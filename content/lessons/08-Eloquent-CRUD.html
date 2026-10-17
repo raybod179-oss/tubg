@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بخش ۰۸ | Eloquent مقدمه و CRUD</title>
+    <meta name="description" content="آموزش Eloquent در لاراول ۱۳: make:model -m، قراردادهای مدل، همه‌خوانی، where/orderBy/limit، create/save، Mass Assignment با #[Fillable]، ویرایش/حذف و Route Model Binding">
+
+    <link rel="icon" href="../assets/img/favicon.png">
+    <link rel="stylesheet" href="../assets/css/rayvo.css">
+    <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script>
+
+    <style>
+        .tk8-file { display:inline-block; background:#eef2ff; color:#4338ca; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:12.5px; direction:ltr; padding:2px 9px; border-radius:6px; border:1px solid #c7d2fe; }
+        .tk8-term { background:#0f172a; color:#e2e8f0; direction:ltr; text-align:left; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:12.5px; line-height:1.9; padding:14px 16px; border-radius:10px; overflow-x:auto; white-space:pre; }
+        .tk8-term .p { color:#38bdf8; }
+        .tk8-term .c { color:#94a3b8; }
+        .tk8-term .o { color:#4ade80; }
+        .tk8-term .y { color:#fbbf24; }
+        .tk8-out { background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px 18px; font-size:14px; line-height:1.9; color:#1f2937; }
+        .tk8-out ul { margin:0; padding-right:20px; }
+        .tk8-muted { color:#94a3b8; font-size:12.5px; }
+        .tk8-more { margin-top:14px; font-size:12.5px; color:#64748b; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:8px 12px; }
+        .tk8-more a { color:#4f46e5; text-decoration:none; font-weight:600; }
+        .tk8-more a:hover { text-decoration:underline; }
+        .tk8-table { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--border); border-radius:10px; overflow:hidden; font-size:13px; margin-top:6px; }
+        .tk8-table th { background:#f8fafc; color:#334155; text-align:right; padding:8px 12px; border-bottom:1px solid #e2e8f0; }
+        .tk8-table td { padding:7px 12px; border-bottom:1px solid #f1f5f9; color:#475569; vertical-align:top; }
+        .tk8-table tr:last-child td { border-bottom:none; }
+        .tk8-table code { background:#f1f5f9; color:#be185d; border-radius:5px; padding:1px 7px; font-size:12px; }
+    </style>
+</head>
+<body>
+<div class="course-page"><!-- ================= سربرگ ================= -->
+    <header class="course-header">
+        <span class="badge">بخش ۰۸</span>
+        <h1>Eloquent مقدمه و CRUD</h1>
+        <p>حالا جدول‌های درسِ قبل «زنده» می‌شوند: هر جدول یک کلاسِ PHP است و ما با همان‌ها می‌خوانیم و می‌نویسیم — بدون حتی یک کوئریِ دستی. این Eloquent است.</p>
+    </header>
+
+    <!-- ================= فهرست ================= -->
+    <nav class="toc" aria-label="فهرست مطالب">
+        <h2>توی این بخش چه چیزهایی یاد می‌گیریم؟</h2>
+        <ol>
+            <li><a href="#what">Eloquent چیست؟ ORM یعنی چه؟</a></li>
+            <li><a href="#make">ساخت مدل: make:model -m</a></li>
+            <li><a href="#conventions">قراردادهای Eloquent</a></li>
+            <li><a href="#read">خواندن: all / find / findOrFail / first</a></li>
+            <li><a href="#where">فیلتر و ترتیب: where / orderBy / limit</a></li>
+            <li><a href="#create">ساخت: save() و create() و Mass Assignment</a></li>
+            <li><a href="#edit">ویرایش و حذف: update() / delete()</a></li>
+            <li><a href="#binding">Route Model Binding با {product}</a></li>
+            <li><a href="#project-step">گام پروژه: کنترلرِ واقعی محصول</a></li>
+            <li><a href="#exercises">تمرین‌ها</a></li>
+        </ol>
+    </nav>
+
+    <!-- ================= درس ۱ ================= -->
+    <section class="lesson" id="what">
+        <div class="lesson-head"><span class="lesson-num">۱</span>
+            <h2>Eloquent چیست؟ ORM یعنی چه؟</h2>
+        </div>
+
+        <p><strong>ORM</strong> یعنی «نقشه‌گر شیء-رابطه». به‌زبانِ ساده: هر <strong>جدولِ</strong> دیتابیس یک
+            <strong>کلاسِ PHP</strong> دارد (به آن <strong>مدل</strong> می‌گوییم) و هر <strong>ردیفِ</strong> آن جدول، یک
+            <strong>نمونه‌ی (instance)</strong> از همان کلاس است. به‌جای نوشتن SQL:
+        </p>
+
+        <div class="tk8-flow" style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:center; background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px 14px;"><span class="tk8-out" style="padding:8px 14px;">جدول products</span>
+            <span style="color:#cbd5e1; font-size:16px;">⇄</span>
+            <span class="tk8-out" style="padding:8px 14px;">مدل Product</span>
+            <span style="color:#cbd5e1; font-size:16px;">⇄</span>
+            <span class="tk8-out" style="padding:8px 14px;">کدِ PHP ما</span>
+        </div>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Eloquent در برابر SQL</span></div>
+                <pre><code># SQL
+SELECT * FROM products WHERE is_active = 1 ORDER BY price DESC;
+
+# Eloquent — همان کار
+$products = Product::where('is_active', true)-&gt;orderByDesc('price')-&gt;get();</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li>متدها روی خودِ کلاس مدل صدا زده می‌شوند: <code>Product::all()</code>، <code>Product::where(...)</code>.</li>
+            <li>نتیجه‌ی چندردیفی یک <strong>Collection</strong> است (مثل آرایه، ولی با ابزارهای بیشتر)؛ با <code>foreach</code> می‌چرخد.</li>
+            <li>نتیجه‌ی تکی، یک «مدل» است؛ ستون‌ها به‌صورت <code>$product-&gt;name</code> در می‌آیند.</li>
+        </ul>
+
+        <div class="note info"><div class="note-title"> ارکانِ تا این‌جا</div>
+            <p>درس ۰۷ «جدول» را می‌سازد (migration) و درس ۰۸ «کلاسِ» آن را (model). اینکه از مدل چطور پرس‌وجو
+                کنیم همین همین‌جا یاد می‌گیری؛ درس ۰۹ روابطِ جدول‌ها را (category ⇄ product) کامل می‌کند.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۲ ================= -->
+    <section class="lesson" id="make">
+        <div class="lesson-head"><span class="lesson-num">۲</span>
+            <h2>ساخت مدل: make:model -m</h2>
+        </div>
+
+        <div class="tk8-term"><span class="p">$</span> php artisan make:model Product
+
+   <span class="o">CREATED</span>  app/Models/Product.php</div>
+
+        <p>و اگر بخواهی مایگریشنش هم ساخته شود (در همان لحظه):</p>
+
+        <div class="tk8-term"><span class="p">$</span> php artisan make:model Product -m
+
+   <span class="o">CREATED</span>  app/Models/Product.php
+   <span class="o">CREATED</span>  database/migrations/2026_09_07_123456_create_products_table.php</div>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">app/Models/Product.php</span></div>
+                <pre><code>&lt;?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Product extends Model
+{
+    // می‌بینی؟ همین. Eloquent بقیه‌اش را بر عهده می‌گیرد.
+}</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li>مدل‌ها در <span class="tk8-file">app/Models/</span> می‌نشینند و از <code>Model</code> ارث می‌برند.</li>
+            <li><code>-m</code> (= <code>--migration</code>) هم فایل مایگریشنِ مربوطه را می‌سازد. در پروژه‌ی ما مایگریشنِ
+                <code>products</code> را در درس ۰۷ ساخته‌ایم؛ پس فقط <code>make:model Product</code> کافی است.</li>
+            <li>ترفند ترکیبی: <code>make:model Product -m</code> یا حتی <code>-mfc</code> (مدل + مایگریشن + کنترلر).</li>
+        </ul>
+    </section>
+
+    <!-- ================= درس ۳ ================= -->
+    <section class="lesson" id="conventions">
+        <div class="lesson-head"><span class="lesson-num">۳</span>
+            <h2>قراردادهای Eloquent</h2>
+        </div>
+
+        <p>Eloquent «رایگان» چیزها را از نامِ کلاس حدس می‌زند. این سه قرارداد را حفظ کن تا معجزه‌اش را ببینی:</p>
+
+        <table class="tk8-table">
+            <thead>
+                <tr><th>حدس زده می‌شود</th><th>مثال</th><th>توضیح</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>نام جدول</strong></td><td><code>Product</code> → جدولِ <code>products</code></td><td>اسمِ جمعِ snake_case از اسمِ کلاس</td></tr>
+                <tr><td><strong>کلید اصلی</strong></td><td><code>id</code></td><td>ستونِ <code>id</code>، خودافزایش</td></tr>
+                <tr><td><strong>زمان‌ها</strong></td><td><code>created_at/updated_at</code></td><td>خودکار پر می‌شود (<code>timestamps()</code>)</td></tr>
+            </tbody>
+        </table>
+
+        <p>اگر جدولی از این قرارداد خارج بود، در لاراول ۱۳ با PHP Attribute صریحش کن (همان‌ها که در درس ۰۱ دیدی):</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">مثالِ تعیینِ صریح</span></div>
+                <pre><code>use Illuminate\Database\Eloquent\Attributes\Table;
+
+#[Table('store_products', key: 'product_id')]
+class Product extends Model
+{
+    // ...
+}</code></pre>
+            </div>
+        </div>
+
+        <div class="note tip"><div class="note-title"> چرا خوب است؟</div>
+            <p>چون مدل «بی‌دردسر» می‌ماند. با همان قراردادِ پیش‌فرض، جدولِ <code>products</code> از درس ۰۷
+                دقیقاً با مدلِ <code>Product</code> جفت می‌شود — بدون هیچ کد اضافه.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۴ ================= -->
+    <section class="lesson" id="read">
+        <div class="lesson-head"><span class="lesson-num">۴</span>
+            <h2>خواندن: all / find / findOrFail / first</h2>
+        </div>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>use App\Models\Product;
+
+// همه‌ی ردیف‌ها (بازگشت: Collection)
+$all = Product::all();
+
+// یک ردیفِ مشخص با کلید اصلی (بازگشت: مدل یا null)
+$found = Product::find(7);
+
+$only   = Product::find([3, 5]);   // چندتا با هم (Collection)
+$first  = Product::first();        // اولینِ ردیفِ جدول
+$byName = Product::where('name', 'کفش')-&gt;first(); // اولینِ منطبق</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>find(n)</code> اگر نباشد <code>null</code> برمی‌گرداند؛ <code>first()</code> هم همین‌طور.</li>
+            <li><code>findOrFail(n)</code> اگر پیدا نشود، خطای ۴۰۴ می‌دهد — برای روت‌ها عالی است (درس ۰۸ هم هست).</li>
+            <li>هر «مدل» ستون‌ها را با <code>$product-&gt;price</code> در اختیارت می‌گذارد.</li>
+        </ul>
+
+        <p>برای تستِ سریعِ همه‌چیز، <strong>Tinker</strong> قلابِ شماست — یک «خطِ فرمانِ تعاملی» برای کدِ لاراول:</p>
+
+        <div class="tk8-term"><span class="p">$</span> php artisan tinker
+<span class="p">&gt;&gt;&gt;</span> <span class="y">$p = App\Models\Product::find(1);</span>
+<span class="o">=&gt;</span> App\Models\Product {#1234
+     id: 1,
+     name: <span class="y">"کفش ورزشی"</span>,
+     price: 250000,
+     category_id: 1,
+   }
+<span class="p">&gt;&gt;&gt;</span> <span class="y">$p-&gt;name;</span>
+<span class="o">=&gt;</span> <span class="y">"کفش ورزشی"</span>
+<span class="p">&gt;&gt;&gt;</span> <span class="y">$p-&gt;created_at;</span>
+<span class="o">=&gt;</span> Illuminate\Support\Carbon @... "2026-09-07 14:33:00"</div>
+
+        <div class="note info"><div class="note-title"> Tinker کجای کار است؟</div>
+            <p>هر چیزی که قرار است در کنترلر بنویسی، اول در Tinker امتحان کن؛ بدون ساختِ صفحه، بدون فرم،
+                فقط درست بودنِ منطق. این عادت خیلی از خطاهای توسعه را می‌خورد.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۵ ================= -->
+    <section class="lesson" id="where">
+        <div class="lesson-head"><span class="lesson-num">۵</span>
+            <h2>فیلتر و ترتیب: where / orderBy / limit</h2>
+        </div>
+
+        <p>مدل در واقع یک «کوئری‌بیلدرِ توانمند» است؛ روش‌های شرط، ترتیب و محدودیت را به‌صورتِ زنجیره‌ای می‌بندی و آخرش با <code>get()</code> اجرا می‌کنی:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>// فقط فعال‌ها، ارزان‌ترین اول
+$products = Product::where('is_active', true)
+    -&gt;orderBy('price')
+    -&gt;get();
+
+// دسته‌های ۱ و ۲، گران‌ترین ها با برش به ۱۰
+$tops = Product::whereIn('category_id', [1, 2])
+    -&gt;orderByDesc('price')
+    -&gt;limit(10)
+    -&gt;get();
+
+// فقط اسم و قیمت بیایند (به‌جای همه‌ی ستون‌ها)
+$light = Product::where('is_active', true)
+    -&gt;select('id', 'name', 'price')
+    -&gt;get();
+
+// شمارش ساده
+$count = Product::where('category_id', 1)-&gt;count();</code></pre>
+            </div>
+        </div>
+
+        <table class="tk8-table">
+            <thead>
+                <tr><th>متد</th><th>کار</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>where('col', $value)</code></td><td>مساوی؛ با عملگر: <code>where('price', '&gt;', 100)</code></td></tr>
+                <tr><td><code>whereIn('col', [آرایه])</code></td><td>عضوِ لیست‌ بودن</td></tr>
+                <tr><td><code>orderBy('col', 'desc')</code></td><td>ترتیب؛ با میان‌برِ <code>orderByDesc</code></td></tr>
+                <tr><td><code>limit(n)</code></td><td>برشِ نتیجه</td></tr>
+                <tr><td><code>get()</code></td><td>اجرا و گرفتنِ Collection</td></tr>
+            </tbody>
+        </table>
+
+        <div class="note warn"><div class="note-title"> جرئی مهم</div>
+            <p>زنجیره‌ها <strong>اجرا نمی‌شوند</strong> مگر با <code>get()</code> (یا <code>first()</code> و...).
+                یادت باشد: «ساختِ کوئری» با «اجرای کوئری» دو چیز است؛ بدون <code>get()</code> فقط مدلِ کوئری‌بیلدر را ساخته‌ای.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۶ ================= -->
+    <section class="lesson" id="create">
+        <div class="lesson-head"><span class="lesson-num">۶</span>
+            <h2>ساخت: save() و create() و Mass Assignment</h2>
+        </div>
+
+        <p><strong>راه اول — قدم‌به‌قدم:</strong> نمونه بساز، فیلدها را بده، <code>save()</code> کن:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>$product = new Product;
+
+$product-&gt;name        = 'کتاب لاراول';
+$product-&gt;description = 'مرجع کامل';
+$product-&gt;price       = 350000;
+$product-&gt;category_id = 1;
+
+$product-&gt;save();   // INSERT انجام می‌شود و timestamps پر می‌شوند</code></pre>
+            </div>
+        </div>
+
+        <p><strong>راه دوم — یک‌خطی:</strong> با <code>create()</code> و یک آرایه:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>$product = Product::create([
+    'name'        =&gt; 'کتاب لاراول',
+    'description' =&gt; 'مرجع کامل',
+    'price'       =&gt; 350000,
+    'category_id' =&gt; 1,
+]);</code></pre>
+            </div>
+        </div>
+
+        <p><code>create()</code> آرایه‌ی ورودی را در یک‌جا به مدل می‌ریزد — به این «پرکردنِ گروهی»
+            (<strong>Mass Assignment</strong>) می‌گویند. و چون همه‌چیز را یکجا می‌پذیرد، لاراول به‌صورتِ پیش‌فرض
+            فقط فیلدهایی را می‌پذیرد که تو <strong>اجازه داده‌ای</strong>. در لاراول ۱۳ این اجازه با PHP Attribute است:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">app/Models/Product.php</span></div>
+                <pre><code>&lt;?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Model;
+
+#[Fillable(['name', 'description', 'price', 'category_id', 'is_active'])]
+class Product extends Model
+{
+    // هر فیلدی این‌جا نباشد، از create()/fill() پذیرفته نمی‌شود.
+}</code></pre>
+            </div>
+        </div>
+
+        <div class="note warn"><div class="note-title"> چرا لازم است؟ امنیت</div>
+            <p>معکوسش را تصور کن: یک کاربرِ بدجنس <code>created_at</code> یا <code>is_active</code> را از داخلِ فرم تزریق
+                کند. با <code>#[Fillable]</code> فقط فیلدهای سفیدِ تو پذیرفته می‌شوند؛ بقیه بی‌صدا دور ریخته می‌شوند.
+                (جایگزین: <code>#[Guarded([...])]</code> برای «همه‌چیز جز این چندتا».)
+            </p>
+        </div>
+
+        <div class="note info"><div class="note-title"> نسخه‌های قدیمی‌تر</div>
+            <p>در آموزش‌های قدیمی می‌بینی: <code>protected $fillable = ['name', ...];</code> (خاصیتِ PHP).
+                در لاراول ۱۳ استانداردِ داک، همان Attribute بالاست؛ ولی جفت‌باره کار می‌کند.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۷ ================= -->
+    <section class="lesson" id="edit">
+        <div class="lesson-head"><span class="lesson-num">۷</span>
+            <h2>ویرایش و حذف: update() / delete()</h2>
+        </div>
+
+        <p><strong>ویرایش:</strong> اول مدلِ موردنظر را بگیر، بعد مقدار بده و ذخیره کن — یا یک‌جا با <code>update()</code>:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>$product = Product::find(2);
+
+$product-&gt;price = 390000;
+$product-&gt;save();                       // UPDATE انجام می‌شود
+
+// یا یک‌لوپ:
+Product::find(2)-&gt;update(['price' =&gt; 390000]);</code></pre>
+            </div>
+        </div>
+
+        <p><strong>حذف:</strong></p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>$product = Product::find(2);
+$product-&gt;delete();                    // حذفِ تکی
+
+Product::destroy(3);                    // حذف با کلید/کلیدها
+Product::destroy([4, 5]);
+
+Product::where('category_id', 2)-&gt;delete(); // حذفِ دسته‌ایِ شرطی</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li>مثلِ <code>create()</code>، <code>update()</code> هم فقط فیلدهای <code>#[Fillable]</code> را می‌پذیرد.</li>
+            <li>حذفِ یک محصول، چون در مایگریشنِ درس ۰۷ <code>cascadeOnDelete</code> برای کلیدِ <code>category_id</code> گذاشتیم،
+                فقط رویِ دسته‌بندی اثر می‌گذارد؛ اگر <code>reviews</code> هم با cascade ساخته باشی، آنها هم حذف می‌شوند.</li>
+        </ul>
+    </section>
+
+    <!-- ================= درس ۸ ================= -->
+    <section class="lesson" id="binding">
+        <div class="lesson-head"><span class="lesson-num">۸</span>
+            <h2>Route Model Binding با {product}</h2>
+        </div>
+
+        <p>در درس ۰۳ یاد گرفتی پارامترِ روت را به‌صورتِ <code>{id}</code> بگیر و خودت <code>findOrFail</code> بزنی.
+            لاراول ۱۳ استانداردِ بهتر دارد: <strong>Route Model Binding</strong>. کافی است در متدِ کنترلر، پارامتری به
+            نامِ <code>{product}</code> با همین نامِ <code>Product $product</code> type-hint کنی:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">routes/web.php</span></div>
+                <pre><code>Route::get('/products/{product}', [ProductController::class, 'show'])
+    -&gt;name('products.show');</code></pre>
+            </div>
+        </div>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">ProductController.php</span></div>
+                <pre><code>&lt;?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Product;
+use Illuminate\Contracts\View\View;
+
+class ProductController extends Controller
+{
+    public function show(Product $product): View
+    {
+        return view('products.show', ['product' =&gt; $product]);
+    }
+}</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li>لاراول خودش <code>Product::findOrFail</code> را با مقدارِ <code>{product}</code> در مسیر انجام می‌دهد؛ اگر نبود، ۴۰۴ می‌دهد.</li>
+            <li>اسمِ پارامترِ مسیر (<code>{product}</code>) باید <strong>دقیقاً</strong> با نامِ آرگومانِ متد (<code>$product</code>) یکی باشد.</li>
+            <li>این الگو برای «متدهایی که یک رکورد می‌گیرند» است: <code>show</code>، <code>update</code>، <code>destroy</code> — همان که در doc می‌خوانی.</li>
+            <li>اگر کلیدِ دیگری می‌خواهی (مثلاً <code>slug</code>) یا با <code>-&gt;withTrashed()</code> بخواهی جست‌وجو کنی، روش‌های سفارشی‌سازی در داک هست.</li>
+        </ul>
+
+        <div class="note tip"><div class="note-title"> چرا استاندارد؟</div>
+            <p>دیگر در هیچ‌جا «id را بگیر و find کن» نمی‌نویسی؛ ماشینِ ۴۰۴، تزریقِ مدل و تمیزیِ کد همه یکجا هدیه‌ گرفته می‌شوند.
+                در درس ۰۹ وقتی رابطه‌ها آمد، به همین <code>$product</code> می‌گویی «دسته‌بندی‌ات را بده».
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۹ ================= -->
+    <section class="lesson" id="project-step">
+        <div class="lesson-head"><span class="lesson-num">۹</span>
+            <h2>گام پروژه: کنترلرِ واقعی محصول</h2>
+        </div>
+
+        <div class="proj-step"><div class="proj-title"> نمونه‌ی CRUDِ درس ۰۳ حالا واقعی می‌شود</div>
+            <p>در درس ۰۳ یک «نمونه CRUD مینی» با آرایه داشتیم. حالا همان را با Eloquent و Route Model Binding بازنویسی می‌کنیم.
+            </p>
+        </div>
+
+        <ol>
+            <li>
+                مدل: <code>php artisan make:model Product</code> (مایگریشن را قبلاً داریم) و روی مدل
+                <code>#[Fillable([...])]</code> را برای فیلدها بگذار.
+            </li>
+            <li>
+                روت‌ها در <span class="tk8-file">web.php</span>:
+                <code>products.index</code> و <code>products.show</code> با <code>/products</code> و
+                <code>/products/{product}</code>.
+            </li>
+            <li>
+                در <code>index()</code>: <code>$products = Product::where('is_active', true)-&gt;latest()-&gt;get();</code>
+                و همان بلیدِ فهرستِ درس ۰۶؛ این‌بار <code>&lt;x-product-card :product="$product"/&gt;</code> داده‌ی واقعی می‌گیرد.
+            </li>
+            <li>
+                در <code>show()</code>: با <code>Product $product</code> (Binding) صفحه‌ی جزئیات محصول.
+            </li>
+            <li>
+                تست: با <code>tinker</code> سه محصول بساز، صفحه را رفرش کن — بدونِ حتی یک خط SQLِ دستی. 
+            </li>
+        </ol>
+
+        <div class="note info"><div class="note-title"> ادامه‌اش کجا؟</div>
+            <p>«ساخت/ویرایش/حذفِ واقعی» در درس ۱۰ (فرم‌ها و Validation) کامل می‌شود؛ «رابطه‌ی دسته‌بندی ⇄ محصول»
+                و «لودِ رابطه‌ها» در درس ۰۹ است. الان اصالتِ Eloquent را بچش.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۱۰ ================= -->
+    <section class="lesson" id="exercises">
+        <div class="lesson-head"><span class="lesson-num">۱۰</span>
+            <h2>تمرین‌ها؛ حالا نوبت توست!</h2>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۱: مدلِ دسته‌بندی</div>
+            <ol>
+                <li><code>php artisan make:model Category</code> بساز (مایگریشنِ جدولِ categories از درس ۰۷ موجود است).</li>
+                <li>در Tinker دو دسته‌بندی بساز و با <code>Category::all()</code> آن‌ها را ببین.</li>
+                <li>دستورِ <code>Category::where('name', '...')-&gt;first()</code> را امتحان کن.</li>
+            </ol>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۲: پرس‌وجوی فیلترشده</div>
+            <ol>
+                <li>پنج محصول بساز (قیمت‌های متفاوت)، بعد با <code>Product::whereIn('category_id', [1, 2])</code> فهرست بگیر.</li>
+                <li>گران‌ترینِ فعال: <code>Product::where('is_active', true)-&gt;orderByDesc('price')-&gt;first()</code>.</li>
+                <li>برترین‌ها: همان با <code>-&gt;take(3)-&gt;get()</code>.</li>
+            </ol>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۳: Binding را بچش</div>
+            <ol>
+                <li>روتِ <code>/products/{product}</code> با <code>show(Product $product)</code> بساز.</li>
+                <li>به <code>/products/99999</code> برو — باید صفحه‌ی ۴۰۴ ببینی، بی‌آنکه تو کدی نوشته باشی.</li>
+                <li>در <code>show</code>، نامِ محصول و قیمتش را چاپ کن.</li>
+            </ol>
+        </div>
+
+        <div class="note info"><div class="note-title"> چالش</div>
+            <p>با <code>Product::select('id','name','price')</code> فقط سه ستون را بکش، در بلید با <code>@foreach</code>
+                فهرست بده و از خودت بپرس: «حداقلِ کوئری» یعنی چه؟
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= نکات طلایی ================= -->
+    <div class="golden"><h3> چیزی که از این بخش توی ذهنت بماند</h3>
+        <ol>
+            <li>هر جدول یک مدل است: <code>make:model</code> (با <code>-m</code> اگر مایگریشن هم لازم است).</li>
+            <li>قراردادها: نامِ جدول = جمعِ snake_case کلاس؛ کلید = <code>id</code>؛ timestamps خودکار.</li>
+            <li>خواندن: <code>all()</code>، <code>find(n)</code>، <code>findOrFail(n)</code>، <code>first()</code>؛ چندتا = Collection.</li>
+            <li>فیلتر و ترتیب: <code>where()</code>، <code>whereIn()</code>، <code>orderBy()</code>، <code>limit()</code> — با <code>get()</code> اجرا کن.</li>
+            <li>ساخت: <code>new</code> + <code>save()</code>، یا <code>create([...])</code>؛ فقط فیلدهای <code>#[Fillable]</code>.</li>
+            <li>ویرایش: <code>update([...])</code>؛ حذف: <code>delete()</code> / <code>destroy(n)</code>.</li>
+            <li>Route Model Binding: <code>{product}</code> + <code>Product $product</code> — ۴۰۴ خودکار و مدلِ آماده.</li>
+            <li>Tinker را برای تستِ سریع نگه دار؛ یک خطا قبل از صفحه، ده‌برابر ارزان‌تر است.</li>
+        </ol>
+    </div>
+
+    <!-- ================= مطالعه‌ی بیشتر ================= -->
+    <div class="tk8-more"> مطالعه‌ی بیشتر (انگلیسی):
+        <a href="https://laravel.com/docs/13.x/eloquent#generating-model-classes" target="_blank" rel="noopener">ساخت مدل‌ها</a> —
+        <a href="https://laravel.com/docs/13.x/eloquent#eloquent-model-conventions" target="_blank" rel="noopener">قراردادهای مدل</a>،
+        <a href="https://laravel.com/docs/13.x/eloquent#retrieving-models" target="_blank" rel="noopener">خواندن مدل‌ها</a>،
+        <a href="https://laravel.com/docs/13.x/eloquent#retrieving-single-models-aggregates" target="_blank" rel="noopener">مدلِ تکی و aggregate</a>،
+        <a href="https://laravel.com/docs/13.x/eloquent#inserting-and-updating-models" target="_blank" rel="noopener">ساخت و به‌روزرسانی</a>،
+        <a href="https://laravel.com/docs/13.x/eloquent#mass-assignment" target="_blank" rel="noopener">Mass Assignment و #[Fillable]</a> و
+        <a href="https://laravel.com/docs/13.x/routing#route-model-binding" target="_blank" rel="noopener">Route Model Binding</a>.
+    </div>
+
+    <!-- ================= ناوبری ================= -->
+    <nav class="lesson-nav" aria-label="ناوبری بین بخش‌ها">
+        <a href="00-فهرست.html">فهرست درس‌ها</a>
+        <a href="07-Migration.html">→ بخش قبل: Migration و شِمای دیتابیس</a>
+        <a href="09-Eloquent-روابط.html">بعدی: Eloquent روابط ←</a>
+    </nav>
+
+</div>
+<script src="../assets/js/rayvo.js"></script>
+</body>
+</html>

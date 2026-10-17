@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بخش ۰۳ | کنترلرها</title>
+    <meta name="description" content="آموزش کنترلرها در Laravel: ساخت با make:controller، اتصال به روت، تزریق Request، Resource Controller و abort(404)">
+
+    <link rel="icon" href="../assets/img/favicon.png">
+    <link rel="stylesheet" href="../assets/css/rayvo.css">
+    <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script>
+
+    <style>
+        .tk3-file { display:inline-block; background:#eef2ff; color:#4338ca; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:12.5px; direction:ltr; padding:2px 9px; border-radius:6px; border:1px solid #c7d2fe; }
+        .tk3-table { background:#fff; color:#1f2937; direction:ltr; text-align:left; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:13px; line-height:1.9; padding:18px 20px; border-radius:10px; border:1px solid var(--border); overflow-x:auto; }
+        .tk3-table .muted { color:#94a3b8; }
+        .tk3-table .act { color:#7c3aed; font-style:italic; }
+        .tk3-flow { display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:center; background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px 14px; }
+        .tk3-flow .box { background:#f1f5f9; border:1px solid #e2e8f0; border-radius:8px; padding:8px 14px; font-size:13.5px; color:#334155; font-weight:600; }
+        .tk3-flow .box.hot { background:#eef2ff; border-color:#c7d2fe; color:#4338ca; }
+        .tk3-flow .arr { color:#cbd5e1; font-size:16px; }
+        .tk3-404 { background:#fff; border:1px solid var(--border); border-radius:10px; padding:26px; text-align:center; }
+        .tk3-404 .num { font-size:44px; font-weight:800; color:#ef4444; direction:ltr; }
+        .tk3-404 .msg { color:#64748b; font-size:14px; margin-top:6px; }
+        .tk3-more { margin-top:14px; font-size:12.5px; color:#64748b; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:8px 12px; }
+        .tk3-more a { color:#4f46e5; text-decoration:none; font-weight:600; }
+        .tk3-more a:hover { text-decoration:underline; }
+    </style>
+</head>
+<body>
+<div class="course-page"><!-- ================= سربرگ ================= -->
+    <header class="course-header">
+        <span class="badge">بخش ۰۳</span>
+        <h1>کنترلرها (Controllers)</h1>
+        <p>مسیر که می‌گوید «کجا»، کنترلر می‌گوید «چه‌کاری». کارهای مرتبط را از روت‌فایل بیرون می‌کشیم و در کلاس‌های تمیز جمع می‌کنیم.</p>
+    </header>
+
+    <!-- ================= فهرست ================= -->
+    <nav class="toc" aria-label="فهرست مطالب">
+        <h2>توی این بخش چه چیزهایی یاد می‌گیریم؟</h2>
+        <ol>
+            <li><a href="#what">کنترلر چیست؟</a></li>
+            <li><a href="#make">ساخت و اتصال به روت</a></li>
+            <li><a href="#resource">Resource Controller</a></li>
+            <li><a href="#partial">فقط بخشی از resource</a></li>
+            <li><a href="#request">درخواست و ورودی‌ها (Request)</a></li>
+            <li><a href="#abort">abort(404) وقتی چیزی پیدا نشد</a></li>
+            <li><a href="#crud">نمونه CRUD مینی</a></li>
+            <li><a href="#project-step">گام پروژه: کنترلر محصولات</a></li>
+            <li><a href="#exercises">تمرین‌ها</a></li>
+        </ol>
+    </nav>
+
+    <!-- ================= درس ۱ ================= -->
+    <section class="lesson" id="what">
+        <div class="lesson-head"><span class="lesson-num">۱</span>
+            <h2>کنترلر چیست؟</h2>
+        </div>
+
+        <p>در درس قبل، همه‌ی کارها توی <code>routes/web.php</code> نوشته می‌شد. خوب بود؛ اما اگر سایت بزرگ شود، این فایل
+            به‌سرعت شلوغ و غیرقابل‌نگهداری می‌شود. <strong>کنترلر</strong> راه‌حل این مشکل است.
+        </p>
+
+        <p>کنترلر یک <strong>کلاس PHP</strong> است که کارهای مرتبط را کنار هم جمع می‌کند.
+            مثلاً همه‌ی کارهای «محصولات» — فهرست، نمایش، ساخت، ویرایش و حذف — در یک فایل به نام
+            <span class="tk3-file">app/Http/Controllers/ProductController.php</span> قرار می‌گیرد و هر کار یک «متد» است.
+            جریانِ کار را این‌طور ببین:
+        </p>
+
+        <div class="tk3-flow"><span class="box">درخواست کاربر</span>
+            <span class="arr">→</span>
+            <span class="box">روت</span>
+            <span class="arr">→</span>
+            <span class="box hot">کنترلر</span>
+            <span class="arr">→</span>
+            <span class="box">مدل / ویو</span>
+            <span class="arr">→</span>
+            <span class="box">پاسخ</span>
+        </div>
+
+        <div class="note info"><div class="note-title"> چرا فایل‌ها را جدا کنیم؟</div>
+            <ul>
+                <li><strong>تمیزی:</strong> فایل روت‌ها فقط «نقشه» است، نه منطق.</li>
+                <li><strong>تکرارِ صفر:</strong> متدی که یک‌بار نوشته می‌شود، در چند روت قابل استفاده است.</li>
+                <li><strong>قابل فهم:</strong> همین‌که فایلِ <code>ProductController.php</code> را باز کنی، همه‌ی کارهای محصول را یک‌جا می‌بینی.</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ================= درس ۲ ================= -->
+    <section class="lesson" id="make">
+        <div class="lesson-head"><span class="lesson-num">۲</span>
+            <h2>ساخت و اتصال به روت</h2>
+        </div>
+
+        <p>لاروال یک فرمان برای ساخت کنترلر دارد. در ترمینالِ پروژه‌ات اجرا کن:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Terminal</span></div>
+                <pre><code>php artisan make:controller ProductController</code></pre>
+            </div>
+        </div>
+
+        <p>فایل ساخته‌شده را می‌توانی توی ادیتورت باز کنی؛ <span class="tk3-file">app/Http/Controllers/ProductController.php</span>.
+            اولِ کار فقط قالبِ کلاس است. دو متد به آن اضافه می‌کنیم:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>&lt;?php
+
+namespace App\Http\Controllers;
+
+class ProductController extends Controller
+{
+    public function index()
+    {
+        return 'فهرست محصولات فروشگاه';
+    }
+
+    public function show(string $id)
+    {
+        return "محصول شماره‌ی $id";
+    }
+}</code></pre>
+            </div>
+        </div>
+
+        <p>حالا در <code>routes/web.php</code>، به‌جای تابعِ تو‌در‌تو، کنترلر را صدا بزن. سه‌گوشه بودنِ
+            <code>[کلاس، 'متد']</code> را ببین:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>&lt;?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProductController;
+
+Route::get('/products', [ProductController::class, 'index']);
+Route::get('/products/{id}', [ProductController::class, 'show']);</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>ProductController::class</code> یعنی «نام کامل کلاس»؛ با این کار اگر روزی مسیرِ پوشه عوض شود، نیازی به ویرایشِ همه‌جا نیست.</li>
+            <li>پارامترِ روت (<code>{id}</code>) خودکار به <strong>آخرین آرگومانِ</strong> متد پاس داده می‌شود: <code>show(string $id)</code>.</li>
+            <li>اکنون بازدید از <code>/products</code> متنِ <em>فهرست محصولات فروشگاه</em> و <code>/products/5</code> متنِ <em>محصول شماره‌ی 5</em> را نشان می‌دهد؛ دقیقاً مثل قبل، ولی تمیزتر!</li>
+        </ul>
+
+        <div class="note tip"><div class="note-title"> قانون ترتیب پارامترها</div>
+            <p>یک کنترلر می‌تواند چند پارامتر از روت بگیرد: <code>show(string $category, string $id)</code>.
+                فقط یادت باشد ترتیبش دقیقاً همان ترتیبِ <code>{...}</code> در آدرسِ روت است.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۳ ================= -->
+    <section class="lesson" id="resource">
+        <div class="lesson-head"><span class="lesson-num">۳</span>
+            <h2>Resource Controller</h2>
+        </div>
+
+        <p>تقریباً هر مدلِ واقعی، هفت «کارِ استاندارد» دارد: فهرست، فرمِ ساخت، ذخیره‌سازی، نمایش، فرمِ ویرایش،
+            به‌روزرسانی و حذف — به‌اختصار <strong>CRUD</strong> (ساخت، خواندن، به‌روزرسانی، حذف).
+            لاروال این الگو را کم‌هزینه کرده است. اول با فرمان زیر، کنترلرِ resource بساز:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Terminal</span></div>
+                <pre><code>php artisan make:controller CategoryController --resource</code></pre>
+            </div>
+        </div>
+
+        <p>این کنترلر با <strong>هفت متدِ خالی</strong> ساخته می‌شود که نام‌شان دقیقاً با الگوی لاروال همخوان است:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>&lt;?php
+
+namespace App\Http\Controllers;
+
+class CategoryController extends Controller
+{
+    public function index() {}    // فهرست دسته‌ها
+    public function create() {}   // فرمِ ساخت دسته
+    public function store() {}    // ذخیره‌ی دسته‌ی جدید
+    public function show(string $id) {}  // نمایش یک دسته
+    public function edit(string $id) {}  // فرمِ ویرایش
+    public function update(string $id) {} // به‌روزرسانی
+    public function destroy(string $id) {} // حذف
+}</code></pre>
+            </div>
+        </div>
+
+        <p>حالا فقط با <strong>یک خط</strong>، همه‌ی این هفت روش، روت می‌شوند:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>Route::resource('categories', CategoryController::class);</code></pre>
+            </div>
+        </div>
+
+        <p>معنایش این هفت روتِ نامدار است:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">خروجی route:list</span></div>
+                <div class="tk3-table">GET|HEAD     /categories           →  categories.index
+GET|HEAD     /categories/create    →  categories.create
+POST         /categories           →  categories.store
+GET|HEAD     /categories/{id}      →  categories.show
+GET|HEAD     /categories/{id}/edit →  categories.edit
+PUT|PATCH    /categories/{id}      →  categories.update
+DELETE       /categories/{id}      →  categories.destroy</div>
+            </div>
+        </div>
+
+        <ul>
+            <li>چهار روشِ GET صفحه نشان می‌دهند، POST می‌سازد، PUT/PATCH به‌روزرسانی می‌کند و DELETE حذف می‌کند. (ترتیبِ ۱ تا ۷ = چرخه‌ی کامل CRUD)</li>
+            <li>نام هر روت خودِ کار است: <code>categories.store</code>، <code>categories.show</code> و... برای ساخت لینک با <code>route()</code> خیلی به‌درد می‌خورند.</li>
+        </ul>
+    </section>
+
+    <!-- ================= درس ۴ ================= -->
+    <section class="lesson" id="partial">
+        <div class="lesson-head"><span class="lesson-num">۴</span>
+            <h2>فقط بخشی از resource</h2>
+        </div>
+
+        <p>همیشه همه‌ی هفت متد لازم نیست. مثلاً مشتری می‌تواند <em>محصول ببیند</em> ولی حقِ <em>ساخت/ویرایش</em> ندارد؛
+            پس فقط دو روتِ <code>index</code> و <code>show</code> را ثبت کن:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>Route::resource('products', ProductController::class)
+    -&gt;only(['index', 'show']);</code></pre>
+            </div>
+        </div>
+
+        <p>یا برعکس؛ اگر از هفت‌تایی فقط یکی لازم نیست، از <code>except</code> استفاده کن:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>Route::resource('categories', CategoryController::class)
+    -&gt;except(['create', 'edit']);</code></pre>
+            </div>
+        </div>
+
+        <div class="note tip"><div class="note-title"> چه وقتی فقطِ فقط؟</div>
+            <p><code>only</code> را برای «صفحه‌های همگان» و <code>except</code> را برای «هرچه خواننده می‌تواند» به‌کار ببر.
+                هر دو برای بخشِ <em>مدیریت</em> (که بعداً با Auth محافظت می‌شود) جدا می‌شوند.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۵ ================= -->
+    <section class="lesson" id="request">
+        <div class="lesson-head"><span class="lesson-num">۵</span>
+            <h2>درخواست و ورودی‌ها (Request)</h2>
+        </div>
+
+        <p>لاروال هر درخواستِ HTTP را در یک شیء <code>Illuminate\Http\Request</code> به کنترلر می‌دهد.
+            برای دریافتش، فقط <strong>تایپ‌هینت</strong> می‌کنی و لاروال خودش آن را ساخته و به متد می‌دهد
+            (به این می‌گویند <strong>تزریق وابستگی</strong>؛ نگرانش نباش، فقط همین الگو را ببین):
+        </p>
+
+        <div class="demo"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>&lt;?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+
+class ProductController extends Controller
+{
+    public function index(Request $request)
+    {
+        $search = $request-&gt;query('q');
+
+        return $search
+            ? "نتیجه‌ی جست‌وجو: $search"
+            : 'فهرست محصولات فروشگاه';
+    }
+}</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">چه می‌بینی؟</span></div>
+                بازدید از آدرسِ:
+                <div class="tk3-flow" style="flex-direction:column;gap:6px;align-items:stretch;text-align:center"><span>/products?q=کفش</span>
+                    <span class="arr">↓</span>
+                    <span>نتیجه‌ی جست‌وجو: کفش</span>
+                    <span class="arr muted" style="color:#cbd5e1">↓</span>
+                    <span>/products</span>
+                    <span class="arr">↓</span>
+                    <span>فهرست محصولات فروشگاه</span>
+                </div>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>$request-&gt;query('q')</code> چیزی را که بعد از <code>?</code> در آدرس آمده می‌خواند (اگر نبود <code>null</code> برمی‌گرداند).</li>
+            <li><code>$request-&gt;input('name', 'پیش‌فرض')</code> هم برای GET هم POST کار می‌کند و می‌تواند مقدارِ پیش‌فرض بدهد.</li>
+            <li><code>$request-&gt;all()</code> همه‌ی ورودی‌ها را آرایه می‌دهد؛ <code>$request-&gt;has('q')</code> می‌گوید آیا فیلدی آمده است یا نه.</li>
+        </ul>
+
+        <div class="note warn"><div class="note-title"> ترتیب را به‌هم نزن</div>
+            <p>اگر متد هم <code>Request</code> می‌خواهد هم پارامترِ روت، اول <code>Request</code> و بعد پارامترها:
+                <code>public function show(Request $request, string $id)</code>. روت‌پارامترها همیشه بعد از تزریق‌ها می‌آیند.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۶ ================= -->
+    <section class="lesson" id="abort">
+        <div class="lesson-head"><span class="lesson-num">۶</span>
+            <h2>abort(404) وقتی چیزی پیدا نشد</h2>
+        </div>
+
+        <p>گاهی باید خودت جلوی ادامه‌ی کار را بگیری؛ مثلاً وقتی محصولِ درخواستی وجود ندارد یا مجاز نیستی.
+            تابعِ <code>abort()</code> همین کار را می‌کند — کدِ خطا را می‌گیری و اجرا قطع می‌شود:
+        </p>
+
+        <div class="demo"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>&lt;?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+
+class ProductController extends Controller
+{
+    public function show(string $id)
+    {
+        // فعلاً فقط محصول ۱ و ۲ وجود دارد
+        $validIds = ['1', '2'];
+
+        if (! in_array($id, $validIds)) {
+            abort(404, 'محصول پیدا نشد');
+        }
+
+        return "محصول شماره‌ی $id";
+    }
+}</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">چه می‌بینی؟</span></div>
+                <div class="tk3-404"><div class="num">404</div>
+                    <div class="msg">محصول پیدا نشد</div>
+                    <div class="msg">(Not Found — صفحه‌ی خطا لاروال)</div>
+                </div>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>abort(404)</code> صفحه‌ی استانداردِ «پیدا نشد» لاروال را نشان می‌دهد.</li>
+            <li>پیامِ دوم اختیاری است؛ در <code>APP_DEBUG=true</code> دیده می‌شود (درس ۱ خواندیم).</li>
+            <li>کدهای مهم دیگر: <code>abort(403)</code> یعنی «مجاز نیستی» و <code>abort(500)</code> یعنی «خطای سرور».</li>
+        </ul>
+
+        <p>برای «شاید، شاید نه» هم میان‌بری هست: <code>abort_unless(شرط، کد)</code> — اگر شرط درست نبود، همان خطا:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>abort_unless(in_array($id, $validIds), 404);</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= درس ۷ ================= -->
+    <section class="lesson" id="crud">
+        <div class="lesson-head"><span class="lesson-num">۷</span>
+            <h2>نمونه CRUD مینی: چرخه‌ی کامل تمیز</h2>
+        </div>
+
+        <p>حالا همه‌ی چیزهایی که یاد گرفتیم را کنار هم بگذاریم. روی یک <strong>لیستِ کوچکِ درون‌حافظه‌ای</strong>
+            (بدون دیتابیس!) یک CRUD واقعی می‌سازیم تا ببینی هر متدِ resource دقیقاً کجای چرخه می‌نشیند.
+            «محصول» را با یک <code>ProductController</code> و یک آرایه‌ی ساده شبیه‌سازی می‌کنیم:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>&lt;?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+
+class ProductController extends Controller
+{
+    // فعلاً به‌جای دیتابیس، یک آرایه‌ی ساده
+    private array $products = [
+        1 =&gt; 'کفش ورزشی',
+        2 =&gt; 'هودی نخی',
+        3 =&gt; 'کوله‌پشتی',
+    ];
+
+    // ۱) فهرست — GET /products
+    public function index()
+    {
+        return implode('، ', $this-&gt;products);
+    }
+
+    // ۲) نمایش تک‌محصول — GET /products/{id}
+    public function show(string $id)
+    {
+        if (! isset($this-&gt;products[$id])) {
+            abort(404, 'محصولی با این شناسه نیست');
+        }
+
+        return $this-&gt;products[$id];
+    }
+
+    // ۳) ساخت — POST /products (با فرم در بخش ۱۰ مقدار واقعی می‌رسد)
+    public function store(Request $request)
+    {
+        return 'ذخیره شد: ' . $request-&gt;input('title', 'بدون عنوان');
+    }
+
+    // ۴) به‌روزرسانی — PUT/PATCH /products/{id}
+    public function update(Request $request, string $id)
+    {
+        return "محصول $id ویرایش شد به: " . $request-&gt;input('title');
+    }
+
+    // ۵) حذف — DELETE /products/{id}
+    public function destroy(string $id)
+    {
+        return "محصول $id حذف شد";
+    }
+}</code></pre>
+            </div>
+        </div>
+
+        <p>و در <code>routes/web.php</code>، همه‌ی این‌ها را با <em>یک خط</em> resource می‌کنیم — یعنی همان
+            هفت روتِ نامدارِ درس ۳:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>Route::resource('products', ProductController::class);</code></pre>
+            </div>
+        </div>
+
+        <p>حالا این آدرس‌ها را در مرورگر امتحان کن. (فعلاً فقط دو متدِ GET بی‌فرم‌اند؛
+            سه متدِ دیگر تا بخش ۱۰ به‌جای POST/PUT/DELETE به فرم نیاز دارند.)
+        </p>
+
+        <div class="demo"><div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">چه می‌بینی؟</span></div>
+                <div class="tk3-flow" style="flex-direction:column;gap:6px;align-items:stretch;text-align:center"><span>GET /products</span>
+                    <span class="arr">↓</span>
+                    <span>کفش ورزشی، هودی نخی، کوله‌پشتی</span>
+                    <span class="arr muted" style="color:#cbd5e1">↓</span>
+                    <span>GET /products/2</span>
+                    <span class="arr">↓</span>
+                    <span>هودی نخی</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="note info"><div class="note-title"> چرا «درون‌حافظه‌ای»؟</div>
+            <p>هر بار که صفحه رفرش شود، آرایه از صفر ساخته می‌شود و چیزی روی دست نمی‌ماند — این دقیقاً همان
+                محدودیتی است که «دیتابیس» حل می‌کند. در بخش ۰۸ (Eloquent) همین پنج متد را روی یک
+                <strong>جدول واقعی</strong> اجرا می‌کنیم و دیگر چیزی از بین نمی‌رود.
+            </p>
+        </div>
+
+        <ul>
+            <li>الگوی کلی همیشه همین است: <code>index</code> فهرست، <code>show</code> تک‌رکورد، <code>store</code> ساخت، <code>update</code> ویرایش، <code>destroy</code> حذف.</li>
+            <li>متدهای تغییردهنده (store/update/destroy) همه‌چیزشان را از <code>Request</code> می‌گیرند؛ پس تا فرم نباشد، فقط الگویشان را ببین.</li>
+            <li>خودِ لاروال هم «محدوده‌بندی» را می‌فهمد: روتِ PUT/DELETE را در مرورگر می‌توان با «روش‌جعل» تست کرد — در بخش ۱۰ (فرم‌ها) آن را هم می‌بینیم.</li>
+        </ul>
+    </section>
+
+    <!-- ================= درس ۸ ================= -->
+    <section class="lesson" id="project-step">
+        <div class="lesson-head"><span class="lesson-num">۸</span>
+            <h2>گام پروژه: کنترلر محصولات</h2>
+        </div>
+
+        <div class="proj-step"><div class="proj-title"> این بخش کجای فروشگاه می‌نشیند؟</div>
+            <p>توی فروشگاه‌مان، هر چیزی که به «محصول» مربوط است — فهرست و نمایش و بعدها ساخت، ویرایش، حذف — در یک
+                <code>ProductController</code> جمع می‌شود. مسیرهای <code>/products</code> و <code>/products/{id}</code>
+                به متدهای <code>index</code> و <code>show</code>ی همین کنترلر اشاره می‌کنند و <code>abort(404)</code>
+                جوابِ محصولِ ناموجود است.
+            </p>
+        </div>
+
+        <p>الان <strong>همین‌جا کاملش نمی‌کنیم</strong>؛ چون هنوز مدل و ویو و فرم را یاد نگرفته‌ایم.
+            کافی است مفهومش را بفهمی:
+        </p>
+
+        <ul>
+            <li><code>php artisan make:controller ProductController</code> کنترلرِ محصولات را می‌سازد.</li>
+            <li><code>Route::get('/products', [ProductController::class, 'index'])</code> فهرست را به <code>index()</code> وصل می‌کند.</li>
+            <li><code>Route::get('/products/{id}', [ProductController::class, 'show'])</code> نمایش را به <code>show()</code> وصل می‌کند.</li>
+            <li>وقتی محصولی وجود ندارد: <code>abort(404)</code>.</li>
+        </ul>
+
+        <p>این‌ها را فقط توی ذهنت نگه دار؛ در بخش ۹۹ (پروژه‌ی پایانی) با کمکِ Eloquent و Blade، همین کنترلر را کامل
+            و واقعی می‌کنیم.
+        </p>
+
+        <div class="note info"><div class="note-title"> حالا خودت امتحان کن</div>
+            <p>در یک پروژه‌ی آزمایشی کوچک، یک <code>TestController</code> بساز، دو متد به آن بده و در <code>web.php</code>
+                وصلش کن تا با <code>route:list</code> ببینی چطور کار می‌کند — بعد پاکش کن.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۹ ================= -->
+    <section class="lesson" id="exercises">
+        <div class="lesson-head"><span class="lesson-num">۹</span>
+            <h2>تمرین‌ها؛ حالا نوبت توست!</h2>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۱: کنترلر دسته‌ها</div>
+            <ol>
+                <li>با <code>make:controller</code> یک <code>CategoryController</code> ساده بساز (بدون resource).</li>
+                <li>دو متد بگذار: <code>index()</code> که «فهرست دسته‌ها» را برمی‌گرداند و <code>show($id)</code> که «دسته شماره‌ی ...» را.</li>
+                <li>در <code>web.php</code> دو روتِ <code>/categories</code> و <code>/categories/{id}</code> (با <code>whereNumber</code>) به آن‌ها وصل کن.</li>
+            </ol>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۲: abort در عمل</div>
+            <ol>
+                <li>در متدِ <code>show</code>ی دسته‌ها، فقط دسته‌های ۱ تا ۳ مجاز باشند؛ بقیه با <code>abort(404)</code>.</li>
+                <li>برای تمرینِ <code>abort(403)</code>، یک متد <code>secret()</code> درست کن که همیشه «مجاز نیستی» دهد.</li>
+                <li>روتش را با <code>Route::get('/secret', [CategoryController::class, 'secret'])</code> ثبت و تست کن.</li>
+            </ol>
+        </div>
+
+        <div class="note info"><div class="note-title"> چالش</div>
+            <p>برای «کوپن‌های تخفیف» یک <code>CouponController</code> با <code>--resource</code> بساز و
+                با <code>Route::resource('coupons', CouponController::class)</code> ثبتش کن.
+                با <code>php artisan route:list</code> هر هفت روت را ببین و نام‌هایشان را بخوان
+                (<code>coupons.index</code>، <code>coupons.store</code> و...).
+                بعد با <code>-&gt;only([...])</code> فقط روت‌هایی را نگه دار که برای «خواندن» لازم‌اند.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= نکات طلایی ================= -->
+    <div class="golden"><h3> چیزی که از این بخش توی ذهنت بماند</h3>
+        <ol>
+            <li>کنترلر یک کلاس است که کارهای یک «منبع» (مثل محصول) را در متدها جمع می‌کند.</li>
+            <li>ساخت: <code>php artisan make:controller ProductController</code>.</li>
+            <li>اتصال: <code>Route::get('/x', [ProductController::class, 'metod'])</code>.</li>
+            <li>پارامترهای روت، خودکار به آرگومان آخرِ متد می‌رسند.</li>
+            <li><code>--resource</code> هفت متد CRUD می‌سازد و <code>Route::resource()</code> هفت روتِ نامدار ثبت می‌کند.</li>
+            <li>با <code>-&gt;only()</code> و <code>-&gt;except()</code> فقط روت‌های لازم را ثبت کن.</li>
+            <li><code>Request</code> را به متد تزریق کن تا ورودی‌ها را بخوانی؛ قانونِ تزریق اول، پارامترِ دوم.</li>
+            <li>برای «پیدا نشد» از <code>abort(404)</code> یا <code>abort_unless(...)</code> استفاده کن.</li>
+        </ol>
+    </div>
+
+    <!-- ================= مطالعه‌ی بیشتر ================= -->
+    <div class="tk3-more"> مطالعه‌ی بیشتر (انگلیسی):
+        <a href="https://laravel.com/docs/13.x/controllers#resource-controllers" target="_blank" rel="noopener">Resource Controllers و جدول متدها</a> و
+        <a href="https://laravel.com/docs/13.x/controllers#dependency-injection-and-controllers" target="_blank" rel="noopener">تزریق وابستگی در کنترلرها</a>.
+    </div>
+
+    <!-- ================= ناوبری ================= -->
+    <nav class="lesson-nav" aria-label="ناوبری بین بخش‌ها">
+        <a href="00-فهرست.html">فهرست درس‌ها</a>
+        <a href="02-روتینگ.html">→ بخش قبل: روتینگ</a>
+        <a href="04-درخواست-پاسخ-فلش.html">بعدی: درخواست، پاسخ و فلش ←</a>
+    </nav>
+
+</div>
+<script src="../assets/js/rayvo.js"></script>
+</body>
+</html>

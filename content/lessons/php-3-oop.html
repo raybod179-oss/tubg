@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سطح ۰ · درس ۴ | مبانی PHP ۳: شی‌گرایی (OOP)</title><meta name="description" content="لاراول کاملاً شی‌گراست: مدل، کنترلر و سرویس همه کلاس‌اند. این درس همان قدر OOP می‌گوید که برای لاراول لازم داری.">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">سطح ۰ · درس ۴</span><h1>مبانی PHP ۳: شی‌گرایی (OOP)</h1><p>لاراول کاملاً شی‌گراست: مدل، کنترلر و سرویس همه کلاس‌اند. این درس همان قدر OOP می‌گوید که برای لاراول لازم داری.</p></header>
+<section class="step"><h2>۱. کلاس و شیء</h2><p>کلاس نقشه است، شیء ساخته‌ی آن. <code>$this</code> یعنی همین شیء.</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">کلاس</span></div><pre><code>&lt;?php
+class Product
+{
+    public function __construct(
+        public string $name,
+        public int $price,
+    ) {}
+
+    public function label(): string
+    {
+        return "{$this-&gt;name} - {$this-&gt;price}";
+    }
+}
+
+$p = new Product('هدفون', 450000);
+echo $p-&gt;label();</code></pre></div></div></section><section class="step"><h2>۲. سطح دسترسی</h2><p><code>public</code> از همه‌جا، <code>protected</code> از خود کلاس و فرزندان، <code>private</code> فقط از خود کلاس. اطلاعات حساس را private کن.</p></section><section class="step"><h2>۳. وراثت</h2><p>فرزند همه‌ی ویژگی‌های والد را می‌گیرد؛ در لاراول هر مدل از <code>Model</code> ارث می‌برد.</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">extends</span></div><pre><code>&lt;?php
+class DigitalProduct extends Product
+{
+    public function label(): string
+    {
+        return parent::label() . ' (دانلودی)';
+    }
+}</code></pre></div></div></section><section class="step"><h2>۴. اینترفیس و namespace</h2><p>اینترفیس قرارداد است؛ namespace از تداخل نام‌ها جلوگیری می‌کند (همان <code>App\Models</code>).</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">interface</span></div><pre><code>&lt;?php
+namespace App\Services;
+
+interface Payable
+{
+    public function pay(int $amount): bool;
+}
+
+class ZarinpalGateway implements Payable
+{
+    public function pay(int $amount): bool { return true; }
+}</code></pre></div></div></section><section class="step"><h2>۵. تمرین</h2><p>کلاس <code>Cart</code> با متدهای <code>add</code>، <code>total</code> و <code>count</code> بنویس که آرایه‌ای از شیءهای Product را نگه دارد.</p></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>نوشتن <code>$name</code> به‌جای <code>$this->name</code> داخل کلاس.</li><li>فراموش‌کردن <code>new</code> هنگام ساخت شیء.</li><li>نام‌گذاری فایل کلاس با اسمی غیر از نام کلاس.</li></ol></div>
+<nav class="lesson-nav"><a href="php-2-arrays-functions.html">→ بخش قبل: مبانی PHP ۲</a><a href="sql-basics.html">بعدی: مبانی SQL با phpMyAdmin ←</a></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

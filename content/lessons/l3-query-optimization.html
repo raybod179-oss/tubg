@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سطح ۳ · درس 3 | بهینه‌سازی کوئری و رفع N+1</title><meta name="description" content="سایت کند معمولاً به‌خاطر تعداد یا سنگینیِ کوئری‌هاست. اول اندازه بگیر، بعد بهینه کن.">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">سطح ۳ · درس 3</span><h1>بهینه‌سازی کوئری و رفع N+1</h1><p>سایت کند معمولاً به‌خاطر تعداد یا سنگینیِ کوئری‌هاست. اول اندازه بگیر، بعد بهینه کن.</p></header>
+<section class="step"><h2>۱. دیدن مشکل</h2><p>لاراول می‌تواند Lazy Loading را در توسعه ممنوع کند تا N+1 همان لحظه خطا بدهد:</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">N+1</span></div><pre><code>// AppServiceProvider::boot()
+Model::preventLazyLoading(! app()-&gt;isProduction());
+
+composer require barryvdh/laravel-debugbar --dev</code></pre></div></div></section><section class="step"><h2>۲. ایندکس و ستون‌ها</h2><p>روی ستون‌هایی که در where و join می‌آیند ایندکس بگذار و فقط ستون‌های لازم را بخوان:</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">index</span></div><pre><code>$table-&gt;index(['category_id', 'is_active']);
+Product::select('id','name','price')-&gt;with('category:id,name')-&gt;get();</code></pre></div></div></section><section class="step"><h2>۳. حجم زیاد و کش</h2><p></p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">chunk/cache</span></div><pre><code>Product::chunkById(500, fn ($rows) =&gt; /* پردازش */);
+
+$top = Cache::remember('top-products', 600, fn () =&gt;
+    Product::orderByDesc('sales')-&gt;limit(8)-&gt;get());</code></pre></div></div></section><section class="step"><h2>۴. تمرین</h2><p>صفحه‌ی محصولات را با Debugbar باز کن، تعداد کوئری‌ها را یادداشت کن، سپس با with و ایندکس آن را کم کن.</p></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>بهینه‌سازی بدون اندازه‌گیری.</li><li>کش‌کردن داده‌ای که هر لحظه تغییر می‌کند بدون پاک‌کردن کش.</li></ol></div>
+<nav class="lesson-nav"><a href="l3-clean-code.html">→ بخش قبل: Service و Repository و کد تمیز</a><a href="l3-livewire.html">بعدی: Livewire: مقدمه ←</a></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

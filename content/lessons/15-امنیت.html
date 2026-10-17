@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بخش ۱۵ | امنیت پایه‌ی وب</title>
+    <meta name="description" content="آموزش امنیت پایه‌ی وب برای سایت در لاراول ۱۳: XSS و اکسکیپ، SQL Injection و placeholder، CSRF، Rate Limiting با throttle، APP_DEBUG و Route::resource only/except">
+
+    <link rel="icon" href="../assets/img/favicon.png">
+    <link rel="stylesheet" href="../assets/css/rayvo.css">
+    <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script>
+
+    <style>
+        .tk15-term { background:#0f172a; color:#e2e8f0; direction:ltr; text-align:left; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:12.5px; line-height:1.9; padding:14px 16px; border-radius:10px; overflow-x:auto; white-space:pre; }
+        .tk15-term .p { color:#38bdf8; }
+        .tk15-term .c { color:#94a3b8; }
+        .tk15-term .o { color:#4ade80; }
+        .tk15-term .x { color:#f87171; }
+        .tk15-more { margin-top:14px; font-size:12.5px; color:#64748b; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:8px 12px; }
+        .tk15-more a { color:#4f46e5; text-decoration:none; font-weight:600; }
+        .tk15-more a:hover { text-decoration:underline; }
+        .tk15-file { display:inline-block; background:#eef2ff; color:#4338ca; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:12.5px; direction:ltr; padding:2px 9px; border-radius:6px; border:1px solid #c7d2fe; }
+        .tk15-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; }
+        .tk15-card { background:#fff; border:1px solid var(--border); border-radius:12px; padding:16px 18px; }
+        .tk15-card h4 { margin:0 0 8px; color:#4338ca; font-size:14px; }
+        .tk15-card p { margin:0; color:#475569; font-size:13px; line-height:1.9; }
+        .tk15-bad { background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:12px 16px; font-size:13.5px; }
+        .tk15-bad .lbl { color:#b91c1c; font-weight:700; font-size:13px; margin-bottom:4px; }
+        .tk15-ok { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:12px 16px; font-size:13.5px; }
+        .tk15-ok .lbl { color:#15803d; font-weight:700; font-size:13px; margin-bottom:4px; }
+        .tk15-compare { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:16px 0; }
+        @media (max-width:760px) {
+            .tk15-compare { grid-template-columns:1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="course-page"><header class="course-header">
+        <span class="badge">بخش ۱۵</span>
+        <h1>امنیت پایه‌ی وب</h1>
+        <p>این درس چهار نکته‌ای را می‌پوشاند که امنیت را از «اتفاقیِ بد» به «قاعده‌ی همیشگی» تبدیل می‌کنند. اگر این پنج ریسک را بشناسی — XSS، SQL Injection، CSRF و Brute-Force — نیمه‌ی بزرگی از باگ‌های امنیتیِ رایج را در طول عمر حرفه‌ای‌ات حذف کرده‌ای.</p>
+    </header>
+
+    <nav class="toc" aria-label="فهرست مطالب">
+        <h2>توی این بخش چه چیزهایی یاد می‌گیریم؟</h2>
+        <ol>
+            <li><a href="#intro">چرا امنیت؟ نقشِ فریم‌ورک</a></li>
+            <li><a href="#xss">XSS و اکسکیپِ خودکار {{ }}</a></li>
+            <li><a href="#sql">SQL Injection و placeholder</a></li>
+            <li><a href="#csrf">CSRF و @csrf</a></li>
+            <li><a href="#throttle">Rate Limiting با throttle</a></li>
+            <li><a href="#debug">APP_DEBUG و محیطِ تولید</a></li>
+            <li><a href="#resource">Route::resource و only/except</a></li>
+            <li><a href="#mass">سطوحِ امنیتیِ بیشتر: Mass Assignment</a></li>
+            <li><a href="#project-step">گام پروژه: سخت‌کردنِ فروشگاه</a></li>
+            <li><a href="#exercises">تمرین‌ها</a></li>
+        </ol>
+    </nav>
+
+    <!-- ================= درس ۱ ================= -->
+    <section class="lesson" id="intro">
+        <div class="lesson-head"><span class="lesson-num">۱</span>
+            <h2>چرا امنیت؟ نقشِ فریم‌ورک</h2>
+        </div>
+
+        <p>هر درخواستی که به سایتِ تو می‌رسد از مرورگرِ «یک غریبه» می‌آید. آن غریبه می‌تواند پیامِ متنی، اسکریپت، و حتی فایلِ مخرب را بفرستد. «امنیتِ وب» یعنی اطمینان از اینکه خروجیِ سایت فقط همان چیزی را اجرا/نمایش می‌دهد که تو، نه چیزی که مهاجم، خواسته است.</p>
+
+        <div class="tk15-grid"><div class="tk15-card"><h4>XSS</h4>
+                <p>تزریقِ کدِ Java­Script به داخلِ خروجیِ HTML — ربودنِ سشن یا جعلِ نمایش.</p>
+            </div>
+            <div class="tk15-card"><h4>SQL Injection</h4>
+                <p>تزریقِ دستورِ SQL از طریقِ ورودیِ کاربر برایِ خواندن/تخریبِ دیتابیس.</p>
+            </div>
+            <div class="tk15-card"><h4>CSRF</h4>
+                <p>فرستادنِ درخواست از طرفِ کاربرِ لاگین‌کرده به‌صورتِ ناخواسته (مثلِ فرمِ جعلی).</p>
+            </div>
+            <div class="tk15-card"><h4>Brute-Force</h4>
+                <p>حدسِ زدنِ رمز با هزاران تلاشِ خودکار — مهار با Rate Limiting.</p>
+            </div>
+        </div>
+
+        <p>خبرِ خوب: «بسیاری از این حملات را خودِ Laravel، به‌صورتِ پیش‌فرض مهار می‌کند». تو فقط باید بدانی دقیقاً کجا (و چرا) این محافظت فعال است تا آن را نشکنی.</p>
+
+        <div class="note info"><div class="note-title"> تلفیقِ فصل‌ها</div>
+        <p>امنیت در چهار لایه پیش می‌آید: امنیتِ خروجی ({{ }})، امنیتِ کوئری (Eloquent)، امنیتِ درخواست (csrf و validation) و امنیتِ دسترسی (middleware و auth). هر لایه کارِ خودش را دارد.</p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۲ ================= -->
+    <section class="lesson" id="xss">
+        <div class="lesson-head"><span class="lesson-num">۲</span>
+            <h2>XSS و اکسکیپِ خودکار {{ }}</h2>
+        </div>
+
+        <p>فرض کن یک محصول به اسمِ این می‌سازد:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">ورودیِ کاربر (نامِ محصول)</span></div>
+                <pre><code>&lt;script&gt;alert('hacked')&lt;/script&gt;</code></pre>
+            </div>
+        </div>
+
+        <p>اگر این رشته را «عهدِ خام» داخلِ HTML چاپ کنی، مرورگر آن را اجرا می‌کند — این یعنی XSS. سلاحِ بلید، دستورِ <code>{{ }}</code> است که به‌صورتِ خودکار متن را «اکسکیپ» (escape) می‌کند؛ یعنی کاراکترهایِ <code>&lt;</code>، <code>&gt;</code> و... را به معادلِ HTML تبدیل می‌کند تا مرورگر به‌جایِ اجرا، فقط <em>نمایش</em> دهد:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade — امن</span></div>
+                <pre><code>{{ $product-&gt;name }}
+{{-- خروجی: &lt;script&gt;alert('hacked')&lt;/script&gt; --}}
+{{-- یعنی به‌صورتِ متنِ خام نمایش داده می‌شود، اجرا نمی‌شود --}}</code></pre>
+            </div>
+        </div>
+
+        <div class="tk15-bad"><div class="lbl">خطرناک — این را ننویس</div>
+            <code>{!! $product-&gt;name !!}</code> — خروجیِ خام بدونِ اکسکیپ. مگر اینکه خودت مطمئن باشی (مثلاً HTMLِ داخلیِ بومی‌شده توسط خودِ ادمین)؛ برایِ ورودیِ کاربر‌ها هرگز.
+        </div>
+
+        <ul>
+            <li>پس یادت بماند: <code>{{ }}</code> امن است، <code>{!! !!}</code> امن نیست. همیشه از <code>{{ }}</code> استفاده کن.</li>
+            <li>helperِ <code>e($string)</code> همان اکسکیپ را در PHPِ خالص انجام می‌دهد؛ در Blade فقط <code>{{ }}</code> لازم است.</li>
+            <li>حواست به attributeها هم باشد: <code>&lt;img src="{{ $url }}"&gt;</code> — خودِ <code>{{ }}</code> از تزریقِ attribute هم جلوگیری می‌کند.</li>
+        </ul>
+
+        <div class="note tip"><div class="note-title"> بلید که نمی‌پرسی؟</div>
+        <p>در Blade، متغیرها خودکار ایمن چاپ می‌شوند (یعنی HTML-special-character ها تبدیل می‌شوند)؛ پس برایِ امنیت کارِ اضافه لازم نیست: همان <code>{{ $value }}</code> یا <code>e($value)</code> کافی است.</p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۳ ================= -->
+    <section class="lesson" id="sql">
+        <div class="lesson-head"><span class="lesson-num">۳</span>
+            <h2>SQL Injection و placeholder</h2>
+        </div>
+
+        <p>حالا ببینیم چرا باید کوئری را دستی بنویسیم و به Query Builder تکیه نکنیم. اگر ورودیِ کاربر را مستقیم در SQL بچسبانی، خطرناک است:</p>
+
+        <div class="tk15-bad"><div class="lbl">خطرناک — تزریقِ SQL</div>
+            <code>DB::select("SELECT * FROM products WHERE name LIKE '%$term%'");</code><br>مثلاً اگر کاربر این را بفرستد: <code>' OR 1=1 --</code>، ممکن است کلِ جدول را نشان بدهد یا حتی پاک کند. این یعنی <strong>SQL Injection</strong>، یکی از جدی‌ترین خطرهای وب.
+        </div>
+
+        <p>سلاحِ پیش‌فرضِ Laravel: Query Builder و Eloquent، تمامِ مقادیر را از طریقِ «پارامترِ مرجع» (placeholder/prepared statement) می‌بندند. یعنی مقدار به‌صورتِ <em>داده</em> ارسال می‌شود، نه به‌صورتِ بخشی از دستور:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP — امن (جایگزینِ همان کوئری)</span></div>
+                <pre><code>// Query Builder — امن
+$products = DB::table('products')
+    -&gt;where('name', 'like', "%{$term}%")
+    -&gt;get();
+
+// Eloquent — امن
+$products = Product::where('name', 'like', "%{$term}%")-&gt;get();
+
+// حتی درِ whereRaw هم باید ? بگذاری:
+$products = DB::table('products')
+    -&gt;whereRaw('price &gt; ? AND name LIKE ?', [$min, "%{$term}%"])
+    -&gt;get();</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li>تا وقتی که از متدهایِ عادیِ Builder استفاده می‌کنی، مقادیر همیشه placeholder می‌شوند — امن.</li>
+            <li>اگر مجبور شدی <code>whereRaw</code> یا <code>orderByRaw</code> بزنی، مقادیرِ کاربر را هرگز بدونِ <code>?</code> نگذار.</li>
+            <li>ترتیبِ ستون‌ها (<code>orderBy</code>/<code>groupBy</code> از ورودی) را همیشه با لیستِ سفیدِ از پیشِ تعریف‌شده چک کن.</li>
+        </ul>
+
+        <div class="tk15-compare"><div class="tk15-bad"><div class="lbl">ورودیِ مخرب</div>
+                <code>' OR 1=1 --</code><br>رشته‌ای که درِ SQLِ خام، «همه» را می‌فرستد.
+            </div>
+            <div class="tk15-ok"><div class="lbl">با placeholder</div>
+                به‌عنوانِ «مقدارِ رشته» بسته می‌شود: کاراکترهایِ تزریقی اجرا نمی‌شوند.
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= درس ۴ ================= -->
+    <section class="lesson" id="csrf">
+        <div class="lesson-head"><span class="lesson-num">۴</span>
+            <h2>CSRF و @csrf</h2>
+        </div>
+
+        <p>تصور کن کاربرِ لاگین‌کرده واردِ یک سایتِ شیطانی شده که فرمِ جعلی دارد و «رویِ دکمه‌ی دیدنِ جایزه» می‌فرستد <code>POST</code> به <code>/products/1</code> (همان روتِ حذفِ محصولاتِ تو). اگر تو سشنِ کاربر را بدونِ تأیید می‌پذیرفتی، محصولِ او ناخواسته حذف می‌شد. به این حمله می‌گویند <strong>CSRF</strong> (Cross-Site Request Forgery).</p>
+
+        <p>مقابلش چه کسی؟ میان‌افزارِ <code>PreventRequestForgery</code> که در گروهِ <code>web</code> فعال است و روی همه‌ی درخواست‌هایِ POST/PUT/PATCH/DELETE توکنِ CSRF را چک می‌کند. اگر توکن نباشد یا غلط باشد، خطای <strong>419</strong> برمی‌گردد:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade — درِ فرم</span></div>
+                <pre><code>&lt;form method="POST" action="{{ route('products.store') }}"
+      enctype="multipart/form-data"&gt;
+    @csrf
+    &lt;input type="text" name="name"&gt;
+    &lt;button type="submit"&gt;ذخیره&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>@csrf</code> یک <code>&lt;input type="hidden" name="_token"&gt;</code> تولید می‌کند که مقدارش همان توکنِ سشنِ کاربر است.</li>
+            <li>توکن با سشنِ مرورگرِ همان کاربر جفت است؛ سایتِ یک‌دیگری نمی‌تواند بسازدش.</li>
+            <li>اگر با AJAX فایل یا داده می‌فرستی، توکن را درِ هدرِ <code>X-CSRF-TOKEN</code> بگذار (مثلِ Meta تگِ استاندارد).</li>
+            <li>رایج‌ترین «خطایِ بی‌ضررِ مبتدی» هم این‌جاست: صفحه‌ی <code>419 Page Expired</code> معمولاً یعنی «@csrf را جا کردی» یا سشنِت (مثلاً بعدِ logout) باطل شده است.</li>
+        </ul>
+
+        <div class="note warn"><div class="note-title"> به‌خصوص برایِ روتِ api</div>
+        <p>روت‌هایِ API (گروهِ <code>api</code>) چون توکن می‌گیرند، به کوکی و سشن نیازی ندارند. ولی روت‌هایِ وب (گروهِ <code>web</code>) با <code>@csrf</code> محافظت می‌شوند.</p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۵ ================= -->
+    <section class="lesson" id="throttle">
+        <div class="lesson-head"><span class="lesson-num">۵</span>
+            <h2>Rate Limiting با throttle</h2>
+        </div>
+
+        <p>حملاتِ Brute-Force یعنی «یک آدرسِ IP، هزاران بار درخواستِ رمز حدس می‌زند». با <strong>Rate Limiting</strong> محدودش می‌کنیم: «در هر دقیقه فقط ۵ تلاشِ ورود از یک IP». اول یک «لیمیترِ نام‌دار» تعریف می‌کنیم — این کد داخلِ متدِ <code>boot()</code> در فایلِ <span class="tk15-file">app/Providers/AppServiceProvider.php</span> می‌نشیند (نه در <code>bootstrap/app.php</code>):</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">app/Providers/AppServiceProvider.php</span></div>
+                <pre><code>use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
+
+RateLimiter::for('login', function (Request $request) {
+    return Limit::perMinute(5)-&gt;by($request-&gt;ip());
+});
+
+// یک لیمیترِ عمومی برایِ api (مثلِ پیش‌فرضِ پروژه): 
+RateLimiter::for('api', function (Request $request) {
+    return Limit::perMinute(60)
+        -&gt;by($request-&gt;user()?->id ?: $request-&gt;ip());
+});</code></pre>
+            </div>
+        </div>
+
+        <p>و بعد رویِ روتِ ورود، middlewareِ <code>throttle:نام-لیمیتر</code> را می‌گذاریم:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">routes/web.php</span></div>
+                <pre><code>Route::post('/login', [AuthController::class, 'store'])
+    -&gt;middleware('throttle:login')-&gt;name('login.store');
+
+// یا بدونِ لیمیترِ آینده، مستقیم: حداکثر ۱۰ درخواست درِ هر دقیقه
+Route::get('/reports-export', function () { /* ... */ })
+    -&gt;middleware('throttle:10,1');</code></pre>
+            </div>
+        </div>
+
+        <div class="tk15-term">GET http://localhost:8000/login , POST /login  → پس ازِ ۵ تلاشِ ناموفق:
+
+HTTP/1.1 <span class="x">429 Too Many Requests</span>
+Retry-After: 60</div>
+
+        <ul>
+            <li><code>throttle:نام</code> لیمیترِ نام‌داری را صدا می‌زند که خودت تعریف کرده‌ای؛ <code>throttle:10,1</code> یعنی «۱۰ تلاش درِ ۱ دقیقه» بدونِ تعریفِ جداگانه.</li>
+            <li>پاسخِ <code>429</code> یعنی از حد رد شده‌ای؛ می‌توانی با <code>-&gt;response()</code> درِ لیمیتر، پیام/صفحه‌ی دلخواه بدهی.</li>
+            <li>برایِ سبدِ خرید یا جستجو هم همین الگو را بگذار — اما با حدِ بالاتر.</li>
+        </ul>
+
+        <div class="note tip"><div class="note-title"> throttle و ورودِ ناموفق</div>
+            <p>فقط ۵ بار درِ دقیقه به <code>POST /login</code> اجازه می‌دهیم؛ همین یک خط، حملاتِ رمزِ خودکارِ ساده را عملاً می‌بندد.</p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۶ ================= -->
+    <section class="lesson" id="debug">
+        <div class="lesson-head"><span class="lesson-num">۶</span>
+            <h2>APP_DEBUG و محیطِ تولید</h2>
+        </div>
+
+        <p>اگر <code>APP_DEBUG=true</code> باشد، هر خطا یک <strong>صفحه‌ی کاملِ دیباگ</strong> با مسیرِ فایل، محیطِ PHP، متغیرهایِ ENV (و گاهی حتی رمزِ دیتابیس) نشان می‌دهد. درِ یک سایتِ زنده این یعنی «اطلاعاتِ حساس به غریبه» — همان‌طور که درِ فصلِ ۱ .env را دیدیم:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">.env — محلی (توسعه)</span></div>
+                <pre><code>APP_NAME="فروشگاهِ کوچک"
+APP_ENV=local
+APP_DEBUG=true</code></pre>
+            </div>
+        </div>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">.env — تولید (هاست)</span></div>
+                <pre><code>APP_NAME="فروشگاهِ کوچک"
+APP_ENV=production
+APP_DEBUG=false</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li>درِ <code>production</code> به‌جایِ جزئیاتِ خطا، یک صفحه‌ی عمومی‌تر نشان داده می‌شود (و خطا هنوز درِ <code>storage/logs/laravel.log</code> ثبت می‌شود).</li>
+            <li>اگر خطایی را نتوانستی پیدا کنی، برگردِ <code>local</code> (و بعدِ دیباگ دوباره خاموشش کن).</li>
+            <li>ضمناً <code>APP_KEY</code> باید با <code>php artisan key:generate</code> منحصربه‌فرد باشد.</li>
+        </ul>
+
+        <div class="note warn"><div class="note-title"> امنیتِ .env خودت</div>
+            <p>فایلِ <code>.env</code> نباید هیچ‌وقت درِ GIT یا پوشه‌ی public باشد؛ gitignore از پیشِ لاراوَل آن را حذف کرده است. اگر پشتِ یک هاست بخواهی deploy کنی، از <code>php artisan config:cache</code> استفاده کن.</p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۷ ================= -->
+    <section class="lesson" id="resource">
+        <div class="lesson-head"><span class="lesson-num">۷</span>
+            <h2>Route::resource و only/except</h2>
+        </div>
+
+        <p>نکته‌ی کم‌دیده‌شده: هر متدِ resource که رها می‌کنی یک «سطحِ حمله» و یک «سوراخِ احتمالی» است. اگر صفحه‌ای فقط خواندنی است (مثلِ صفحه‌ی عمومی‌ِ محصولات) چرا روتِ <em>destroy</em> برایش بگذاری؟ با <code>only</code> فقط آنچه لازم است را باز کن، و با <code>except</code> آنچه را نمی‌خواهی حذف کن:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">routes/web.php</span></div>
+                <pre><code>// فقط index و show (بدونِ create/store/update/delete)
+Route::resource('products', ProductController::class)
+    -&gt;only(['index', 'show']);
+
+// همه‌ی resource، به‌جزِ destroy (مثلاً صفحه‌ی عمومی)
+Route::resource('categories', CategoryController::class)
+    -&gt;except(['destroy']);</code></pre>
+            </div>
+        </div>
+
+        <p>نتیجه: روتِ <code>DELETE products</code> اصلاً ثبت نمی‌شود و ۴۰۴ می‌دهد؛ اگر سراغش بروی هم چیزی برایِ حمله نیست. همین قانون ساده، «سطحِ حمله» را کوچک می‌کند — اصلِ «کمترین امتیاز/حداقلی بودن» در امنیت.</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">روت‌هایِ Created شده</span></div>
+                <pre><code>GET      /products             → products.index
+GET      /products/{product}   → products.show
+// هیچ POST / PUT / DELETE ای ثبت نشده است.</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li>بقیه‌ی متدهایِ resource را حذف کن؛ لازم نیست همه باز باشند. middleware را با <code>-&gt;only()-&gt;middleware()</code> روی همان متدهایِ لازم بگذار.</li>
+            <li>برایِ جفت‌کردنِ resource و auth: <code>Route::resource('products', ...)-&gt;only([...])-&gt;middleware('auth')</code>.</li>
+        </ul>
+    </section>
+
+    <!-- ================= درس ۸ ================= -->
+    <section class="lesson" id="mass">
+        <div class="lesson-head"><span class="lesson-num">۸</span>
+            <h2>سطوحِ امنیتیِ بیشتر: Mass Assignment</h2>
+        </div>
+
+        <p>ولی یک اشتباهِ رایج، کلِ امنیتِ فرم را از بین می‌برد: وقتی کلِ ورودی را مستقیم به <code>create()</code> می‌دهی (<strong>Mass Assignment</strong>). با <code>create($request-&gt;all())</code> هر فیلدی که کاربر بفرستد ذخیره می‌شود — حتی <code>role</code> یا <code>is_verified</code> که نباید از سمتِ کاربر پر شوند:</p>
+
+        <div class="tk15-bad"><div class="lbl">خطرناک</div>
+                <code>User::create($request-&gt;all());</code>
+            — راه‌حل: روی مدل مشخص کن کدام فیلدها مجازند، با <code>#[Fillable('name', 'email', 'password')]</code>.
+        </div>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">app/Models/User.php</span></div>
+                <pre><code>// فقط این ستون‌ها قابلِ پر شدن از mass-assignment هستند
+protected $fillable = ['name', 'email', 'password'];
+
+// بقیه (مثلِ role) را باید به‌صرفِ کدِ خودت ست کنی:
+$user = User::create(['name' =&gt; ..., 'email' =&gt; ..., 'password' =&gt; Hash::make(...)]);
+$user-&gt;role = 'customer';   // درِ کدِ خودت — نه از ورودیِ کاربر</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>$fillable</code> (لیستِ سفید) یا <code>$guarded</code> (لیستِ سیاه) — حداقلِ یکی لازم است.</li>
+            <li>هیچ‌وقت <code>$request-&gt;all()</code> را مستقیم به <code>create()</code> نده؛ همیشه فیلدهایِ مشخص را جدا کن یا از <code>validated()</code> (فصلِ ۱۰) استفاده کن.</li>
+            <li>این همان دلیلی است که قبلاً گفتیم: «جلوگیریِ لایه‌ی محدودکردن با fillable».</li>
+        </ul>
+    </section>
+
+    <!-- ================= درس ۹ ================= -->
+    <section class="lesson" id="project-step">
+        <div class="lesson-head"><span class="lesson-num">۹</span>
+            <h2>گام پروژه: سخت‌کردنِ فروشگاه</h2>
+        </div>
+
+        <div class="proj-step"><div class="proj-title"> تکمیلی: فروشگاهِ مقاوم‌شده</div>
+            <p>پنج‌گامِ ساده ولی حرفه‌ای که فروشگاهِ تمرینیِ تو را به «سایتِ واقعی» نزدیک می‌کند:</p>
+        </div>
+
+        <ol>
+            <li><strong>اکسکیپ:</strong> درِ تمامِ بلیدها، مطمئن شو هرجایِ کاربر می‌بینند <code>{{ }}</code> است و هیچ‌جا <code>{!! !!}</code> با داده‌ی کاربر نیست.</li>
+            <li><strong>راه‌حل:</strong> اگر واقعاً کوئریِ خام لازم داری، همیشه از Query Builder استفاده کن و ورودی را با <code>?</code> به‌جای درجِ مستقیم در رشته پاس بده (نه <code>whereRaw</code> با رشته‌سازی).</li>
+            <li><strong>CSRF:</strong> همه‌ی فرم‌هایِ POST/PUT/DELETE <code>@csrf</code> داشته باشند؛ فرمِ حذفِ محصول را با <code>@method('DELETE')</code> درست کن.</li>
+            <li><strong>throttle:</strong> برایِ <code>POST /login</code> لیمیترِ <code>login</code> (5 درِ دقیقه) را تعریف و وصل کن.</li>
+            <li><strong>محیط:</strong> اگر جایی deploy کردی، <code>APP_ENV=production</code> و <code>APP_DEBUG=false</code> را بگذار و <code>config:cache</code> بزن.</li>
+            <li><strong>resource:</strong> صفحه‌ی عمومیِ محصولات را با <code>-&gt;only(['index','show'])</code> محدود کن؛ پنلِ مدیریت را با auth و only/except.</li>
+        </ol>
+
+        <div class="note info"><div class="note-title"> ادامه‌ی راه</div>
+            <p>درِ بخشِ آخر (پروژه‌ی پایانی)، همه‌ی این‌ها رویِ فروشگاه یکجا پیاده می‌شود؛ پس هر کدام را که الان جا گذاشتی، درِ پروژه برمی‌گردی بهش.</p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۱۰ ================= -->
+    <section class="lesson" id="exercises">
+        <div class="lesson-head"><span class="lesson-num">۱۰</span>
+            <h2>تمرین‌ها؛ حالا نوبت توست!</h2>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۱: تستِ XSS</div>
+            <ol>
+                <li>یک محصول با نامِ <code>&lt;script&gt;alert(1)&lt;/script&gt;</code> بساز (با seed یا فرم).</li>
+                <li>درِ بلید چک کن که «خروجی» به‌صورتِ متن نمایش داده می‌شود و هیچ پاپاپی بالا نمی‌آید.</li>
+                <li>اگر با <code>{!! !!}</code> تست می‌کردی چه می‌شد؟ (بعدش دوباره به <code>{{ }}</code> برگرد.)</li>
+            </ol>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۲: تزریقِ بی‌اثر</div>
+            <ol>
+                <li>درِ فرمِ جست‌وجو، مقدارِ <code>' OR 1=1 --</code> را وارد کن.</li>
+                <li>ببین Query Builder همان «صفر نتیجه» یا «نتیجه‌ی عادی» را برمی‌گرداند — نه تخریب و نه لیستِ کامل.</li>
+                <li>یک نسخه‌ی <code>whereRaw</code>یِ بدونِ placeholder بساز و ببین چقدر راحت هک می‌شود؛ بعد حذفش کن.</li>
+            </ol>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۳: ورودِ محافظت‌شده</div>
+            <ol>
+                <li>لیمیترِ <code>login</code> با <code>Limit::perMinute(5)</code> بساز و به روتِ ورود وصل کن.</li>
+                <li>۶ بار پشت‌سرهم «رمزِ غلط» وارد کن؛ تلاشِ ۶ام باید <code>429</code> بدهد.</li>
+                <li>برایِ جست‌وجوی محصول هم لیمیترِ <code>perMinute(30)</code> اضافه کن.</li>
+            </ol>
+        </div>
+
+        <div class="note info"><div class="note-title"> چالش</div>
+            <p>درِ فرمِ «حذفِ محصول» یک حمله‌ی CSRF شبیه‌سازی کن: یک صفحه‌ی HTMLِ ساده درِ پوشه‌ی دیگری باز کن که <code>&lt;form action="http://localhost:8000/products/1" method="POST"&gt;</code> با یک دکمه‌ی بی‌ضرر دارد. رویِ Deleteِ محصولِ واقعی، بدونِ <code>@csrf</code> چه اتفاقی می‌افتد؟ (راهنما: 419)</p>
+        </div>
+    </section>
+
+
+
+        <div class="golden"><h3> چیزی که از این بخش توی ذهنت بماند</h3>
+            <ol>
+            <li>XSS: برایِ داده‌ی کاربر همیشه <code>{{ }}</code> یا <code>e()</code> (هر دو خودکار escape می‌کنند). <code>{!! !!}</code> فقط برایِ داده‌ای که خودت ساخته‌ای و کاملاً مطمئنی.</li>
+            <li>SQL Injection: با Builder یا Eloquent کار کن و ورودی را با <code>?</code> پاس بده؛ اگر ناچار به کوئریِ خام شدی، هرگز رشته‌سازی نکن.</li>
+            <li>Brute-Force مهار می‌شود: <code>throttle:login</code> برایِ ورود (۵ درِ دقیقه)؛ <code>429</code> یعنی محدود شده‌ای.</li>
+            <li>CSRF: درِ گروهِ <code>web</code> توکن را خودکار چک می‌کند؛ فقط یادت بماند <code>@csrf</code> در فرم بگذاری، وگرنه ۴۱۹ می‌گیری.</li>
+            <li>تولید: <code>APP_DEBUG=false</code>؛ درِ محلی true. صفحه‌ی خطایِ جزئیات، دانشِ حمله به مهاجم می‌دهد.</li>
+            <li>متدهایِ اضافه را حذف کن: <code>Route::resource(...)-&gt;only([...])</code> به‌جایِ <code>except</code> + middleware.</li>
+            <li>Mass Assignment: با <code>#[Fillable(...)]</code> مشخص کن چه فیلدهایی مجازند؛ <code>create($request-&gt;all())</code> ناامن است.</li>
+        </ol>
+    </div>
+
+    <!-- ================= مطالعه‌ی بیشتر ================= -->
+    <div class="tk15-more"> مطالعه‌ی بیشتر (انگلیسی):
+        <a href="https://laravel.com/docs/13.x/security" target="_blank" rel="noopener">Laravel Security</a> —
+<a href="https://laravel.com/docs/13.x/blade#escaping-echoed-content" target="_blank" rel="noopener">Blade و escape کردنِ خروجی</a> -
+        <a href="https://laravel.com/docs/13.x/database#running-queries" target="_blank" rel="noopener">Query و prepared statements</a> —
+        <a href="https://laravel.com/docs/13.x/csrf" target="_blank" rel="noopener">CSRF Protection</a> —
+        <a href="https://laravel.com/docs/13.x/rate-limiting" target="_blank" rel="noopener">Rate Limiting</a> — و
+        <a href="https://laravel.com/docs/13.x/eloquent#mass-assignment" target="_blank" rel="noopener">Mass Assignment</a>.
+    </div>
+
+    <!-- ================= ناوبری ================= -->
+    <nav class="lesson-nav" aria-label="ناوبری بین بخش‌ها">
+        <a href="00-فهرست.html">فهرست درس‌ها</a>
+        <a href="14-Storage-و-آپلود.html">→ بخش قبل: Storage و آپلود</a>
+        <a href="project-shop.html">بعدی: پروژه‌ی پایانی ←</a>
+    </nav>
+
+</div>
+<script src="../assets/js/rayvo.js"></script>
+</body>
+</html>

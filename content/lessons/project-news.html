@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>پروژه‌ی دوم | پروژه‌ی دوم: سایت خبری</title><meta name="description" content="سایت خبری کامل با پنل ادمین، کاربران، دیدگاه و آپلود تصویر. این پروژه برای دوره‌ی «Laravel از 0 تا 1000» توسط Rayvo (رایبد اکبرلو) ساخته شده است.">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">پروژه‌ی دوم</span><h1>پروژه‌ی دوم: سایت خبری</h1><p>سایت خبری کامل با پنل ادمین، کاربران، دیدگاه و آپلود تصویر. این پروژه برای دوره‌ی «Laravel از 0 تا 1000» توسط Rayvo (رایبد اکبرلو) ساخته شده است.</p></header>
+<section class="step"><h2>۱. دانلود با یک کلیک</h2><p><p><a href="../downloads/laravel-news-source.zip" download style="display:inline-block;background:#0b6bcb;color:#fff;padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:700">⬇ دانلود laravel-news-source.zip</a></p><p>۳۳ فایل: مدل‌ها، مایگریشن‌ها، کنترلرها، ویوها، پنل مدیریت، داده‌ی آزمایشی و تست. این zip یک «لایه‌ی روی لاراول» است، نه پروژه‌ی کامل؛ پوشه‌ی vendor را Composer نصب می‌کند.</p><p> این فایل‌ها بازنویسی می‌شوند: <code>routes/web.php</code>، <code>app/Models/User.php</code> و <code>database/seeders/DatabaseSeeder.php</code>. فقط روی پروژه‌ی تازه استخراج کن.</p></p></section><section class="step"><h2>۲. نصب و اجرا (گام‌به‌گام)</h2><p>اول XAMPP یا Laragon را باز و Apache/MySQL را Start کن (برای SQLite پیش‌فرض لازم نیست). ترمینال VS Code را در پوشه‌ای که می‌خواهی پروژه آنجا ساخته شود باز کن. PHP 8.3+ و Composer 2 لازم است.</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">ترمینال</span></div><pre><code>composer create-project laravel/laravel laravel-news
+cd laravel-news
+
+# ویندوز (PowerShell):
+tar -xf "$env:USERPROFILE\Downloads\laravel-news-source.zip" -C .
+# مک / لینوکس:
+unzip -o ~/Downloads/laravel-news-source.zip -d .
+
+php artisan migrate --seed
+php artisan storage:link
+php artisan serve</code></pre></div></div></section><section class="step"><h2>۳. اگر با MySQL (XAMPP یا Laragon) کار می‌کنی</h2><p>در <code>http://127.0.0.1/phpmyadmin/</code> دیتابیسی به اسم <code>laravel_news</code> با collation برابر <code>utf8mb4_unicode_ci</code> بساز و این مقدارها را در <code>.env</code> بگذار. بعد دیتابیس را از نو بساز:</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">.env</span></div><pre><code>DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=laravel_news
+DB_USERNAME=root
+DB_PASSWORD=
+
+php artisan migrate:fresh --seed</code></pre></div></div></section><section class="step"><h2>۴. حساب‌ها و آدرس‌ها</h2><p>مدیر: <code>admin@news.test</code> با گذرواژه‌ی <code>password</code> (پس از ورود به <code>/admin</code> می‌روی). کاربر عادی: <code>user@news.test</code> با <code>password</code>. آدرس‌ها: <code>/</code> خانه، <code>/category/1</code> دسته، <code>/posts/1</code> خبر، <code>/login</code> و <code>/register</code>، <code>/admin</code> پنل مدیریت (فقط ادمین).</p></section><section class="step"><h2>۵. امکانات پروژه</h2><p>وبسایت عمومی: فهرست خبر با صفحه‌بندی، جستجو، فیلتر دسته، بازدید خبر. کاربر: ثبت‌نام و ورود، ثبت دیدگاه (پس از تأیید ادمین نمایش داده می‌شود). پنل ادمین: داشبورد آماری، CRUD خبر با آپلود تصویر و پیش‌نویس/انتشار، مدیریت دسته‌ها، تأیید و حذف دیدگاه‌ها. امنیت: نقش ادمین با Middleware، محدودیت نرخ ورود و دیدگاه، <code>role</code> خارج از fillable، escape خروجی.</p></section><section class="step"><h2>۶. هر بخش به کدام درس برمی‌گردد</h2><p>روت و کنترلر (درس ۲ و ۳)، Blade و کامپوننت (۵ و ۶)، Migration (۷)، Eloquent و روابط (۸ و ۹)، Validation (۱۰)، Middleware (۱۱)، Auth (۱۲)، آپلود (۱۴)، امنیت (۱۵).</p></section><section class="step"><h2>۷. اجرای تست</h2><p></p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">تست</span></div><pre><code>php artisan test</code></pre></div></div></section><section class="step"><h2>۸. تمرین و قدم بعدی</h2><p>فیلد برچسب (Tag) با رابطه‌ی چندبه‌چند اضافه کن؛ تاریخ شمسی را با درس فارسی‌سازی به خبرها بده؛ ایمیل اطلاع به ادمین هنگام دیدگاه جدید بفرست (Notification)؛ API خبرها را با Sanctum بساز؛ نقش «ویراستار» را با Policy اضافه کن.</p></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>استخراج zip بیرون از پوشه‌ی laravel-news؛ پوشه‌ی app باید کنار artisan باشد.</li><li>فراموش‌کردن <code>php artisan storage:link</code> و ۴۰۴ شدن تصویرها.</li><li>روشن‌نبودن MySQL هنگام استفاده از دیتابیس MySQL (خطای connection refused).</li></ol></div>
+<nav class="lesson-nav"><a href="l2-payment-gateway.html">→ بخش قبل: اتصال درگاه پرداخت</a><a href="project-booking.html">بعدی: سیستم رزرو وقت ←</a></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

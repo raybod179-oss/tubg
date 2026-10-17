@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ورود دانشجویان | Rayvo</title><meta name="description" content="ورود به دوره با کد دسترسی">
+<link rel="icon" href="assets/img/favicon.png"><link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<link rel="stylesheet" href="assets/css/rayvo.css"><link rel="stylesheet" href="assets/css/sales.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"dark")}catch(e){}</script></head>
+<body class="sales"><header class="s-nav"><div class="s-wrap s-nav-in">
+<a class="rv-logo" href="index.html"><img class="rv-mark" src="assets/img/rayvo-logo-96.png" alt="Rayvo" width="30" height="30"><span><b>Rayvo</b><small>دوره‌ی جامع Laravel</small></span></a>
+<span class="rv-spacer"></span>
+<a class="s-link" href="#curriculum">سرفصل‌ها</a><a class="s-link" href="#support">پشتیبانی</a><a class="s-link s-keep" href="login.html">ورود دانشجویان</a>
+<button class="rv-btn rv-theme" id="themeBtn" type="button" aria-label="تغییر تم روشن/تیره"></button><a class="s-btn s-sm" href="https://t.me/RayvoSupport" target="_blank" rel="noopener">خرید</a>
+</div></header>
+<main class="s-login"><div class="s-box">
+<img class="ix-logo" src="assets/img/rayvo-logo-96.png" alt="Rayvo" width="60" height="60">
+<h1>ورود به دوره</h1><p>کد دسترسی که بعد از خرید گرفته‌ای را وارد کن.</p>
+<form id="f"><input id="code" type="text" dir="ltr" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="RV-XXXX-XXXX-XXXX" required>
+<button class="s-btn" type="submit">ورود</button><div id="err" class="s-err" role="alert"></div></form>
+<small>کد نداری؟ <a href="https://t.me/RayvoSupport" target="_blank" rel="noopener">از پشتیبانی بخر</a></small>
+</div></main>
+<script>
+document.getElementById("f").addEventListener("submit",function(e){e.preventDefault();
+var b=this.querySelector("button"),er=document.getElementById("err");er.textContent="";b.disabled=true;
+fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code:document.getElementById("code").value.trim()})})
+.then(function(r){return r.json().then(function(d){return[r.ok,d]})})
+.then(function(x){if(x[0]){location.href="/lessons/00-%D9%81%D9%87%D8%B1%D8%B3%D8%AA.html"}else{er.textContent=x[1].error||"کد معتبر نیست";b.disabled=false}})
+.catch(function(){er.textContent="خطا در ارتباط؛ دوباره تلاش کن";b.disabled=false})});
+</script><script>document.getElementById("themeBtn").addEventListener("click",function(){var r=document.documentElement,t=r.getAttribute("data-theme")==="dark"?"light":"dark";r.setAttribute("data-theme",t);try{localStorage.setItem("rayvo:theme",t)}catch(e){}})</script></body></html>

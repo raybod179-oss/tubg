@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سطح ۲ · درس 9 | فارسی‌سازی: RTL و تاریخ شمسی</title><meta name="description" content="سایتی که برای ایرانی‌هاست باید راست‌به‌چپ، فارسی و با تاریخ شمسی باشد.">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">سطح ۲ · درس 9</span><h1>فارسی‌سازی: RTL و تاریخ شمسی</h1><p>سایتی که برای ایرانی‌هاست باید راست‌به‌چپ، فارسی و با تاریخ شمسی باشد.</p></header>
+<section class="step"><h2>۱. زبان و جهت</h2><p></p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">env/layout</span></div><pre><code># .env
+APP_LOCALE=fa
+APP_TIMEZONE=Asia/Tehran
+
+&lt;!-- layout --&gt;
+&lt;html lang="fa" dir="rtl"&gt;</code></pre></div></div></section><section class="step"><h2>۲. پیام‌های فارسی</h2><p>فایل ترجمه را در <code>lang/fa/validation.php</code> می‌گذاری (در سورس فروشگاه آماده است).</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">artisan</span></div><pre><code>php artisan lang:publish   # ساخت پوشه‌ی lang</code></pre></div></div></section><section class="step"><h2>۳. تاریخ شمسی</h2><p>پکیج متداول morilog/jalali:</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">jalali</span></div><pre><code>composer require morilog/jalali
+
+use Morilog\Jalali\Jalalian;
+
+echo Jalalian::fromCarbon($order-&gt;created_at)-&gt;format('Y/m/d H:i');</code></pre></div></div></section><section class="step"><h2>۴. فونت</h2><p>Vazirmatn را محلی بارگذاری کن تا به CDN وابسته نباشی (در فروشگاه دوره اینطور است).</p></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>فراموش‌کردن <code>dir="rtl"</code> و به‌هم‌ریختن فرم‌ها.</li><li>ذخیره‌ی تاریخ شمسی در دیتابیس؛ همیشه میلادی ذخیره کن و موقع نمایش تبدیل کن.</li></ol></div>
+<nav class="lesson-nav"><a href="l2-scheduler.html">→ بخش قبل: Scheduler و کارهای زمان‌بندی‌شده</a><a href="l2-payment-gateway.html">بعدی: اتصال درگاه پرداخت ←</a></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

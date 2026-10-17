@@ -1,0 +1,338 @@
+/* ==========================================================================
+   Rayvo — طراحی مینیمال دوره‌ی Laravel
+   یک فایل، بدون گرادیان و سایه. رنگ برند فقط در --accent عوض می‌شود.
+   ========================================================================== */
+
+/* ---------- فونت ---------- */
+@font-face{font-family:"Vazirmatn";src:url("../fonts/Vazirmatn-FD-Regular.woff2") format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Vazirmatn";src:url("../fonts/Vazirmatn-FD-Medium.woff2") format("woff2");font-weight:500;font-display:swap}
+@font-face{font-family:"Vazirmatn";src:url("../fonts/Vazirmatn-FD-SemiBold.woff2") format("woff2");font-weight:600;font-display:swap}
+@font-face{font-family:"Vazirmatn";src:url("../fonts/Vazirmatn-FD-Bold.woff2") format("woff2");font-weight:700 900;font-display:swap}
+
+/* ---------- متغیرها ---------- */
+:root{
+  --bg:#fff; --subtle:#f7f7f8; --surface:#fff;
+  --text:#3b4048; --heading:#0a0a0b; --muted:#737a85;
+  --border:#e8e9eb; --border-strong:#d3d6da;
+  --accent:#0369a1; --accent-strong:#075985; --accent-soft:#eff7fc;
+  --tip:#15803d; --warn:#b45309;
+  --radius:10px; --radius-sm:8px;
+  --code-bg:#0e1116; --code-label:#0e1116; --code-border:#1f242c; --code-text:#d6dde6; --code-muted:#8b949e;
+  --side-w:288px; --top-h:56px; --page-w:740px;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,"Courier New",monospace;
+  /* سازگاری با استایل‌های inline درس‌ها */
+  --pink:#94a3b8; --purple:#94a3b8; --teal:#94a3b8; --blue:#94a3b8; --yellow:#cbd5e1; --orange:#94a3b8;
+  --dark:#0e1116; --dark-soft:#161b22; --shadow:none; --shadow-lg:none;
+  color-scheme:light;
+}
+html[data-theme="dark"]{
+  --bg:#0c0c0d; --subtle:#131315; --surface:#0c0c0d;
+  --text:#b6bbc4; --heading:#f4f4f5; --muted:#8a909a;
+  --border:#222226; --border-strong:#33353b;
+  --accent:#38bdf8; --accent-strong:#7dd3fc; --accent-soft:rgba(56,189,248,.08);
+  --tip:#4ade80; --warn:#fbbf24;
+  --code-bg:#111317; --code-border:#23272e;
+  color-scheme:dark;
+}
+
+/* ---------- پایه ---------- */
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--top-h) + 20px);-webkit-text-size-adjust:100%}
+body{font-family:"Vazirmatn",Tahoma,sans-serif;background:var(--bg);color:var(--text);font-size:16px;line-height:2;
+  padding-top:var(--top-h);-webkit-font-smoothing:antialiased}
+::selection{background:var(--accent);color:#fff}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline;text-underline-offset:4px}
+img{max-width:100%}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+/* ---------- نوار بالا ---------- */
+.rv-top{position:fixed;inset:0 0 auto 0;height:var(--top-h);z-index:60;display:flex;align-items:center;gap:10px;padding:0 20px;
+  background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border)}
+.rv-logo{display:flex;align-items:center;gap:10px;color:var(--heading);text-decoration:none}
+.rv-logo:hover{text-decoration:none}
+.rv-mark{display:block;width:30px;height:30px;border-radius:8px;object-fit:cover;background:#000}
+.rv-logo span{display:flex;align-items:baseline;gap:10px}
+.rv-logo b{font-size:15px;font-weight:700;letter-spacing:.2px}
+.rv-logo small{font-size:13px;color:var(--muted);font-weight:400}
+.rv-spacer{flex:1}
+.rv-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:34px;min-width:34px;padding:0 12px;
+  background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);
+  font:inherit;font-size:13px;cursor:pointer;text-decoration:none;transition:border-color .15s,color .15s}
+.rv-btn:hover{border-color:var(--border-strong);color:var(--heading);text-decoration:none}
+.rv-menu{display:none}
+.rv-theme::before{content:"";width:14px;height:14px;border-radius:50%;border:1.5px solid currentColor;background:linear-gradient(90deg,currentColor 50%,transparent 50%)}
+.rv-bar{position:absolute;inset:auto 0 -1px 0;height:2px}
+.rv-bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .12s}
+
+/* ---------- منوی کناری ---------- */
+.rv-side{position:fixed;top:var(--top-h);bottom:0;inset-inline-start:0;width:var(--side-w);overflow-y:auto;z-index:50;
+  background:var(--subtle);border-inline-end:1px solid var(--border);padding:20px 14px 32px;scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent}
+.rv-prog{padding:0 6px 16px;margin-bottom:10px;border-bottom:1px solid var(--border)}
+.rv-prog .t{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--muted)}
+.rv-prog .t b{color:var(--heading);font-weight:600}
+.rv-prog .track{height:3px;border-radius:3px;background:var(--border);margin:10px 0 8px;overflow:hidden}
+.rv-prog .track i{display:block;height:100%;width:0;background:var(--accent);transition:width .4s}
+.rv-prog .t.sm{font-size:12px}
+details.rv-lvl{margin:2px 0}
+details.rv-lvl>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:8px 8px;border-radius:var(--radius-sm);
+  font-size:13.5px;font-weight:600;color:var(--heading);user-select:none}
+details.rv-lvl>summary::-webkit-details-marker{display:none}
+details.rv-lvl>summary:hover{background:color-mix(in srgb,var(--heading) 5%,transparent)}
+details.rv-lvl>summary span{flex:1}
+details.rv-lvl>summary small{font-size:11.5px;font-weight:400;color:var(--muted)}
+details.rv-lvl>summary::before{content:"";flex:none;width:6px;height:6px;border-inline-end:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);
+  transform:rotate(45deg);transition:transform .15s;margin-inline-end:2px}
+details.rv-lvl[open]>summary::before{transform:rotate(-135deg)}
+.rv-list{list-style:none;margin:2px 0 8px}
+.rv-list a,.rv-list span.soon{display:flex;gap:8px;align-items:baseline;padding:5px 8px;border-radius:var(--radius-sm);
+  color:var(--text);font-size:13.5px;line-height:1.8;text-decoration:none}
+.rv-list a:hover{background:color-mix(in srgb,var(--heading) 5%,transparent);text-decoration:none}
+.rv-list a.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.rv-list .n{flex:none;width:20px;text-align:center;font-size:11.5px;color:var(--muted)}
+.rv-list a.done .n::before{content:"✓";color:var(--accent);font-weight:700}
+.rv-list span.soon{color:var(--muted);opacity:.6;cursor:default}
+.rv-proj{display:flex;align-items:center;gap:8px;margin:8px 0;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--bg);color:var(--heading);font-size:13.5px;font-weight:600;text-decoration:none}
+.rv-proj:hover{border-color:var(--border-strong);text-decoration:none}
+.rv-proj.on{border-color:var(--accent);color:var(--accent)}
+.rv-proj.soon{opacity:.55;cursor:default}
+.rv-proj span{flex:1}
+.rv-proj em{font-style:normal;font-size:11px;font-weight:400;color:var(--muted)}
+.rv-side-foot{margin:24px 6px 0;padding-top:14px;border-top:1px solid var(--border);font-size:12.5px;line-height:1.9;color:var(--muted)}
+.rv-side-foot b{color:var(--heading);font-weight:600}
+@media(min-width:1100px){body.rv-has-side{padding-inline-start:var(--side-w)}}
+@media(max-width:1099px){
+  .rv-menu{display:inline-flex}
+  .rv-side{transform:translateX(105%);transition:transform .22s;width:min(320px,86vw)}
+  html[dir="ltr"] .rv-side{transform:translateX(-105%)}
+  body.rv-open .rv-side{transform:none}
+  body.rv-open::after{content:"";position:fixed;inset:var(--top-h) 0 0 0;background:rgba(0,0,0,.4);z-index:40}
+}
+@media(max-width:560px){.rv-logo small,.rv-hide-sm{display:none}.rv-top{padding:0 14px}}
+
+/* ---------- قاب صفحه و سربرگ درس ---------- */
+.course-page{max-width:var(--page-w);margin:0 auto;padding:56px 24px 72px}
+.course-header{margin-bottom:36px;padding-bottom:28px;border-bottom:1px solid var(--border)}
+.course-header .badge{display:inline-block;margin-bottom:12px;font-size:13px;font-weight:600;color:var(--accent);letter-spacing:.2px}
+.course-header h1{font-size:clamp(26px,3.6vw,34px);font-weight:700;line-height:1.5;color:var(--heading);letter-spacing:-.01em;margin-bottom:10px}
+.course-header p{color:var(--muted);font-size:16px;max-width:620px;line-height:2}
+.rv-meta{display:flex;flex-wrap:wrap;margin-top:16px;font-size:13px;color:var(--muted)}
+.rv-chip{background:none;border:0;padding:0;color:var(--muted)}
+.rv-chip+.rv-chip::before{content:"·";margin-inline:10px}
+
+/* ---------- فهرست داخل درس ---------- */
+.toc{border:1px solid var(--border);border-radius:var(--radius);padding:18px 22px;margin-bottom:8px}
+.toc h2{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px}
+.toc ol{list-style:none;counter-reset:toc;display:grid;grid-template-columns:1fr 1fr;gap:0 28px}
+.toc li{counter-increment:toc;display:flex;gap:10px;align-items:baseline;font-size:14.5px;line-height:2.1}
+.toc li::before{content:counter(toc,persian);flex:none;width:18px;text-align:center;font-size:12px;color:var(--muted)}
+.toc a{color:var(--text)}
+.toc a:hover{color:var(--accent);text-decoration:none}
+
+/* ---------- محتوا ---------- */
+.lesson,.step{margin-top:48px}
+.lesson-head{display:flex;align-items:baseline;gap:12px;margin-bottom:14px}
+.lesson-num{flex:none;font-size:14px;font-weight:600;color:var(--accent);background:none;border:0;min-width:0}
+.lesson h2,.lesson-head h2,.step h2{font-size:22px;font-weight:700;line-height:1.6;color:var(--heading)}
+.step h2{margin-bottom:10px;font-size:20px}
+.lesson h3{font-size:17px;font-weight:700;color:var(--heading);margin:30px 0 8px}
+.lesson p,.step p{margin-bottom:14px}
+.lesson ul,.lesson ol,.step ul,.step ol{margin:0 0 16px;padding-inline-start:24px}
+.lesson li,.step li{margin-bottom:6px}
+.lesson li::marker,.step li::marker{color:var(--muted)}
+.lesson strong,.step strong{color:var(--heading);font-weight:600}
+code{font-family:var(--mono)}
+.lesson code,.step code,.note code,.exercise code,.toc code,.proj-step code,.golden code{
+  background:var(--subtle);border:1px solid var(--border);border-radius:5px;padding:1px 6px;font-size:.86em;color:var(--heading);
+  direction:ltr;unicode-bidi:isolate;word-break:break-word}
+pre code,.demo-code code{background:transparent !important;border:0 !important;padding:0 !important}
+.demo-code pre,.demo-code pre code{color:var(--code-text) !important}
+
+/* ---------- کد ---------- */
+.demo{display:block;margin:18px 0}
+.demo>*+*{margin-top:12px}
+.demo-code{position:relative;background:var(--code-bg);border:1px solid var(--code-border);border-radius:var(--radius);overflow:hidden;direction:ltr;text-align:left}
+.demo-code .demo-label{display:flex;align-items:center;gap:10px;direction:rtl;padding:7px 14px;font-family:"Vazirmatn",sans-serif;font-size:12px;
+  color:var(--code-muted);background:var(--code-label);border-bottom:1px solid var(--code-border)}
+.demo-code .demo-label span:first-child{flex:1;color:var(--code-muted);font-weight:500}
+.demo-code .demo-tag{padding:0 8px;border:1px solid #2a3039;border-radius:6px;color:var(--code-muted);font-size:11px;font-family:var(--mono);direction:ltr;line-height:1.7}
+.demo-code pre{margin:0;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.85;scrollbar-width:thin;scrollbar-color:#2a3039 transparent}
+.demo-code code{font-family:var(--mono);font-size:inherit;line-height:inherit;color:var(--code-text);direction:ltr;white-space:pre}
+.demo-block+.demo-block{border-top:1px solid var(--code-border)}
+.demo-lang{padding:10px 18px 0;font-family:var(--mono);font-size:11px;color:var(--code-muted);direction:ltr;text-align:left}
+.demo-block pre{padding:6px 18px 16px}
+.rv-copy{flex:none;background:none;border:0;color:var(--code-muted);font:inherit;font-size:12px;cursor:pointer;padding:2px 6px;border-radius:6px}
+.rv-copy:hover{color:#fff;background:rgba(255,255,255,.08)}
+.rv-copy.ok{color:#4ade80}
+.demo-code>.rv-copy{position:absolute;top:6px;inset-inline-end:8px}
+
+/* پیش‌نمایش خروجی (شبیه مرورگر؛ همیشه روشن) */
+.demo-out{background:#fff;color:#1f2937;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;padding:0 20px 18px;line-height:1.9;font-size:15px}
+.demo-out .demo-label{display:flex;justify-content:space-between;align-items:center;margin:0 -20px 14px;padding:7px 14px;font-size:12px;color:#6b7280;background:#f6f7f8;border-bottom:1px solid #eceef0}
+.demo-out .demo-tag{font-size:11px;color:#6b7280}
+.demo-out code{background:#f3f4f6 !important;color:#111827 !important;border-color:#e5e7eb !important}
+.demo-out :is(h1,h2,h3,h4,h5,h6){color:#0f172a;margin:0 0 8px;line-height:1.5}
+.demo-out p{margin:0 0 8px;color:#1f2937}
+.demo-out ul,.demo-out ol{margin:0 0 8px;padding-inline-start:22px}
+.demo-out a{color:#2563eb}
+.demo-out img{max-width:100%;border-radius:6px}
+.demo-out hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
+.demo-out blockquote{border-inline-start:3px solid #d1d5db;margin:8px 0;padding:4px 14px;color:#6b7280}
+.demo-out label{display:block;margin:8px 0 4px;font-size:14px;color:#374151}
+.demo-out :is(input[type=text],input[type=password],input[type=email],input[type=number],input[type=date],input[type=time],input[type=search],input[type=tel],input[type=url],textarea,select){
+  width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:8px;font:inherit;font-size:14px;color:#111827;background:#fff}
+.demo-out :is(input,textarea,select):focus{outline:2px solid #93c5fd;border-color:#3b82f6}
+.demo-out :is(button,input[type=submit],input[type=reset]){padding:8px 18px;border:0;border-radius:8px;background:#111827;color:#fff;font:inherit;font-size:14px;cursor:pointer}
+.demo-out input[type=reset]{background:#e5e7eb;color:#374151}
+
+/* ---------- نکته، تمرین، گام پروژه، جمع‌بندی ---------- */
+.note{margin:20px 0;padding:14px 18px;background:var(--subtle);border-radius:var(--radius-sm);border-inline-start:2px solid var(--accent);font-size:15px;line-height:1.95}
+.note .note-title{font-weight:700;font-size:14px;color:var(--accent);margin-bottom:4px}
+.note p{margin:0}
+.note ul,.note ol{margin:6px 0 0;padding-inline-start:20px}
+.note li{margin-bottom:3px}
+.note.tip{border-inline-start-color:var(--tip)}.note.tip .note-title{color:var(--tip)}
+.note.warn{border-inline-start-color:var(--warn)}.note.warn .note-title{color:var(--warn)}
+.exercise{margin:22px 0;padding:16px 20px;border:1px solid var(--border);border-radius:var(--radius)}
+.exercise .ex-title{font-size:14px;font-weight:700;color:var(--accent);margin-bottom:8px}
+.exercise ol,.exercise ul{padding-inline-start:22px;margin:0}
+.exercise li{margin-bottom:4px}
+.proj-step{margin:24px 0;padding:16px 20px;background:var(--accent-soft);border-radius:var(--radius);border-inline-start:2px solid var(--accent)}
+.proj-step .proj-title{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--accent);margin-bottom:6px}
+.proj-step p{margin:6px 0}
+.proj-step ol,.proj-step ul{margin:8px 0 0;padding-inline-start:22px}
+.proj-step li{margin:4px 0}
+.golden{margin:36px 0 0;padding:20px 24px;background:var(--subtle);border:1px solid var(--border);border-radius:var(--radius)}
+.golden h3{margin:0 0 10px;font-size:16px;font-weight:700;color:var(--heading)}
+.golden ol,.golden ul{padding-inline-start:22px}
+.golden li{margin-bottom:6px;font-size:15px}
+.lesson table{display:block;overflow-x:auto;width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}
+.lesson table th,.lesson table td{padding:9px 14px;text-align:start;border-bottom:1px solid var(--border);white-space:nowrap}
+.lesson table th{font-weight:600;color:var(--heading);background:var(--subtle)}
+.lesson table caption{text-align:start;font-weight:600;color:var(--heading);margin-bottom:8px}
+
+/* ---------- ناوبری درس‌ها ---------- */
+.rv-done{display:flex;justify-content:center;margin:40px 0 16px}
+.rv-done button{font:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:10px 22px;border-radius:var(--radius-sm);
+  border:1px solid var(--border-strong);background:transparent;color:var(--heading);transition:.15s}
+.rv-done button:hover{border-color:var(--accent);color:var(--accent)}
+.rv-done button.is-done{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.lesson-nav{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.lesson-nav a{display:block;padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--heading);
+  font-size:14px;font-weight:500;line-height:1.7;text-decoration:none;transition:border-color .15s}
+.lesson-nav a:hover{border-color:var(--accent);text-decoration:none}
+.lesson-nav a:first-child{grid-column:1/-1;text-align:center;border:0;padding:4px;color:var(--muted);font-size:13px}
+.lesson-nav a:first-child:hover{color:var(--accent)}
+.lesson-nav a:last-child{background:var(--heading);border-color:var(--heading);color:var(--bg)}
+.lesson-nav a:last-child:hover{opacity:.88}
+.lesson-nav a:nth-child(2):last-child{grid-column:1/-1}
+
+/* ---------- فوتر ---------- */
+.rv-footer{max-width:var(--page-w);margin:0 auto;padding:28px 24px 48px;border-top:1px solid var(--border);text-align:center;font-size:13px;color:var(--muted);line-height:2}
+.rv-footer .by{color:var(--text)}
+.rv-footer .by b{color:var(--heading);font-weight:700}
+.rv-links{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 18px;margin-top:10px}
+.rv-links a{color:var(--muted)}
+.rv-links a:hover{color:var(--accent);text-decoration:none}
+.rv-footer .sub{margin-top:2px}
+.rv-copy-right{margin-top:8px;font-size:12px;opacity:.8}
+.rv-top-btn{position:fixed;inset-block-end:20px;inset-inline-end:20px;z-index:45;width:38px;height:38px;border-radius:var(--radius-sm);
+  border:1px solid var(--border-strong);background:var(--bg);color:var(--heading);font-size:16px;cursor:pointer;opacity:0;pointer-events:none;transition:.2s}
+.rv-top-btn.show{opacity:1;pointer-events:auto}
+
+/* ---------- صفحه‌ی فهرست دوره ---------- */
+.ix-hero{text-align:center;padding:24px 0 36px;margin-bottom:8px}
+.ix-logo{display:block;width:60px;height:60px;margin:0 auto 22px;border-radius:15px;background:#000}
+.ix-badge,.ix-how,.ix-star{display:none}
+.ix-hero h1{font-size:clamp(30px,5.4vw,44px);font-weight:700;line-height:1.4;color:var(--heading);letter-spacing:-.015em;margin-bottom:14px;direction:rtl}
+.ix-hero p{max-width:540px;margin:0 auto;color:var(--muted);font-size:16px;line-height:2}
+.ix-cta{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:26px}
+.ix-btn{display:inline-flex;align-items:center;justify-content:center;padding:11px 24px;border-radius:var(--radius-sm);
+  background:var(--heading);color:var(--bg);border:1px solid var(--heading);font-size:15px;font-weight:600;text-decoration:none;transition:opacity .15s}
+.ix-btn:hover{opacity:.88;text-decoration:none;color:var(--bg)}
+.ix-btn.ghost{background:transparent;color:var(--heading);border-color:var(--border-strong)}
+.ix-btn.ghost:hover{opacity:1;border-color:var(--heading);color:var(--heading)}
+.ix-stats{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 40px;margin-top:36px}
+.ix-stats div{text-align:center}
+.ix-stats b{display:block;font-size:22px;font-weight:700;color:var(--heading);line-height:1.5}
+.ix-stats span{display:block;font-size:12.5px;color:var(--muted)}
+.ix-h{margin:44px 0 6px;font-size:13px;font-weight:600;color:var(--muted)}
+.ix-level{border-top:1px solid var(--border)}
+.ix-level:last-of-type{border-bottom:1px solid var(--border)}
+.ix-level>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:14px;padding:18px 4px;user-select:none}
+.ix-level>summary::-webkit-details-marker{display:none}
+.ix-level>summary::after{content:"";flex:none;width:7px;height:7px;border-inline-end:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(45deg);transition:transform .15s}
+.ix-level[open]>summary::after{transform:rotate(-135deg)}
+.ix-num{flex:none;width:32px;height:32px;display:grid;place-items:center;border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-size:14px;font-weight:600;color:var(--heading)}
+.ix-body{flex:1;min-width:0}
+.ix-body b{display:block;font-size:16px;font-weight:600;color:var(--heading);line-height:1.7}
+.ix-body small{display:block;font-size:13px;color:var(--muted);line-height:1.8}
+.ix-tag{flex:none;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.ix-level ul{list-style:none;padding:0 0 12px}
+.ix-level li a,.ix-level li.soon{display:flex;align-items:baseline;gap:12px;padding:8px 10px;border-radius:var(--radius-sm);color:var(--text);text-decoration:none;line-height:1.8}
+.ix-level li a:hover{background:var(--subtle);text-decoration:none;color:var(--heading)}
+.ix-level li .n{flex:none;width:30px;text-align:center;font-size:13px;color:var(--muted)}
+.ix-level li a .n:empty::before{content:"✓";color:var(--accent);font-weight:700}
+.ix-level li .tt{flex:1}
+.ix-level li .mn{flex:none;font-size:12.5px;color:var(--muted)}
+.ix-level li.soon{opacity:.5}
+.ix-proj{display:flex;align-items:center;gap:14px;margin:12px 0;padding:16px 18px;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 22%,transparent);
+  border-radius:var(--radius);color:var(--heading);text-decoration:none;transition:border-color .15s}
+.ix-proj:hover{text-decoration:none;border-color:var(--accent)}
+.ix-proj .ix-body b{color:var(--heading)}
+.ix-proj .ix-tag{color:var(--accent)}
+.ix-proj.soon{opacity:.55}
+
+/* ---------- موبایل ---------- */
+@media(max-width:760px){
+  .course-page{padding:36px 18px 56px}
+  .course-header h1{font-size:25px}
+  .toc ol{grid-template-columns:1fr}
+  .lesson,.step{margin-top:40px}
+  .lesson h2,.lesson-head h2{font-size:20px}
+  .lesson-nav{grid-template-columns:1fr}
+  .ix-level li .mn{display:none}
+  .ix-hero{padding-top:8px}
+}
+
+/* ---------- چاپ ---------- */
+@media print{
+  .rv-top,.rv-side,.rv-top-btn,.rv-done,.rv-copy,.lesson-nav{display:none !important}
+  body{padding:0 !important}
+  .demo-code{background:#fff;color:#000;border-color:#ccc}
+  .demo-code code{color:#000}
+}
+
+/* ---------- محافظت از محتوا ---------- */
+.rv-wm{position:fixed;inset:0;z-index:9990;pointer-events:none;background-repeat:repeat}
+.rv-protect .course-page{-webkit-user-select:none;user-select:none}
+.rv-protect pre,.rv-protect .demo-code{-webkit-user-select:text;user-select:text}
+@media print{html.rv-protect body{display:none !important}}
+
+/* ---------- ریسپانسیو دقیق‌تر ---------- */
+@media(max-width:1099px){.course-page{padding-top:44px}}
+@media(max-width:560px){
+  .rv-btn,.rv-done button,.lesson-nav a,.ix-btn{min-height:44px}
+  .demo-code pre{padding:14px}
+  .demo-out{padding:0 14px 14px}.demo-out .demo-label{margin:0 -14px 12px}
+  .ix-level>summary{padding:16px 0}
+  .ix-stats{gap:14px 26px}
+  .rv-footer{padding:24px 18px 40px}
+}
+@supports(padding:max(0px)){
+  .rv-top{padding-inline:max(20px,env(safe-area-inset-left))}
+  .course-page{padding-bottom:max(72px,env(safe-area-inset-bottom))}
+}
+
+.lat{font-family:Inter,"Segoe UI",system-ui,Arial,sans-serif;font-weight:inherit;letter-spacing:-.01em}
+
+/* ---------- حالت مهمان: درس‌های قفل و نوار خرید ---------- */
+.rv-guest .lock{opacity:.6}
+.rv-guest .rv-list a.lock::after,.rv-guest .ix-level li a.lock .mn::after{content:" قفل";font-size:11px;color:var(--muted)}
+.rv-guest .rv-proj.lock::after,.rv-guest a.ix-proj.lock .ix-tag::after{content:" قفل";font-size:11px}
+.rv-guest-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:32px;padding:14px 18px;
+  border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);background:var(--accent-soft);border-radius:var(--radius);font-size:14.5px;color:var(--heading)}
+.rv-guest-bar>span:last-child{display:flex;gap:8px;flex-wrap:wrap}
+.rv-guest-bar .rv-btn{height:36px}

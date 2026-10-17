@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سطح ۲ · درس 4 | احراز هویت API با Sanctum</title><meta name="description" content="اپ موبایل کوکی و سشن ندارد؛ با توکن وارد می‌شود. Sanctum ساده‌ترین راه توکن‌دادن در لاراول است.">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">سطح ۲ · درس 4</span><h1>احراز هویت API با Sanctum</h1><p>اپ موبایل کوکی و سشن ندارد؛ با توکن وارد می‌شود. Sanctum ساده‌ترین راه توکن‌دادن در لاراول است.</p></header>
+<section class="step"><h2>۱. آماده‌سازی</h2><p>اگر <code>install:api</code> را زده‌ای Sanctum نصب است. مدل User باید trait داشته باشد:</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">User.php</span></div><pre><code>use Laravel\Sanctum\HasApiTokens;
+
+class User extends Authenticatable
+{
+    use HasApiTokens, Notifiable;
+}</code></pre></div></div></section><section class="step"><h2>۲. ورود و ساخت توکن</h2><p></p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">login</span></div><pre><code>// routes/api.php
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+Route::post('/login', function (Request $request) {
+    $data = $request-&gt;validate(['email' =&gt; 'required|email', 'password' =&gt; 'required']);
+
+    if (! Auth::attempt($data)) {
+        return response()-&gt;json(['message' =&gt; 'ایمیل یا گذرواژه اشتباه است'], 422);
+    }
+
+    $token = $request-&gt;user()-&gt;createToken('mobile')-&gt;plainTextToken;
+    return ['token' =&gt; $token];
+});</code></pre></div></div></section><section class="step"><h2>۳. محافظت از روت</h2><p>کلاینت توکن را در هدر <code>Authorization: Bearer TOKEN</code> می‌فرستد.</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">auth:sanctum</span></div><pre><code>Route::middleware('auth:sanctum')-&gt;group(function () {
+    Route::get('/me', fn (Request $r) =&gt; $r-&gt;user());
+    Route::post('/logout', function (Request $r) {
+        $r-&gt;user()-&gt;currentAccessToken()-&gt;delete();
+        return response()-&gt;noContent();
+    });
+});</code></pre></div></div></section><section class="step"><h2>۴. تمرین</h2><p>API سفارش‌های کاربر وارد‌شده را بنویس (فقط سفارش‌های خودش) و با Postman تست کن.</p></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>ذخیره‌ی توکن در جای ناامن؛ توکن مثل گذرواژه است.</li><li>فراموش‌کردن حذف توکن هنگام خروج.</li></ol></div>
+<nav class="lesson-nav"><a href="l2-api-resources.html">→ بخش قبل: ساخت API و Resource</a><a href="l2-queues.html">بعدی: صف (Queue) و Job ←</a></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

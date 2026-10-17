@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سطح ۳ · درس 8 | CI/CD و GitHub Actions</title><meta name="description" content="با هر Push، تست‌ها خودکار اجرا شوند تا کد خراب وارد شاخه‌ی اصلی نشود.">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">سطح ۳ · درس 8</span><h1>CI/CD و GitHub Actions</h1><p>با هر Push، تست‌ها خودکار اجرا شوند تا کد خراب وارد شاخه‌ی اصلی نشود.</p></header>
+<section class="step"><h2>۱. فایل Workflow</h2><p>فایل را در <code>.github/workflows/tests.yml</code> بساز:</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">tests.yml</span></div><pre><code>name: tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+      - run: composer install --no-interaction --prefer-dist
+      - run: cp .env.example .env &amp;&amp; php artisan key:generate
+      - run: php artisan test</code></pre></div></div></section><section class="step"><h2>۲. دیپلوی خودکار</h2><p>بعد از موفقیت تست‌ها می‌توان با SSH یا سرویس دیپلوی، سایت را به‌روز کرد. رمزها را فقط در Settings ← Secrets مخزن بگذار، نه در فایل.</p></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>گذاشتن رمز یا کلید در خود فایل workflow.</li><li>نداشتن <code>.env.example</code> کامل در مخزن.</li></ol></div>
+<nav class="lesson-nav"><a href="l3-deploy.html">→ بخش قبل: دیپلوی روی هاست و VPS</a><a href="l3-advanced-security.html">بعدی: امنیت پیشرفته ←</a></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

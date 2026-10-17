@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سطح ۳ · درس 6 | Docker و محیط توسعه</title><meta name="description" content="Docker محیط یکسان (PHP، MySQL و ...) را برای همه‌ی اعضای تیم می‌سازد. لاراول ابزار رسمی آن، Sail، را دارد.">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">سطح ۳ · درس 6</span><h1>Docker و محیط توسعه</h1><p>Docker محیط یکسان (PHP، MySQL و ...) را برای همه‌ی اعضای تیم می‌سازد. لاراول ابزار رسمی آن، Sail، را دارد.</p></header>
+<section class="step"><h2>۱. پیش‌نیاز</h2><p>Docker Desktop. در ویندوز باید WSL2 فعال باشد و دستورها داخل ترمینال WSL اجرا شوند.</p></section><section class="step"><h2>۲. پروژه‌ی جدید و موجود</h2><p></p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">sail</span></div><pre><code># پروژه‌ی تازه (لینوکس/WSL)
+curl -s "https://laravel.build/my-app" | bash
+
+# پروژه‌ی موجود
+composer require laravel/sail --dev
+php artisan sail:install</code></pre></div></div></section><section class="step"><h2>۳. کار با Sail</h2><p></p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">sail</span></div><pre><code>./vendor/bin/sail up -d
+./vendor/bin/sail artisan migrate --seed
+./vendor/bin/sail composer install
+./vendor/bin/sail down</code></pre></div></div></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>اجرای Sail در PowerShell ویندوز به‌جای WSL.</li><li>اشغال‌بودن پورت 80 یا 3306 توسط XAMPP؛ XAMPP را خاموش کن یا پورت را عوض کن.</li></ol></div>
+<nav class="lesson-nav"><a href="l3-broadcasting.html">→ بخش قبل: بلادرنگ (Broadcasting)</a><a href="l3-deploy.html">بعدی: دیپلوی روی هاست و VPS ←</a></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

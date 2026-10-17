@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سطح ۲ · درس 10 | اتصال درگاه پرداخت</title><meta name="description" content="جریان همه‌ی درگاه‌ها یکی است: درخواست پرداخت ← انتقال کاربر به درگاه ← بازگشت ← تأیید (Verify) ← ثبت نهایی.">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">سطح ۲ · درس 10</span><h1>اتصال درگاه پرداخت</h1><p>جریان همه‌ی درگاه‌ها یکی است: درخواست پرداخت ← انتقال کاربر به درگاه ← بازگشت ← تأیید (Verify) ← ثبت نهایی.</p></header>
+<section class="step"><h2>۱. جریان</h2><p>اول سفارش با وضعیت <code>pending</code> بساز. بعد از پرداخت موفق و تأییدِ سرور به سرور، وضعیت را به پرداخت‌شده تغییر بده؛ هرگز فقط به بازگشت مرورگر اعتماد نکن.</p></section><section class="step"><h2>۲. نمونه با زرین‌پال</h2><p>آدرس‌ها و فیلدها ممکن است تغییر کنند؛ همیشه با مستندات رسمی زرین‌پال تطبیق بده.</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Zarinpal</span></div><pre><code>// ۱) درخواست
+$res = Http::post('https://payment.zarinpal.com/pg/v4/payment/request.json', [
+    'merchant_id'  =&gt; config('services.zarinpal.merchant'),
+    'amount'       =&gt; $order-&gt;total * 10,   // تومان به ریال، طبق مستندات
+    'callback_url' =&gt; route('payment.callback', $order),
+    'description'  =&gt; "سفارش {$order-&gt;id}",
+])-&gt;json('data');
+
+return redirect('https://payment.zarinpal.com/pg/StartPay/'.$res['authority']);
+
+// ۲) Callback و Verify
+$verify = Http::post('https://payment.zarinpal.com/pg/v4/payment/verify.json', [
+    'merchant_id' =&gt; config('services.zarinpal.merchant'),
+    'amount'      =&gt; $order-&gt;total * 10,
+    'authority'   =&gt; $request-&gt;Authority,
+])-&gt;json('data');
+
+if (($verify['code'] ?? null) == 100) { $order-&gt;update(['status' =&gt; 'paid']); }</code></pre></div></div></section><section class="step"><h2>۳. نکات</h2><p>مبلغ را همیشه از دیتابیس بخوان نه از فرم؛ شناسه‌ی تراکنش را ذخیره کن؛ تأیید را idempotent بنویس تا دوبار اجرا شدن، دوبار سفارش را شارژ نکند.</p></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>اعتماد به پارامتر Status در URL بدون Verify.</li><li>گرفتن مبلغ از ورودی کاربر.</li><li>فراموش‌کردن تبدیل تومان و ریال.</li></ol></div>
+<nav class="lesson-nav"><a href="l2-persian-rtl.html">→ بخش قبل: فارسی‌سازی: RTL و تاریخ شمسی</a><a href="l3-policies-permissions.html">بعدی: نقش‌ها و دسترسی‌ها ←</a></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

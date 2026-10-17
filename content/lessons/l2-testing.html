@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سطح ۲ · درس 2 | تست‌نویسی (Feature و Unit)</title><meta name="description" content="تست یعنی کدی که درستیِ کد دیگرت را خودکار چک می‌کند. با تست، بدون ترس از خراب‌شدن چیزی، پروژه را تغییر می‌دهی.">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">سطح ۲ · درس 2</span><h1>تست‌نویسی (Feature و Unit)</h1><p>تست یعنی کدی که درستیِ کد دیگرت را خودکار چک می‌کند. با تست، بدون ترس از خراب‌شدن چیزی، پروژه را تغییر می‌دهی.</p></header>
+<section class="step"><h2>۱. ساخت و اجرا</h2><p>Feature تست مسیر کامل درخواست را می‌زند و Unit تست یک کلاس یا تابع کوچک است.</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">artisan</span></div><pre><code>php artisan make:test ProductTest            # Feature
+php artisan make:test PriceTest --unit      # Unit
+php artisan test</code></pre></div></div></section><section class="step"><h2>۲. یک Feature test</h2><p><code>RefreshDatabase</code> دیتابیس تست را برای هر تست پاک می‌کند و به دیتابیس واقعی دست نمی‌زند.</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">tests/Feature</span></div><pre><code>&lt;?php
+use App\Models\{Product, User};
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+class ProductTest extends Tests\TestCase
+{
+    use RefreshDatabase;
+
+    public function test_products_page_loads(): void
+    {
+        Product::factory()-&gt;count(3)-&gt;create();
+        $this-&gt;get('/products')-&gt;assertOk();
+    }
+
+    public function test_admin_area_needs_admin(): void
+    {
+        $user = User::factory()-&gt;create();
+        $this-&gt;actingAs($user)-&gt;get('/admin')-&gt;assertForbidden();
+    }
+}</code></pre></div></div></section><section class="step"><h2>۳. Unit test</h2><p>بدون دیتابیس و بدون HTTP؛ فقط منطق خالص.</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">tests/Unit</span></div><pre><code>&lt;?php
+class PriceTest extends PHPUnit\Framework\TestCase
+{
+    public function test_discount(): void
+    {
+        $this-&gt;assertSame(180, (int) (200 - 200 * 10 / 100));
+    }
+}</code></pre></div></div></section><section class="step"><h2>۴. تمرین</h2><p>برای فروشگاه دوره تستی بنویس که ثبت سفارش موجودی را کم کند و تستی که نشان دهد مشتری سفارش دیگران را نمی‌بیند (۴۰۳).</p></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>نگذاشتن <code>RefreshDatabase</code> و پاک‌شدن داده‌ی واقعی در حالت MySQL.</li><li>تست‌نویسی بعد از تمام‌شدن کل پروژه؛ همان لحظه که بخش را می‌نویسی تستش را هم بنویس.</li></ol></div>
+<nav class="lesson-nav"><a href="l2-eloquent-advanced.html">→ بخش قبل: Eloquent پیشرفته</a><a href="l2-api-resources.html">بعدی: ساخت API و Resource ←</a></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

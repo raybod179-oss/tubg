@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>پروژه‌ی پایانی | پروژه‌ی پایانی: مارکت‌پلیس چندفروشنده</title><meta name="description" content="مارکت‌پلیس کامل: فروشگاه درس‌ها به فروشندگان مستقل تبدیل می‌شود؛ هر فروشنده پنل، محصول، سفارش، کمیسیون و کیف پول دارد. برای دوره‌ی «Laravel از صفر تا ">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">پروژه‌ی پایانی</span><h1>پروژه‌ی پایانی: مارکت‌پلیس چندفروشنده</h1><p>مارکت‌پلیس کامل: فروشگاه درس‌ها به فروشندگان مستقل تبدیل می‌شود؛ هر فروشنده پنل، محصول، سفارش، کمیسیون و کیف پول دارد. برای دوره‌ی «Laravel از 0 تا 1000» توسط Rayvo (رایبد اکبرلو) ساخته شده است.</p></header>
+<section class="step"><h2>۱. دانلود با یک کلیک</h2><p><p><a href="../downloads/laravel-marketplace-source.zip" download style="display:inline-block;background:#0b6bcb;color:#fff;padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:700">⬇ دانلود laravel-marketplace-source.zip</a></p><p>136 فایل: مدل، مایگریشن، کنترلر، ویو، پنل مدیریت، داده‌ی آزمایشی و تست. این zip یک «لایه‌ی روی لاراول» است، نه پروژه‌ی کامل؛ پوشه‌ی vendor را Composer نصب می‌کند.</p><p> این zip شامل کل فروشگاه پروژه‌ی اول به‌علاوه‌ی لایه‌ی فروشنده است؛ پس <b>فقط همین یک zip</b> را روی پروژه‌ی تازه استخراج کن، نه zip فروشگاه را هم. این فایل‌های فروشگاه بازنویسی می‌شوند: <code>routes/web.php</code>، <code>User.php</code>، <code>Product.php</code>، <code>Order.php</code>، <code>CheckoutController.php</code>، <code>config/shop.php</code>، <code>DatabaseSeeder.php</code> و layout.</p></p></section><section class="step"><h2>۲. نصب و اجرا</h2><p>همان الگوی همیشگی: لاراول تازه، استخراج zip، migrate با seed و اجرا:</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">ترمینال</span></div><pre><code>composer create-project laravel/laravel laravel-marketplace
+cd laravel-marketplace
+
+# ویندوز (PowerShell):
+tar -xf "$env:USERPROFILE\Downloads\laravel-marketplace-source.zip" -C .
+# مک / لینوکس:
+unzip -o ~/Downloads/laravel-marketplace-source.zip -d .
+
+php artisan migrate --seed
+php artisan storage:link
+php artisan serve</code></pre></div></div></section><section class="step"><h2>۳. اگر با MySQL (XAMPP یا Laragon) کار می‌کنی</h2><p>اگر با MySQL کار می‌کنی، XAMPP یا Laragon را باز و MySQL را Start کن. در <code>http://127.0.0.1/phpmyadmin/</code> دیتابیسی به اسم <code>laravel_marketplace</code> با collation برابر <code>utf8mb4_unicode_ci</code> بساز، این مقدارها را در <code>.env</code> بگذار و دیتابیس را از نو بساز:</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">.env</span></div><pre><code>DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=laravel_marketplace
+DB_USERNAME=root
+DB_PASSWORD=
+
+php artisan migrate:fresh --seed</code></pre></div></div></section><section class="step"><h2>۴. حساب‌ها</h2><p>مدیر: <code>admin@shop.test</code>، مشتری: <code>customer@shop.test</code>، فروشنده‌ی تأییدشده: <code>vendor@shop.test</code>؛ گذرواژه‌ی هر سه <code>password</code>. آدرس‌ها: <code>/vendor</code> پنل فروشنده، <code>/vendor/apply</code> درخواست فروشندگی، <code>/shops/{id}</code> صفحه‌ی عمومی فروشگاه، <code>/admin/vendors</code> و <code>/admin/payouts</code> مدیریت فروشندگان و برداشت‌ها.</p></section><section class="step"><h2>۵. چرخه‌ی کار مارکت‌پلیس</h2><p>۱) مشتری از «فروشنده شو» درخواست می‌دهد. ۲) مدیر در <code>/admin/vendors</code> تأیید می‌کند. ۳) فروشنده محصول می‌سازد (فقط محصول خودش را می‌بیند و ویرایش می‌کند). ۴) مشتری سبدی از چند فروشنده می‌خرد؛ هر ردیف سفارش، فروشنده و کمیسیون را snapshot می‌کند. ۵) وقتی مدیر وضعیت سفارش را «تحویل داده شد» کرد، سهم هر فروشنده (قیمت منهای کمیسیون) به کیف پولش واریز می‌شود، فقط یک بار. ۶) فروشنده درخواست برداشت می‌دهد و مدیر پرداخت یا رد می‌کند (رد، مبلغ را برمی‌گرداند).</p></section><section class="step"><h2>۶. کمیسیون و حداقل برداشت</h2><p>در <code>config/shop.php</code>:</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">config</span></div><pre><code>'commission_percent' =&gt; 10,
+'min_payout' =&gt; 50000,</code></pre></div></div></section><section class="step"><h2>۷. قلب پروژه: واریز به کیف پول</h2><p>فایل <code>app/Services/Wallet.php</code>. واریز با <code>firstOrCreate</code> و یک ایندکس یکتا انجام می‌شود تا تسویه‌ی دوباره‌ی یک سفارش ممکن نباشد؛ برداشت داخل تراکنش و با قفل ردیف کاربر انجام می‌شود تا دو برداشت هم‌زمان موجودی را منفی نکنند:</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Order.php</span></div><pre><code>protected static function booted(): void
+{
+    static::updated(function (Order $order) {
+        if ($order-&gt;wasChanged('status') &amp;&amp; $order-&gt;status === 'completed') {
+            app(\App\Services\Wallet::class)-&gt;settle($order);
+        }
+    });
+}</code></pre></div></div></section><section class="step"><h2>۸. امنیت</h2><p><code>vendor_id</code> هنگام ساخت محصول همیشه از سرور تعیین می‌شود نه از فرم؛ هر فروشنده فقط محصول خودش را ویرایش می‌کند (۴۰۳ برای بقیه)؛ نقش فروشنده با Middleware جدا بررسی می‌شود و وضعیت فروشنده فقط ادمین عوض می‌کند.</p></section><section class="step"><h2>۹. اجرای تست</h2><p></p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">تست</span></div><pre><code>php artisan test</code></pre></div></div></section><section class="step"><h2>۱۰. نکته‌ی مهم قبل از راه‌اندازی واقعی</h2><p>این پروژه پرداخت آنلاین واقعی را انجام نمی‌دهد (سفارش‌ها دستی تحویل داده می‌شوند) و برداشت‌ها را مدیر دستی پرداخت می‌کند. قبل از استفاده‌ی واقعی باید درگاه پرداخت (درس سطح ۲)، قوانین مالی و مالیاتی و شرایط استفاده برای فروشندگان را خودت اضافه و بررسی کنی.</p></section><section class="step"><h2>۱۱. تمرین</h2><p>نظرات و امتیاز محصول، چت مشتری و فروشنده با Broadcasting، تقسیم سفارش به چند ارسال، کد تخفیف، گزارش فروش با نمودار برای فروشنده و API با Sanctum.</p></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>استخراج هر دو zip (فروشگاه و مارکت‌پلیس) روی یک پروژه؛ فقط zip مارکت‌پلیس کافی است.</li><li>فراموش‌کردن تأیید فروشنده توسط ادمین و تعجب از ۴۰۳ در <code>/vendor</code>.</li><li>فراموش‌کردن تغییر وضعیت سفارش به «تحویل داده شد» و ندیدن واریز به کیف پول.</li></ol></div>
+<nav class="lesson-nav"><a href="project-booking.html">→ بخش قبل: پروژه‌ی سوم: سیستم رزرو وقت</a><span></span></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

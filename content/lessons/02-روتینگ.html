@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بخش ۰۲ | روتینگ</title>
+    <meta name="description" content="آموزش مسیریابی در Laravel: Route پایه، پارامترها، محدودیت where، مسیرهای نامدار و گروه‌ها">
+
+    <link rel="icon" href="../assets/img/favicon.png">
+    <link rel="stylesheet" href="../assets/css/rayvo.css">
+    <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script>
+
+    <style>
+        .tk2-browser { background:#fff; color:#1f2937; direction:ltr; text-align:left; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:13.5px; line-height:1.9; padding:18px 20px; border-radius:10px; border:1px solid var(--border); white-space:pre; overflow-x:auto; }
+        .tk2-browser .dim { color:#94a3b8; }
+        .tk2-browser .ok { color:#059669; }
+        .tk2-404 { background:#fff; border:1px solid var(--border); border-radius:10px; padding:26px; text-align:center; }
+        .tk2-404 .num { font-size:44px; font-weight:800; color:#ef4444; direction:ltr; }
+        .tk2-404 .msg { color:#64748b; font-size:14px; margin-top:6px; }
+        .tk2-welcome { text-align:center; padding:30px 16px; background:#fff; border-radius:10px; }
+        .tk2-welcome-title { font-size:40px; font-weight:800; letter-spacing:1px; color:#e3342f; direction:ltr; }
+        .tk2-welcome-sub { color:var(--muted); font-size:13px; margin-top:6px; }
+        .tk2-more { margin-top:14px; font-size:12.5px; color:#64748b; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:8px 12px; }
+        .tk2-more a { color:#4f46e5; text-decoration:none; font-weight:600; }
+        .tk2-more a:hover { text-decoration:underline; }
+    </style>
+</head>
+<body>
+<div class="course-page"><!-- ================= سربرگ ================= -->
+    <header class="course-header">
+        <span class="badge">بخش ۰۲</span>
+        <h1>روتینگ (مسیریابی)</h1>
+        <p>هر درخواستی که به سایت می‌آید، اول از یک روت رد می‌شود. به این‌جا می‌گوییم «نقشه‌ی سایت»؛ حالا این نقشه را درست می‌خوانیم و می‌کشیم.</p>
+    </header>
+
+    <!-- ================= فهرست ================= -->
+    <nav class="toc" aria-label="فهرست مطالب">
+        <h2>توی این بخش چه چیزهایی یاد می‌گیریم؟</h2>
+        <ol>
+            <li><a href="#web-file">نقشه‌ی سایت: routes/web.php</a></li>
+            <li><a href="#basic">اولین مسیر</a></li>
+            <li><a href="#params">پارامترهای مسیر</a></li>
+            <li><a href="#where">محدودکردن پارامتر با where</a></li>
+            <li><a href="#named">مسیرهای نامدار و route()</a></li>
+            <li><a href="#view-redirect">view() و redirect()</a></li>
+            <li><a href="#groups">گروه‌کردن مسیرها</a></li>
+            <li><a href="#project-step">گام پروژه: مسیرهای فروشگاه</a></li>
+            <li><a href="#exercises">تمرین‌ها</a></li>
+        </ol>
+    </nav>
+
+    <!-- ================= درس ۱ ================= -->
+    <section class="lesson" id="web-file">
+        <div class="lesson-head"><span class="lesson-num">۱</span>
+            <h2>نقشه‌ی سایت: routes/web.php</h2>
+        </div>
+
+        <p>همه‌ی مسیرهای سایت‌ت (که با مرورگر باز می‌شوند) در فایل <code>routes/web.php</code> نوشته می‌شوند.
+            هر بار که کسی آدرسی را باز کند، لاراول اول این فایل را نگاه می‌کند: «این آدرس با کدام روت می‌خواند؟»
+            اگر خواند، کارِ همان روت انجام می‌شود؛ اگر نه، به صفحه‌ی ۴۰۴ می‌رسد.
+        </p>
+
+        <p>فایلِ پیش‌فرض پروژه‌ات دقیقاً همین است:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>&lt;?php
+
+use Illuminate\Support\Facades\Route;
+
+Route::get('/', function () {
+    return view('welcome');
+});</code></pre>
+            </div>
+        </div>
+
+        <p>قسمت‌هایش را بشکنیم:</p>
+        <ul>
+            <li><code>Route::get('/')</code> یعنی «وقتی کسی آدرس ریشه (<code>/</code>) را با روش GET باز کرد...».</li>
+            <li><code>function () { ... }</code> کارِ همان آدرس است؛ این‌جا فقط صفحه‌ی خوش‌آمد را برمی‌گرداند.</li>
+            <li><code>view('welcome')</code> یعنی «فایل <code>resources/views/welcome.blade.php</code> را نشان بده».</li>
+        </ul>
+
+        <div class="note info"><div class="note-title"> چرا «روش GET» مهم است؟</div>
+            <p>مرورگرها برای بازکردن صفحه از <strong>GET</strong> استفاده می‌کنند؛ اما برای ارسال فرم‌ها روش‌های دیگری مثل
+                <strong>POST</strong> هم هست. لاراول برای هرکدام متد جدا دارد: <code>Route::get</code>، <code>Route::post</code>،
+                <code>Route::put</code>، <code>Route::delete</code> و...
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۲ ================= -->
+    <section class="lesson" id="basic">
+        <div class="lesson-head"><span class="lesson-num">۲</span>
+            <h2>اولین مسیر</h2>
+        </div>
+
+        <p>ساده‌ترین روت، یک آدرس + یک تابع است. هر چیزی که تابع برگرداند، همان توی مرورگر نشان داده می‌شود:
+        </p>
+
+        <div class="demo"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>Route::get('/hello', function () {
+    return 'سلام دنیا!';
+});</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">چه می‌بینی؟</span></div>
+                بازدید از <code>/hello</code> توی مرورگر:
+                <div class="tk2-browser">سلام دنیا!</div>
+            </div>
+        </div>
+
+        <p>وقتی تابع فقط یک خط است، می‌توانی از تابع کوتاهِ <code>fn()</code> هم استفاده کنی:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>Route::get('/hello', fn () =&gt; 'سلام دنیا!');
+
+// یعنی همان تابع بالا، فقط خلاصه‌تر؛ هر دو یکی‌اند</code></pre>
+            </div>
+        </div>
+
+        <div class="note tip"><div class="note-title"> نکته</div>
+            <ul>
+                <li>این مسیر را توی <code>routes/web.php</code> بنویس (بعد از روتِ ریشه)، سپس صفحه را در <code>/hello</code> باز کن.</li>
+                <li>وقتی چیزی را از کد تغییر می‌دهی، فقط کافی است صفحه را رفرش کنی؛ لاراول خودش تازه‌اش می‌کند.</li>
+                <li>برای دیدن همه‌ی مسیرهایت: <code>php artisan route:list</code> — یک نقشه‌ی مرتب از روت‌ها.</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ================= درس ۳ ================= -->
+    <section class="lesson" id="params">
+        <div class="lesson-head"><span class="lesson-num">۳</span>
+            <h2>پارامترهای مسیر</h2>
+        </div>
+
+        <p>بعضی آدرس‌ها «متغیر» هستند؛ مثلاً هر کاربر باید صفحه‌ی خودش را داشته باشد.
+            به‌جای نوشتن صدها روت، یک بخش متغیر با <code>{...}</code> تعریف می‌کنیم و مقدارش به تابع می‌رسد:
+        </p>
+
+        <div class="demo"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>Route::get('/users/{name}', function (string $name) {
+    return 'درود، ' . $name . '!';
+});</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">چه می‌بینی؟</span></div>
+                بازدید از <code>/users/zahra</code>:
+                <div class="tk2-browser">درود، zahra!</div>
+                <span class="dim" style="font-size:0.85em;color:var(--muted)">با <code>/users/ali</code> هم «درود، ali!» را می‌بینی؛ همه با یک روت.
+                </span>
+            </div>
+        </div>
+
+        <h3>پارامترِ اختیاری</h3>
+        <p>اگر بخواهی پارامترِ حذف‌شدنی باشد، بعد از نامش <code>?</code> بگذار و برایش یک مقدار پیش‌فرض بده:
+        </p>
+
+        <div class="demo"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>Route::get('/greet/{name?}', function (?string $name = null) {
+    return $name ? "درود، $name!" : 'درود، مهمان!';
+});</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">چه می‌بینی؟</span></div>
+                <code>/greet</code>:
+                <div class="tk2-browser">درود، مهمان!</div>
+                <code>/greet/sara</code>:
+                <div class="tk2-browser">درود، sara!</div>
+            </div>
+        </div>
+
+        <div class="note warn"><div class="note-title"> دقت کن</div>
+            <p>در پارامترِ اختیاری، <strong>مقدارِ پیش‌فرض حتماً باید باشد</strong>؛ وگرنه وقتی پارامتر نیاید،
+                خطای «مقدارِ آرگومان ندارد» می‌گیری. پس توابع PHP را به یاد بیاور: <code>?string $name = null</code>.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۴ ================= -->
+    <section class="lesson" id="where">
+        <div class="lesson-head"><span class="lesson-num">۴</span>
+            <h2>محدودکردن پارامتر با where</h2>
+        </div>
+
+        <p>گاهی می‌خواهیم بگوییم «اینجا فقط عدد قبول است» یا «فقط حروفِ انگلیسی». این کار با
+            <code>-&gt;where()</code> و یک الگو (Regular Expression) انجام می‌شود:
+        </p>
+
+        <div class="demo"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>Route::get('/posts/{id}', function (string $id) {
+    return "پست شماره‌ی $id";
+})-&gt;where('id', '[0-9]+');</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">چه می‌بینی؟</span></div>
+                <code>/posts/12</code>:
+                <div class="tk2-browser">پست شماره‌ی 12</div>
+                <code>/posts/laravel</code> (خوانده نمی‌شود):
+                <div class="tk2-404"><div class="num">404</div>
+                    <div class="msg">Not Found — چون «laravel» با الگوی عددی نمی‌خواند</div>
+                </div>
+            </div>
+        </div>
+
+        <p>برای چند پارامتر هم می‌توانی یک آرایه بدهی، یا از میان‌برهای آماده استفاده کنی:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>// چند پارامتر با یک‌جا
+Route::get('/user/{id}/{name}', function (string $id, string $name) {
+    // ...
+})-&gt;where(['id' =&gt; '[0-9]+', 'name' =&gt; '[a-z]+']);
+
+// میان‌برهای آماده‌ی لاراول
+Route::get('/post/{id}', function (string $id) {
+    // ...
+})-&gt;whereNumber('id');      // فقط عدد
+
+Route::get('/post/{slug}', function (string $slug) {
+    // ...
+})-&gt;whereAlpha('slug');     // فقط حروف انگلیسی</code></pre>
+            </div>
+        </div>
+
+        <div class="note info"><div class="note-title"> چرا این‌قدر مهم است؟</div>
+            <p>چون اگر الگو نگذاری، آدرسِ «اشتباه‌نویسی» وارد تابع‌ات می‌شود و باید خودت خطاها را مدیریت کنی؛
+                با <code>where</code>، لاراول خودش درخواستِ خارج از محدوده را با ۴۰۴ رد می‌کند.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۵ ================= -->
+    <section class="lesson" id="named">
+        <div class="lesson-head"><span class="lesson-num">۵</span>
+            <h2>مسیرهای نامدار و route()</h2>
+        </div>
+
+        <p>به‌جای این‌که مسیرها را همیشه با آدرسِ خامشان صدا بزنی، می‌توانی به هر روت یک <strong>نام</strong> بدهی.
+            فایده‌اش: اگر آدرسِ یک روت را عوض کنی، همه‌ی لینک‌های سایت خودکار آپدیت می‌شوند.
+        </p>
+
+        <div class="demo"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>Route::get('/products/create', function () {
+    return 'فرمِ ساختِ محصول';
+})-&gt;name('products.create');
+
+// ساختِ لینک با نام مسیر:
+$url = route('products.create');</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">چه می‌بینی؟</span></div>
+                مقدارِ <code>$url</code>:
+                <div class="tk2-browser"><span class="ok">http://127.0.0.1:8000/products/create</span></div>
+                <span class="dim" style="font-size:0.85em;color:var(--muted)">یعنی با وجودِ پارامترها هم کار می‌کند: <code>route('products.show', ['id' =&gt; 3])</code>
+                </span>
+            </div>
+        </div>
+
+        <p>با <code>route:list</code> می‌توانی نامِ مسیرهایت را در یک نگاه ببینی:</p>
+
+        <div class="demo"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">ترمینال</span></div>
+                <pre><code>php artisan route:list</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">خلاصه</span></div>
+                <div class="tk2-browser">GET|HEAD   /                     →  Closure
+  GET|HEAD   /hello                →  Closure
+  GET|HEAD   /products/create      →  products.create
+  GET|HEAD   /users/{name}         →  Closure
+  GET|HEAD   /posts/{id}           →  Closure</div>
+            </div>
+        </div>
+
+        <div class="note tip"><div class="note-title"> نکته</div>
+            <ul>
+                <li>اسم مسیرها در کل برنامه باید <strong>یکتا</strong> باشد. رسمِ معمول، نقطه‌گذاری مثل <code>blog.create</code> و <code>blog.show</code> است.</li>
+                <li>برای رد‌ایرکت به یک مسیرِ نامدار: <code>return to_route('blog.create');</code> — در درس بعد کامل می‌بینیم.</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ================= درس ۶ ================= -->
+    <section class="lesson" id="view-redirect">
+        <div class="lesson-head"><span class="lesson-num">۶</span>
+            <h2>view() و redirect()</h2>
+        </div>
+
+        <p>دو پاسخِ پرکاربرد در روت‌ها: یکی «یک صفحه را نشان بده» با <code>view()</code> و دیگری «کاربر را به جای دیگری بفرست» با <code>redirect()</code>.
+        </p>
+
+        <h3>view() — نشان‌دادن یک صفحه</h3>
+        <p>تا وقتی Blade را کامل یاد نگرفتی، ویو فقط یک فایلِ HTML در <code>resources/views</code> است
+            (فایلِ <code>welcome.blade.php</code> را از بخش قبل می‌شناسی). روتِ ریشه‌ی خود لاراول هم همین را می‌کند:
+        </p>
+
+        <div class="demo"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>Route::get('/', function () {
+    return view('welcome');
+});</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">چه می‌بینی؟</span></div>
+                بازدید از <code>/</code>:
+                <div class="tk2-welcome"><div class="tk2-welcome-title">Laravel</div>
+                    <div class="tk2-welcome-sub">همان صفحه‌ی خوش‌آمدِ پیش‌فرض</div>
+                </div>
+            </div>
+        </div>
+
+        <h3>redirect() — فرستادن به جای دیگر</h3>
+        <p>مثلاً یک آدرسِ قدیمی داری که می‌خواهی کاربر به صفحه‌ی اصلی برود. با <code>Route::redirect</code> این کار یک‌خطی می‌شود:
+        </p>
+
+        <div class="demo"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>// بازدید از /home → رفتن به /
+Route::redirect('/home', '/');</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">چه می‌بینی؟</span></div>
+                بازدید از <code>/home</code>:
+                <div class="tk2-browser">HTTP/<span class="ok">302</span> Found
+Location: <span class="ok">http://127.0.0.1:8000/</span></div>
+                <span class="dim" style="font-size:0.85em;color:var(--muted)">مرورگر خودکار به <code>/</code> می‌رود؛ این را «ریدایرکت ۳۰۲» می‌گویند.
+                </span>
+            </div>
+        </div>
+
+        <div class="note tip"><div class="note-title"> نکته</div>
+            <ul>
+                <li>اگر بخواهی همان‌لحظه به یک مسیرِ نامدار بفرستی: <code>Route::get('/product/4', fn () =&gt; to_route('products.show', ['id' =&gt; 4]));</code></li>
+                <li>برای رفتن به بیرون از سایت هم <code>redirect()->away('https://example.com')</code> هست.</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ================= درس ۷ ================= -->
+    <section class="lesson" id="groups">
+        <div class="lesson-head"><span class="lesson-num">۷</span>
+            <h2>گروه‌کردن مسیرها</h2>
+        </div>
+
+        <p>وقتی چند مسیر مشترکِ یک بخش دارید (مثلاً همه‌ی بخشِ «پنل مدیریت» با <code>/admin</code> شروع می‌شوند)،
+            می‌توانی آن‌ها را گروه کنی تا پیشوندِ مشترک را یک‌بار بنویسی:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>Route::prefix('admin')-&gt;group(function () {
+    Route::get('/dashboard', fn () =&gt; 'پنل مدیریت');
+    Route::get('/users', fn () =&gt; 'فهرست کاربران');
+    Route::get('/settings', fn () =&gt; 'تنظیمات');
+});</code></pre>
+            </div>
+        </div>
+
+        <p>علاوه بر پیشوندِ آدرس، می‌توانی پیشوندِ <strong>نام</strong> هم بدهی تا همه‌ی مسیرهای گروه با یک اسمِ مشترک شروع شوند:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>Route::prefix('admin')-&gt;name('admin.')-&gt;group(function () {
+    Route::get('/users', fn () =&gt; 'کاربران')-&gt;name('users');
+    // آدرس: /admin/users   --   نام: admin.users
+});</code></pre>
+            </div>
+        </div>
+
+        <table>
+            <tr>
+                <th>تعریف</th>
+                <th>آدرس</th>
+                <th>نام</th>
+            </tr>
+            <tr>
+                <td><code>/dashboard</code> داخل گروه</td>
+                <td><code>/admin/dashboard</code></td>
+                <td>—</td>
+            </tr>
+            <tr>
+                <td><code>-&gt;name('users')</code> داخل گروه</td>
+                <td><code>/admin/users</code></td>
+                <td><code>admin.users</code></td>
+            </tr>
+        </table>
+
+        <div class="note info"><div class="note-title"> کی به درد می‌خورد؟</div>
+            <p>وقتی بخشِ بزرگی داری که همه‌ی مسیرهایش یک پیشوند دارند — مثل پنلِ مدیریت، دکمه‌ی «حساب کاربری» یا
+                هوکِ «فروشگاه». به‌جای تکرارِ «admin» و «admin.» در هر خط، یک‌بار در سرِ گروه می‌نویسی.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۸ ================= -->
+    <section class="lesson" id="project-step">
+        <div class="lesson-head"><span class="lesson-num">۸</span>
+            <h2>گام پروژه: مسیرهای فروشگاه</h2>
+        </div>
+
+        <div class="proj-step"><div class="proj-title"> نقشه‌ی اولیه‌ی فروشگاه</div>
+            <p>توی <code>routes/web.php</code>، محتوای قبلی را با این نقشه‌ی اولیه‌ی فروشگاه عوض کن (کامنت‌ها به فارسی‌اند):
+            </p>
+        </div>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>&lt;?php
+
+use Illuminate\Support\Facades\Route;
+
+// صفحه‌ی اصلی فروشگاه
+Route::get('/', fn () =&gt; view('welcome'));
+
+// فهرست همه‌ی محصول‌ها
+Route::get('/products', fn () =&gt; 'فهرست محصول‌ها');
+
+// نمایش یک محصول با شماره (فقط عدد)
+Route::get('/products/{id}', fn (string $id) =&gt; "محصول شماره‌ی $id")
+    -&gt;whereNumber('id')
+    -&gt;name('products.show');
+
+// محصول‌های یک دسته
+Route::get('/categories/{id}', fn (string $id) =&gt; "دسته شماره‌ی $id")
+    -&gt;whereNumber('id')
+    -&gt;name('categories.show');
+
+// سبد خرید (فعلاً فقط یک متن؛ منطقش را بعداً می‌سازیم)
+Route::get('/cart', fn () =&gt; 'سبد خرید: خالی');</code></pre>
+            </div>
+        </div>
+
+        <ol>
+            <li>فایل را ذخیره کن و <code>php artisan serve</code> را اجرا کن.</li>
+            <li>آدرس‌های <code>/</code>، <code>/products</code>، <code>/products/1</code>، <code>/categories/2</code> و <code>/cart</code> را باز کن.</li>
+            <li>حالا <code>/products/abc</code> را باز کن؛ ببین چرا ۴۰۴ می‌گیری!</li>
+            <li>با <code>php artisan route:list</code> نقشه‌ی کامل مسیرهایت را ببین.</li>
+        </ol>
+
+        <div class="note tip"><div class="note-title"> یادت باشد</div>
+            <p>توی این مرحله همه‌چیز «متن ساده» است؛ چون هنوز مدل و ویو را یاد نگرفته‌ایم. ساختارِ مسیرها تا
+                آخرِ دوره تقریباً همین می‌ماند؛ فقط بدنه‌هایشان از «متن» به «کنترلر + مدل + Blade» ارتقا می‌یابد.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= تمرین ================= -->
+    <section class="lesson" id="exercises">
+        <div class="lesson-head"><span class="lesson-num">۹</span>
+            <h2>تمرین‌ها؛ حالا نوبت توست!</h2>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۱: مسیرهای خودت</div>
+            <ol>
+                <li>یک روت <code>/about-me</code> بساز که نام و رشته‌ات را برگرداند.</li>
+                <li>یک روت با پارامتر بساز: <code>/skills/{skill}</code> که مثلاً «علاقه‌ی من: PHP» را نشان دهد.</li>
+                <li>به آن یک نام بده و با <code>route('...')</code> آدرسش را چک کن.</li>
+            </ol>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۲: بازی با پارامتر</div>
+            <ol>
+                <li>یک روت <code>/age/{age?}</code> بساز که بدون پارامتر، «سن تو مشخص نیست» و با پارامتر، «سن تو: ...» را نشان دهد.</li>
+                <li>با <code>-&gt;whereNumber('age')</code> جلوی خروجیِ غیرعددی را بگیر.</li>
+                <li><code>/age/abc</code> را تست کن؛ ۴۰۴ گرفتی؟</li>
+            </ol>
+        </div>
+
+        <div class="note info"><div class="note-title"> چالش</div>
+            <p>به فروشگاهت دو مسیر اضافه کن: <code>/sale</code> که «محصول‌های تخفیف‌دار» را نشان دهد و
+                <code>/sale/{code}</code> که فقط کدهای حراج (حروف انگلیسی کوچک) را بپذیرد — با <code>whereAlpha</code>.
+                با <code>php artisan route:list</code> هر دو را چک کن.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= نکات طلایی ================= -->
+    <div class="golden"><h3> چیزی که از این بخش توی ذهنت بماند</h3>
+        <ol>
+            <li>همه‌ی مسیرها در <code>routes/web.php</code> هستند؛ اول هر درخواست از این‌جا عبور می‌کند.</li>
+            <li>روت = آدرس + تابع: <code>Route::get('/x', fn () =&gt; ...)</code>.</li>
+            <li>پارامتر با <code>{x}</code> و اختیاری با <code>{x?}</code> + مقدارِ پیش‌فرض.</li>
+            <li>با <code>-&gt;where()</code> و میان‌برهای <code>whereNumber</code> / <code>whereAlpha</code> مقدار را محدود کن.</li>
+            <li>به مسیرهای مهم نام بده (<code>-&gt;name('...')</code>) و با <code>route()</code> / <code>to_route()</code> لینک بساز.</li>
+            <li>مسیرهای هم‌خانواده را با <code>Route::prefix</code> و <code>Route::name</code> گروه کن.</li>
+            <li><code>php artisan route:list</code> نقشه‌ی کامل مسیرهایت را نشان می‌دهد.</li>
+        </ol>
+    </div>
+
+    <!-- ================= مطالعه‌ی بیشتر ================= -->
+    <div class="tk2-more"> مطالعه‌ی بیشتر (انگلیسی):
+        <a href="https://laravel.com/docs/13.x/routing#basic-routing" target="_blank" rel="noopener">مسیر پایه و redirect/view routes</a>،
+        <a href="https://laravel.com/docs/13.x/routing#route-parameters" target="_blank" rel="noopener">پارامترها و پارامترِ اختیاری</a>،
+        <a href="https://laravel.com/docs/13.x/routing#parameters-regular-expression-constraints" target="_blank" rel="noopener">محدودیت با where</a>،
+        <a href="https://laravel.com/docs/13.x/routing#named-routes" target="_blank" rel="noopener">مسیرهای نامدار</a> و
+        <a href="https://laravel.com/docs/13.x/routing#route-groups" target="_blank" rel="noopener">گروه‌بندی (prefix/name)</a>.
+    </div>
+
+    <!-- ================= ناوبری ================= -->
+    <nav class="lesson-nav" aria-label="ناوبری بین بخش‌ها">
+        <a href="00-فهرست.html">فهرست درس‌ها</a>
+        <a href="01-مقدمه-و-نصب.html">→ بخش قبل: مقدمه و نصب</a>
+        <a href="03-کنترلرها.html">بعدی: کنترلرها ←</a>
+    </nav>
+
+</div>
+<script src="../assets/js/rayvo.js"></script>
+</body>
+</html>

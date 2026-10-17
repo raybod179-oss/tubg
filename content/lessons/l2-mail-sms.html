@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سطح ۲ · درس 7 | ایمیل و پیامک</title><meta name="description" content="در توسعه، ایمیل را در لاگ ببین تا ایمیل واقعی نرود؛ در پروداکشن SMTP واقعی بگذار. پیامک از طریق API سرویس‌دهنده‌ی داخلی ارسال می‌شود.">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">سطح ۲ · درس 7</span><h1>ایمیل و پیامک</h1><p>در توسعه، ایمیل را در لاگ ببین تا ایمیل واقعی نرود؛ در پروداکشن SMTP واقعی بگذار. پیامک از طریق API سرویس‌دهنده‌ی داخلی ارسال می‌شود.</p></header>
+<section class="step"><h2>۱. تنظیم ایمیل</h2><p>با <code>log</code> متن ایمیل در <code>storage/logs/laravel.log</code> می‌آید.</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">env</span></div><pre><code># .env توسعه
+MAIL_MAILER=log
+
+# .env پروداکشن (نمونه)
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.example.com
+MAIL_PORT=587
+MAIL_USERNAME=...
+MAIL_PASSWORD=...
+MAIL_FROM_ADDRESS=info@yoursite.ir</code></pre></div></div></section><section class="step"><h2>۲. ساخت و ارسال</h2><p></p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Mail</span></div><pre><code>php artisan make:mail WelcomeMail --markdown=emails.welcome
+
+use Illuminate\Support\Facades\Mail;
+Mail::to($user-&gt;email)-&gt;send(new WelcomeMail($user));
+// صف: -&gt;queue(new WelcomeMail($user))</code></pre></div></div></section><section class="step"><h2>۳. پیامک</h2><p>هر سرویس‌دهنده (مثل کاوه‌نگار، ملی‌پیامک و ...) مستندات و آدرس API خودش را دارد. الگوی کلی با Http:</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">SMS</span></div><pre><code>use Illuminate\Support\Facades\Http;
+
+Http::post(config('services.sms.url'), [
+    'apikey'   =&gt; config('services.sms.key'),
+    'receptor' =&gt; $mobile,
+    'message'  =&gt; 'کد تأیید شما: 12345',
+]);
+// آدرس و نام فیلدها را از مستندات سرویس‌دهنده‌ی خودت بگیر</code></pre></div></div></section><section class="step"><h2>۴. تمرین</h2><p>ایمیل خوش‌آمدگویی بعد از ثبت‌نام بفرست و آن را به صف ببر.</p></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>گذاشتن رمز SMTP در کد به‌جای <code>.env</code>.</li><li>تست روی ایمیل واقعی مشتری؛ در توسعه از <code>log</code> استفاده کن.</li></ol></div>
+<nav class="lesson-nav"><a href="l2-events-notifications.html">→ بخش قبل: Event، Listener و Notification</a><a href="l2-scheduler.html">بعدی: Scheduler و کارهای زمان‌بندی‌شده ←</a></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

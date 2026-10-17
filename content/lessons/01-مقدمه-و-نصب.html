@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بخش ۰۱ | مقدمه و نصب</title>
+    <meta name="description" content="آشنایی با Laravel، نصب Composer، ساخت اولین پروژه و آشنایی با ساختار پوشه‌ها">
+
+    <link rel="icon" href="../assets/img/favicon.png">
+    <link rel="stylesheet" href="../assets/css/rayvo.css">
+    <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script>
+
+    <style>
+        .tk1-term { background:#0b1220; color:#cbd5e1; direction:ltr; text-align:left; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:13px; line-height:1.8; padding:14px 16px; border-radius:10px; white-space:pre; overflow-x:auto; }
+        .tk1-tree { background:#0b1220; color:#e2e8f0; direction:ltr; text-align:left; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:13.5px; line-height:1.9; padding:16px 18px; border-radius:10px; white-space:pre; overflow-x:auto; }
+        .tk1-tree .dir { color:#fbbf24; font-weight:700; }
+        .tk1-tree .cmd { color:#34d399; }
+        .tk1-term .dim { color:#64748b; }
+        .tk1-term .ok { color:#34d399; }
+        .tk1-welcome { text-align:center; padding:34px 18px; background:#fff; border-radius:10px; }
+        .tk1-welcome-title { font-size:44px; font-weight:800; letter-spacing:1px; color:#e3342f; direction:ltr; }
+        .tk1-welcome-sub { color:var(--muted); font-size:14px; margin-top:8px; }
+        .tk1-welcome-btn { display:inline-block; margin-top:18px; border:1px solid var(--border); border-radius:8px; padding:6px 22px; color:#9ca3af; font-size:13px; }
+    </style>
+</head>
+<body>
+<div class="course-page"><!-- ================= سربرگ ================= -->
+    <header class="course-header">
+        <span class="badge">بخش ۰۱</span>
+        <h1>مقدمه و نصب</h1>
+        <p>بلدیم PHP. حالا میریم سراغ فریمورکِ محبوبش: Laravel را بشناسیم، نصبش کنیم و اولین پروژه‌مان را بالا بیاوریم.</p>
+    </header>
+
+    <!-- ================= فهرست ================= -->
+    <nav class="toc" aria-label="فهرست مطالب">
+        <h2>توی این بخش چه چیزهایی یاد می‌گیریم؟</h2>
+        <ol>
+            <li><a href="#laravel">Laravel چیست؟</a></li>
+            <li><a href="#tools">پیش‌نیازها و ابزارها</a></li>
+            <li><a href="#new-project">نصب Composer و ساخت اولین پروژه</a></li>
+            <li><a href="#run">اجرای پروژه با php artisan serve</a></li>
+            <li><a href="#structure">ساختار پوشه‌ها</a></li>
+            <li><a href="#env">فایل .env</a></li>
+            <li><a href="#artisan">فرمان‌های پرکاربرد</a></li>
+            <li><a href="#exercises">تمرین‌ها</a></li>
+        </ol>
+    </nav>
+
+    <!-- ================= درس ۱ ================= -->
+    <section class="lesson" id="laravel">
+        <div class="lesson-head"><span class="lesson-num">۱</span>
+            <h2>Laravel چیست؟</h2>
+        </div>
+
+        <p>توی دوره‌ی HTML/CSS دیدی که مرورگر، صفحه را از یک سرور می‌گیرد. آن سرور با کدهایی که روی آن اجرا می‌شود،
+            صفحه را می‌سازد. PHP یکی از زبان‌های همین «سمتِ سرور» است؛ ولی نوشتن همه‌چیز با PHPِ خام، طولانی و تکراری می‌شود.
+            <strong>Laravel</strong> یک <strong>فریمورک PHP</strong> است؛ یعنی یک بسته‌ی آماده که خیلی از کارهای تکراری
+            (مسیریابی، اتصال به دیتابیس، لاگین، قالب و...) را برایت پیاده کرده؛ تو فقط کدِ کارِ خودت را می‌نویسی.
+        </p>
+
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;margin:16px 0;font-size:14px"><div style="background:#eef2f7;border:2px solid #94a3b8;border-radius:14px;padding:10px 18px;text-align:center"><div style="font-size:28px"></div>
+                <strong>تو (مرورگر)</strong>
+                <div style="color:#64748b">کلاینت</div>
+            </div>
+            <div style="font-size:22px;color:#94a3b8">⟵ درخواست</div>
+            <div style="font-size:22px;color:#94a3b8">⟶ پاسخ</div>
+            <div style="background:#eef7f2;border:2px solid #94a3b8;border-radius:14px;padding:10px 18px;text-align:center"><div style="font-size:28px"></div>
+                <strong>سرور PHP + Laravel</strong>
+                <div style="color:#64748b">این‌جا صفحه ساخته می‌شود</div>
+            </div>
+        </div>
+
+        <p>چرا Laravel؟ چند تا از چیزهایی که از جعبه و بدون کدِ اضافه به تو می‌دهد:</p>
+        <ul>
+            <li>مسیریابی تمیز (<strong>Routing</strong>) و کنترلرها</li>
+            <li>موتور قالب <strong>Blade</strong> برای ساخت ویو</li>
+            <li><strong>Eloquent</strong> برای کار با دیتابیس، همراه با Migration و Seeder</li>
+            <li>احراز هویت (Auth) و کنترل دسترسی</li>
+            <li>دستیار خط‌فرمان <strong>Artisan</strong></li>
+        </ul>
+
+        <h3>الگوی MVC؛ زبانِ مشترکِ همه‌ی فریمورک‌ها</h3>
+        <p>تقریباً هر سایت لاراولی یک سفرِ درخواست را طی می‌کند: این‌که درخواستِ کاربر کجا می‌آید، چه کسی تصمیم
+            می‌گیرد چه کاری انجام شود، از کجا داده بیاید و با کدام قالب نمایش داده شود. ترتیبِ این کارها در الگوی
+            <strong>MVC</strong> خلاصه می‌شود که حرف اولِ سه کلمه است: <strong>Model</strong> (مدل)، <strong>View</strong> (ویو) و
+            <strong>Controller</strong> (کنترلر).
+        </p>
+
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;margin:16px 0;font-size:14px"><div style="background:#eef2f7;border:2px solid #94a3b8;border-radius:14px;padding:10px 18px;text-align:center"><div style="font-size:28px"></div>
+                <strong>تو (مرورگر)</strong>
+                <div style="color:#64748b">درخواست می‌فرستی</div>
+            </div>
+            <div style="font-size:20px;color:#94a3b8">⟵</div>
+            <div style="background:#eef2f7;border:2px solid #94a3b8;border-radius:14px;padding:10px 18px;text-align:center"><div style="font-size:24px"></div>
+                <strong>Route</strong>
+                <div style="color:#64748b">مسیر را پیدا می‌کند</div>
+            </div>
+            <div style="font-size:20px;color:#94a3b8">⟵</div>
+            <div style="background:#f2eef9;border:2px solid #94a3b8;border-radius:14px;padding:10px 18px;text-align:center"><div style="font-size:24px"></div>
+                <strong>Controller</strong>
+                <div style="color:#64748b">تصمیم می‌گیرد</div>
+            </div>
+            <div style="font-size:20px;color:#94a3b8">⟵</div>
+            <div style="background:#eef7f2;border:2px solid #94a3b8;border-radius:14px;padding:10px 18px;text-align:center"><div style="font-size:24px"></div>
+                <strong>Model</strong>
+                <div style="color:#64748b">داده را می‌آورد</div>
+            </div>
+            <div style="font-size:20px;color:#94a3b8">⟵</div>
+            <div style="background:#f5f4ee;border:2px solid #cbd5e1;border-radius:14px;padding:10px 18px;text-align:center"><div style="font-size:24px"></div>
+                <strong>View</strong>
+                <div style="color:#64748b">قالبِ صفحه</div>
+            </div>
+        </div>
+
+        <table>
+            <tr>
+                <th>جزء</th>
+                <th>کارش چیست؟</th>
+                <th>کجا می‌نشیند؟</th>
+            </tr>
+            <tr>
+                <td><code>Model</code></td>
+                <td>گفت‌وگو با دیتابیس و منطقِ داده</td>
+                <td><code>app/Models</code></td>
+            </tr>
+            <tr>
+                <td><code>View</code></td>
+                <td>نمایش؛ فقط قالب و ظاهرِ صفحه</td>
+                <td><code>resources/views</code></td>
+            </tr>
+            <tr>
+                <td><code>Controller</code></td>
+                <td>پلِ درخواست و پاسخ؛ مدل و ویو را به هم وصل می‌کند</td>
+                <td><code>app/Http/Controllers</code></td>
+            </tr>
+        </table>
+
+        <div class="note info"><div class="note-title"> چرا مهم است؟</div>
+            <p>مهم‌ترین فایده‌ی MVC این است که «کارها از هم جدا می‌مانند»: منطقِ دیتابیس، تصمیم‌گیری و ظاهرِ قالب
+                هرکدام خانه‌ی خودشان را دارند. این یعنی وقتی ظاهرت را عوض می‌کنی، به کدِ دیتابیس دست نمی‌زنی.
+                بقیه‌ی این دوره همین سه تا را یکی‌یکی یاد می‌گیریم.
+            </p>
+        </div>
+
+        <div class="note info"><div class="note-title"> فقط یک اشاره</div>
+            <p>نسخه‌های جدید Laravel (مثل ۱۳) هر سال چند قابلیت تازه هم اضافه می‌کنند؛ مثلاً SDK هوش مصنوعی یا
+                پیکربندی مدل‌ها با PHP Attributes. این‌ها برای مرحله‌های بعدی است؛ فعلاً همین پایه‌ها را درست یاد بگیر.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۲ ================= -->
+    <section class="lesson" id="tools">
+        <div class="lesson-head"><span class="lesson-num">۲</span>
+            <h2>پیش‌نیازها و ابزارها</h2>
+        </div>
+
+        <p>قبل از نصب، مطمئن شو این ابزارها روی سیستم‌ت هست. نسخه‌ی Laravel 13 به PHP 8.3 یا بالاتر نیاز دارد.
+        </p>
+
+        <table>
+            <tr>
+                <th>ابزار</th>
+                <th>فرمانِ چک کردن</th>
+                <th>چه‌کاری انجام می‌دهد؟</th>
+            </tr>
+            <tr>
+                <td>PHP 8.3+</td>
+                <td><code>php -v</code></td>
+                <td>زبانِ اصلی برنامه؛ قائدتاً آن را بلدی</td>
+            </tr>
+            <tr>
+                <td>Composer</td>
+                <td><code>composer -V</code></td>
+                <td>مدیر پکیجِ PHP؛ با آن پروژه‌ی Laravel می‌سازی</td>
+            </tr>
+            <tr>
+                <td>دیتابیس (SQLite یا MySQL)</td>
+                <td>—</td>
+                <td>ذخیره‌ی داده‌ها؛ پیش‌فرض نسخه‌های جدید SQLite است</td>
+            </tr>
+            <tr>
+                <td>ادیتور کد</td>
+                <td>—</td>
+                <td>VS Code یا PHPStorm؛ برای نوشتن کد</td>
+            </tr>
+        </table>
+
+        <div class="note tip"><div class="note-title"> نکته</div>
+            <ul>
+                <li>اگر Composer را نداری، از <a href="https://getcomposer.org/download/">getcomposer.org</a> نصبش کن. اگر PHP را نداری، ساده‌ترین راه، نصب رسمی از <a href="https://php.new/">php.new</a> است.</li>
+                <li>دستور <code>composer -V</code> و <code>php -v</code> را توی ترمینال اجرا کن؛ اگر نسخه چاپ شد یعنی آماده‌ای. اگر خطای «شناخته نشد» گرفتی، مسیر نصب را به متغیر PATH سیستم اضافه کن.</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ================= درس ۳ ================= -->
+    <section class="lesson" id="new-project">
+        <div class="lesson-head"><span class="lesson-num">۳</span>
+            <h2>نصب Composer و ساخت اولین پروژه</h2>
+        </div>
+
+        <p>با یک فرمان ساده می‌توانی یک پروژه‌ی کاملاً جدید Laravel با اسم دلخواهت بسازی. این فرمان یعنی:
+            «یک پروژه‌ی Laravel از قالب رسمی <code>laravel/laravel</code> بساز و بگذار توی پوشه‌ی <code>blog</code>».
+        </p>
+
+        <div class="demo"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">ترمینال</span></div>
+                <pre><code>composer create-project laravel/laravel blog</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">خلاصه</span></div>
+                <div class="tk1-term">Creating a "laravel/laravel" project at "./blog"
+Installing laravel/laravel (v13.10.1)
+  - Downloading laravel/laravel
+  - Installing laravel/laravel
+...
+<span class="dim">> @php artisan key:generate --ansi</span>
+
+<span class="ok">Application key set successfully.</span>
+<span class="dim">... (انتهای اجرا، چند خط دیگر؛ فقط با «...» خلاصه شده)</span></div>
+            </div>
+        </div>
+
+        <p>حالا وارد پوشه‌ی پروژه شو:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">ترمینال</span></div>
+                <pre><code>cd blog</code></pre>
+            </div>
+        </div>
+
+        <div class="note tip"><div class="note-title"> نکته</div>
+            <ul>
+                <li>در زمان نصب، لاراول فایل <code>.env</code> را از روی <code>.env.example</code> می‌سازد و کلید امنیتی (<code>APP_KEY</code>) را هم خودش تولید می‌کند؛ دستی دست به این‌ها نزن.</li>
+                <li>ولی اگر بعداً بخواهی کلید را دوباره بسازی: <code>php artisan key:generate</code>.</li>
+                <li>جزئیات بیشتر در <a href="https://laravel.com/docs/13.x/installation">داکیومنت نصب لاراول</a>.</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ================= درس ۴ ================= -->
+    <section class="lesson" id="run">
+        <div class="lesson-head"><span class="lesson-num">۴</span>
+            <h2>اجرای پروژه با php artisan serve</h2>
+        </div>
+
+        <p>Artisan دستیارِ خط‌فرمانِ لاراول است (با همین <code>php artisan</code> شروع می‌شود). برای دیدن پروژه در مرورگر،
+            کافی است سرورِ محلی را با <code>serve</code> روشن کنی:
+        </p>
+
+        <div class="demo"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">ترمینال</span></div>
+                <pre><code>php artisan serve</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">خلاصه</span></div>
+                <div class="tk1-term">INFO  Server running on <span class="ok">[http://127.0.0.1:8000]</span>.
+
+  Press Ctrl+C to stop the server</div>
+            </div>
+        </div>
+
+        <p>حالا مرورگر را باز کن و آدرس <code>http://127.0.0.1:8000</code> را بزن. صفحه‌ی خوش‌آمدِ Laravel را می‌بینی؛
+            یعنی پروژه‌ات زنده است!
+        </p>
+
+        <div class="demo"><div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">چه می‌بینی؟</span></div>
+                <div class="tk1-welcome"><div class="tk1-welcome-title">Laravel</div>
+                    <div class="tk1-welcome-sub">نوبتِ ساختنِ اولین پروژه‌ی تو رسیده </div>
+                    <div class="tk1-welcome-btn">Laravel 13</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="note warn"><div class="note-title"> دقت کن</div>
+            <p>این صفحه‌ی خوش‌آمد فقط «پیش‌فرض» پروژه است و ربطی به کارِ تو ندارد؛ آدرس ریشه (<code>/</code>) به یک
+                قالبِ خوش‌آمد اشاره می‌کند. از بخش بعدی، خودمان روت‌های واقعی می‌سازیم و این صفحه را کنار می‌زنیم.
+                برای خاموش کردن سرور، <code>Ctrl + C</code> را توی همان ترمینال بزن.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۵ ================= -->
+    <section class="lesson" id="structure">
+        <div class="lesson-head"><span class="lesson-num">۵</span>
+            <h2>ساختار پوشه‌ها</h2>
+        </div>
+
+        <p>یک پروژه‌ی تازه‌ی Laravel یک ساختار مشخص دارد. لازم نیست همه‌چیز را حفظ کنی؛ فقط یادت باشد «هر چیزی کجاست»
+            تا در درس‌های بعد، مسیرها را گم نکنی:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>ساختار</span><span class="demo-tag">پوشه‌ها</span></div>
+                <pre class="tk1-tree">blog/
+├── <span class="dir">app/</span>          ← کدِ اصلی: کنترلرها، مدل‌ها، Middleware
+├── <span class="dir">bootstrap/</span>    ← راه‌اندازی فریمورک + کش
+├── <span class="dir">config/</span>       ← تنظیمات (app، database، mail و...)
+├── <span class="dir">database/</span>     ← Migrationها، Seederها، Factoryها
+├── <span class="dir">public/</span>       ← نقطه‌ی ورود <span class="cmd">index.php</span> و فایل‌های عمومی
+├── <span class="dir">resources/</span>    ← ویوهای Blade و دارایی‌های خام
+├── <span class="dir">routes/</span>       ← مسیرها: <span class="cmd">web.php</span> و <span class="cmd">console.php</span>
+├── <span class="dir">storage/</span>      ← لاگ، کش و فایل‌های تولیدشده
+├── <span class="dir">tests/</span>        ← تست‌ها
+└── <span class="dir">vendor/</span>       ← کتابخانه‌های نصب‌شده با Composer</pre>
+            </div>
+        </div>
+
+        <p>چهار تایی که بقیه‌ی دوره خیلی سراغشان می‌رویم:</p>
+        <ul>
+            <li><code>routes/web.php</code> — مسیرهای سایت‌ت؛ بیا که همه‌چیز از این‌جا شروع می‌شود.</li>
+            <li><code>app/Http/Controllers</code> — کنترلرها؛ منطقِ درخواست‌ها اینجا می‌نشیند.</li>
+            <li><code>resources/views</code> — قالب‌های Blade؛ صفحه‌هایی که کاربر می‌بیند.</li>
+            <li><code>database/migrations</code> — ساختار جدول‌های دیتابیس، در قالبِ کد.</li>
+            <li><code>public</code> — فقط محتوای این پوشه روی سرور در دسترس عموم است (مثل عکس‌ها).</li>
+        </ul>
+
+        <div class="note info"><div class="note-title"> چرا این ساختار؟</div>
+            <p>این نظمِ قراردادِ لاراول است؛ کتابخانه‌ها، ابزارها و حتی تیم‌های دیگر می‌دانند هر چیزی کجاست.
+                می‌توانی سازمان‌دهی را تغییر دهی ولی «کار» نکن؛ توی کورس اول‌پایه، طبق همین ساختار پیش می‌رویم.
+                جزئیات در <a href="https://laravel.com/docs/13.x/structure">داکیومنت ساختار پوشه‌ها</a>.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۶ ================= -->
+    <section class="lesson" id="env">
+        <div class="lesson-head"><span class="lesson-num">۶</span>
+            <h2>فایل .env</h2>
+        </div>
+
+        <p>تنظیماتی که بین «محیط‌ها» فرق می‌کند (محیطِ توسعه‌ی خودت، سرورِ عملیاتی و...) در کدِ برنامه قرار نمی‌گیرد؛
+            بلکه در فایل <code>.env</code> در ریشه‌ی پروژه نوشته می‌شود. به همین دلیل این فایل هرگز در گیت کامیت نمی‌شود —
+            چون ممکن است رمزِ دیتابیس و تنظیماتِ حساس داشته باشد.
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">.env</span></div>
+                <pre><code>APP_NAME=blog
+APP_ENV=local
+APP_KEY=base64:... (خودکار ساخته می‌شود)
+APP_DEBUG=true
+APP_URL=http://localhost
+
+DB_CONNECTION=sqlite
+# یا اگر با MySQL کار می‌کنی:
+# DB_CONNECTION=mysql
+# DB_HOST=127.0.0.1
+# DB_PORT=3306
+# DB_DATABASE=blog
+# DB_USERNAME=root
+# DB_PASSWORD=</code></pre>
+            </div>
+        </div>
+
+        <table>
+            <tr>
+                <th>متغیر</th>
+                <th>چه‌کاری انجام می‌دهد؟</th>
+            </tr>
+            <tr>
+                <td><code>APP_DEBUG</code></td>
+                <td>اگر خطایی رخ دهد جزئیاتش را نشان می‌دهد. در توسعه <code>true</code>، در عملیات حتماً <code>false</code></td>
+            </tr>
+            <tr>
+                <td><code>APP_URL</code></td>
+                <td>آدرس اصلی سایت‌ت (برای لینک‌هایی که بعداً می‌سازی)</td>
+            </tr>
+            <tr>
+                <td><code>DB_*</code></td>
+                <td>تنظیمات اتصال دیتابیس؛ پیش‌فرضِ نسخه‌های جدید SQLite است</td>
+            </tr>
+        </table>
+
+        <div class="note warn"><div class="note-title"> دقت کن</div>
+            <p>اگر <code>APP_DEBUG=true</code> روی سرورِ عملیاتی بماند، هر خطا تمام تنظیمات و رمزها را به کاربر نشان می‌دهد؛
+                این بزرگ‌ترین درس امنیتی این بخش است. جزئیات در
+                <a href="https://laravel.com/docs/13.x/configuration">داکیومنت تنظیمات</a>.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۷ ================= -->
+    <section class="lesson" id="artisan">
+        <div class="lesson-head"><span class="lesson-num">۷</span>
+            <h2>فرمان‌های پرکاربرد</h2>
+        </div>
+
+        <p><strong>Artisan</strong> مغزِ فرمان‌های لاراول است. با <code>php artisan list</code> می‌بینی چه فرمان‌هایی
+            در دسترس است و با <code>php artisan about</code> یک نگاه کلی به وضعیت برنامه‌ات می‌اندازی:
+        </p>
+
+        <div class="demo"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">ترمینال</span></div>
+                <pre><code>php artisan list
+
+php artisan about</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">خلاصه</span></div>
+                <div class="tk1-term">Environment  ................................... local
+  Application Name ................................. blog
+  Application Version .............................. 13.10.1
+  PHP Version ...................................... 8.4.4
+  Composer Version ................................. 2.8.4
+  Database ......................................... sqlite
+  Debug Mode ...................................... ON
+  URL ............................................. http://localhost</div>
+            </div>
+        </div>
+
+        <p>اگر فقط یک بخش از این گزارش را بخواهی، می‌توانی فیلترش کنی:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">ترمینال</span></div>
+                <pre><code>php artisan about --only=environment</code></pre>
+            </div>
+        </div>
+
+        <div class="note tip"><div class="note-title"> نکته</div>
+            <ul>
+                <li>خروجیِ <code>about</code> بسته به سیستم تو ممکن است اعداد دیگری نشان دهد؛ به همین شکل، «خلاصه» همین است و مشکلی نیست.</li>
+                <li>اشتباه تایپی و پیام خطا بخشی از کارِ برنامه‌نویسی است؛ بعداً با همین خطاها آشنا می‌شوی.</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ================= تمرین ================= -->
+    <section class="lesson" id="exercises">
+        <div class="lesson-head"><span class="lesson-num">۸</span>
+            <h2>تمرین‌ها؛ حالا نوبت توست!</h2>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۱: اولین پروژه‌ات را بساز</div>
+            <ol>
+                <li>توی ترمینال فرمان <code>composer create-project laravel/laravel blog</code> را اجرا کن.</li>
+                <li>وارد پوشه‌ی <code>blog</code> شو و <code>php artisan serve</code> را بزن.</li>
+                <li>در مرورگر آدرس <code>http://127.0.0.1:8000</code> را باز کن و صفحه‌ی خوش‌آمدِ Laravel را ببین.</li>
+                <li>برای اطمینان <code>php artisan about</code> را هم اجرا کن.</li>
+            </ol>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۲: ساختار را بشناس</div>
+            <ol>
+                <li>فایل <code>routes/web.php</code> را باز کن و اولین سطرهایش را بخوان؛ حدس بزن هر خط چه می‌گوید.</li>
+                <li>فایل <code>.env</code> را باز کن و مقدار <code>APP_DEBUG</code> و <code>DB_CONNECTION</code> را پیدا کن.</li>
+                <li>توی <code>resources/views/</code> جستجو کن و ببین صفحه‌ای که همین حالا در مرورگر دیدی کدام فایل است.</li>
+            </ol>
+        </div>
+
+        <div class="note info"><div class="note-title"> چالش</div>
+            <p>در فایل <code>.env</code> مقدار <code>APP_NAME</code> را به چیزی مثل <code>My First App</code> تغییر بده و
+                صفحه را رفرش کن؛ عنوانِ صفحه در تب مرورگر عوض می‌شود! (این یعنی <code>.env</code> واقعاً تنظیمات را مدیریت می‌کند.)
+                بعد از آزمایش، مقدار قبل را برگردان.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= پروژه‌ی دوره ================= -->
+    <div class="proj-step"><div class="proj-title"> پروژه‌ی این دوره: یک فروشگاه کوچک</div>
+        <p>از این به بعد، هر درس یک <strong>«گام پروژه»</strong> دارد تا دقیقاً همان چیزی را که یاد می‌گیری،
+            روی یک پروژه‌ی واقعی پیاده کنی. پروژه‌ی ما در پایان دوره یک <strong>فروشگاه کوچک</strong> است:
+            ثبت‌نام و ورود، محصول‌ها و دسته‌بندی، آپلود تصویر محصول و یک سبد خریدِ ساده (بدون پرداخت واقعی).
+        </p>
+        <p>گامِ این درس فقط این است که بفهمی قرار است کجا برویم؛ از درسِ بعد (روتینگ) ساختِ واقعی شروع می‌شود. 
+        </p>
+    </div>
+
+    <!-- ================= نکات طلایی ================= -->
+    <div class="golden"><h3> چیزی که از این بخش توی ذهنت بماند</h3>
+        <ol>
+            <li>Laravel یک فریمورک PHP برای سمتِ سرور است؛ پایه‌های آماده را به تو می‌دهد و تو فقط کارِ خودت را می‌نویسی.</li>
+            <li>پروژه‌ی جدید = <code>composer create-project laravel/laravel blog</code>.</li>
+            <li>اجرا با <code>php artisan serve</code> در آدرس <code>http://127.0.0.1:8000</code>؛ خاموشی با <code>Ctrl+C</code>.</li>
+            <li>مسیرهای مهم: <code>routes/web.php</code>، <code>app/Http/Controllers</code>، <code>resources/views</code> و <code>database/migrations</code>.</li>
+            <li><code>.env</code> خانه‌ی تنظیمات محیطی است؛ هرگز در گیت کامیت نمی‌شود و <code>APP_DEBUG</code> در عملیات <code>false</code> است.</li>
+            <li>همیشه مرجعِ رسمی و به‌روز: <code>laravel.com/docs</code>.</li>
+        </ol>
+    </div>
+
+    <!-- ================= ناوبری ================= -->
+    <nav class="lesson-nav" aria-label="ناوبری بین بخش‌ها">
+        <a href="00-فهرست.html">فهرست درس‌ها</a>
+        <a href="02-روتینگ.html">بعدی: روتینگ ←</a>
+    </nav>
+
+</div>
+<script src="../assets/js/rayvo.js"></script>
+</body>
+</html>

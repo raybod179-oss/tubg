@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بخش ۱۰ | فرم‌ها و Validation</title>
+    <meta name="description" content="آموزش فرم‌ها و اعتبارسنجی در لاراول ۱۳: @csrf، @error و old()، قواعد required/email/min/unique/same، validated() و نمونه فرم ثبت‌نام مینی">
+
+    <link rel="icon" href="../assets/img/favicon.png">
+    <link rel="stylesheet" href="../assets/css/rayvo.css">
+    <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script>
+
+    <style>
+        .tk10-file { display:inline-block; background:#eef2ff; color:#4338ca; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:12.5px; direction:ltr; padding:2px 9px; border-radius:6px; border:1px solid #c7d2fe; }
+        .tk10-term { background:#0f172a; color:#e2e8f0; direction:ltr; text-align:left; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:12.5px; line-height:1.9; padding:14px 16px; border-radius:10px; overflow-x:auto; white-space:pre; }
+        .tk10-term .p { color:#38bdf8; }
+        .tk10-term .c { color:#94a3b8; }
+        .tk10-term .o { color:#4ade80; }
+        .tk10-term .x { color:#f87171; }
+        .tk10-out { background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px 18px; font-size:14px; line-height:1.9; color:#1f2937; }
+        .tk10-out ul { margin:0; padding-right:20px; }
+        .tk10-muted { color:#94a3b8; font-size:12.5px; }
+        .tk10-more { margin-top:14px; font-size:12.5px; color:#64748b; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:8px 12px; }
+        .tk10-more a { color:#4f46e5; text-decoration:none; font-weight:600; }
+        .tk10-more a:hover { text-decoration:underline; }
+        .tk10-table { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--border); border-radius:10px; overflow:hidden; font-size:13px; margin-top:6px; }
+        .tk10-table th { background:#f8fafc; color:#334155; text-align:right; padding:8px 12px; border-bottom:1px solid #e2e8f0; }
+        .tk10-table td { padding:7px 12px; border-bottom:1px solid #f1f5f9; color:#475569; vertical-align:top; }
+        .tk10-table tr:last-child td { border-bottom:none; }
+        .tk10-table code { background:#f1f5f9; color:#be185d; border-radius:5px; padding:1px 7px; font-size:12px; }
+        .tk10-flow { display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:center; background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px 14px; }
+        .tk10-flow .box { background:#f1f5f9; border:1px solid #e2e8f0; border-radius:8px; padding:8px 14px; font-size:13px; color:#334155; font-weight:600; }
+        .tk10-flow .box.hot { background:#eef2ff; border-color:#c7d2fe; color:#4338ca; }
+        .tk10-flow .box.x { background:#fef2f2; border-color:#fecaca; color:#b91c1c; }
+        .tk10-flow .arr { color:#cbd5e1; font-size:16px; }
+    </style>
+</head>
+<body>
+<div class="course-page"><!-- ================= سربرگ ================= -->
+    <header class="course-header">
+        <span class="badge">بخش ۱۰</span>
+        <h1>فرم‌ها و Validation</h1>
+        <p>تا این‌جا داده را با Tinker ساختیم. حالا کاربرِ واقعی از درونِ سایت ثبت‌نام و محصول اضافه می‌کند — با فرم‌های امن و ورودی‌های «بررسی‌شده».</p>
+    </header>
+
+    <!-- ================= فهرست ================= -->
+    <nav class="toc" aria-label="فهرست مطالب">
+        <h2>توی این بخش چه چیزهایی یاد می‌گیریم؟</h2>
+        <ol>
+            <li><a href="#why">فرم در Laravel و چرخه‌اش</a></li>
+            <li><a href="#csrf">@csrf و چرا</a></li>
+            <li><a href="#form">فرمِ ثبت‌نامِ مینی — بلید</a></li>
+            <li><a href="#rules">قواعدِ اعتبارسنجی</a></li>
+            <li><a href="#validated">validated() و ذخیره‌ی امن</a></li>
+            <li><a href="#errors">@error و نمایشِ پیام‌ها</a></li>
+            <li><a href="#old">old() و بازپر کردنِ فرم</a></li>
+            <li><a href="#project-step">گام پروژه: فرمِ ایجادِ محصول</a></li>
+            <li><a href="#exercises">تمرین‌ها</a></li>
+        </ol>
+    </nav>
+
+    <!-- ================= درس ۱ ================= -->
+    <section class="lesson" id="why">
+        <div class="lesson-head"><span class="lesson-num">۱</span>
+            <h2>فرم در Laravel و چرخه‌اش</h2>
+        </div>
+
+        <p>فرم یعنی دو روت: یکی با <code>GET</code> که فرم را <strong>نشان</strong> می‌دهد، یکی با <code>POST</code>
+            که <strong>داده را در خودش می‌پذیرد</strong>. چرخه پس از ارسالِ نامعتبر این است:
+        </p>
+
+        <div class="tk10-flow"><span class="box">کاربر فرم را پر می‌کند</span>
+            <span class="arr">←</span>
+            <span class="box hot">validation در کنترلر</span>
+            <span class="arr">→</span>
+            <span class="box x">نامعتبر: خطاها به فرم برگرد</span>
+            <span class="arr">/</span>
+            <span class="box">معتبر: ذخیره و redirect</span>
+        </div>
+
+        <p>در این بخش این چرخه را با یک «فرمِ ثبت‌نامِ مینی» کامل دنبال می‌کنیم (بدون ورود واقعی — آن در درس ۱۲ است).</p>
+
+        <div class="note info"><div class="note-title"> چرا validation؟</div>
+            <p>داده‌ی فرم «بیرونی» است و نباید به آن اعتماد کرد: شاید خالی باشد، شاید فرمتِ ایمیل نادرست باشد،
+                شاید کاربری خواسته نامِ دیگری را در فیلدِ قیمت قالب دهد. اعتبارسنجی یعنی «قبل از هر کاری، بررسی کن».
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۲ ================= -->
+    <section class="lesson" id="csrf">
+        <div class="lesson-head"><span class="lesson-num">۲</span>
+            <h2>@csrf و چرا</h2>
+        </div>
+
+        <p>فرم‌های HTML از روتِ <code>POST</code> می‌توانند از <em>هر سایتی</em> فرستاده شوند؛ یک سایتِ بدجنس می‌تواند
+            فرمی بسازد که «is_admin=1» به فرمِ ثبت‌نامِ تو رجوع بدهد. به این حمله
+            <strong>CSRF</strong> (جعلِ درخواستِ بین‌سایتی) می‌گویند.
+        </p>
+        <p>دفاعِ Laravel: برای هر جلسه یک <strong>توکنِ مخفی</strong> می‌سازد که در سشنِ کاربر است — وب‌سایتِ مزاحم به آن
+            دسترسی ندارد. کافی است در فرمِ خودت، این توکن را بفرستی:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade</span></div>
+                <pre><code>&lt;form method="POST" action="{{ route('register') }}"&gt;
+    @csrf
+    &lt;input type="text" name="email"&gt;
+    ...
+&lt;/form&gt;</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>@csrf</code> یک inputِ مخفیِ <code>_token</code> را با مقدارِ توکنِ جلسه می‌سازد — معادلِ
+                <code>{{ csrf_token() }}</code>.</li>
+            <li>middlewareِ مربوطه (<code>PreventRequestForgery</code>) در گروهِ <code>web</code> — یعنی روت‌هایِ <code>web.php</code> — توکن را چک می‌کند؛ اگر درست نباشد، خطای <strong>419</strong> برمی‌گردد.</li>
+            <li>پس فقط روتِ GET را راحت بردار؛ هر فرمِ POST/PUT/PATCH/DELETE به <code>@csrf</code> نیاز دارد.</li>
+        </ul>
+
+        <div class="note warn"><div class="note-title"> اولین برخورد: 419</div>
+            <p>اگر فرمی یادت برود <code>@csrf</code> بگذارد، صفحه‌ی «419 Page Expired» می‌بینی. این یعنی
+                همان middleware توکن را رد کرده — نه اینکه سیستم خراب است.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۳ ================= -->
+    <section class="lesson" id="form">
+        <div class="lesson-head"><span class="lesson-num">۳</span>
+            <h2>فرمِ ثبت‌نامِ مینی — بلید</h2>
+        </div>
+
+        <p>اول روت‌ها — «نشان بده» و «قبول کن»:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">routes/web.php</span></div>
+                <pre><code>use App\Http\Controllers\AuthController;
+
+Route::get('/register', [AuthController::class, 'create'])-&gt;name('register');
+Route::post('/register', [AuthController::class, 'store'])-&gt;name('register.store');</code></pre>
+            </div>
+        </div>
+
+        <p>حالا خودِ فرم — با برچسب، placeholder و جایِ خطاها:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">resources/views/auth/register.blade.php</span></div>
+                <pre><code>&lt;form method="POST" action="{{ route('register.store') }}"&gt;
+    @csrf
+
+    &lt;label for="name"&gt;نام&lt;/label&gt;
+    &lt;input type="text" name="name" id="name" value="{{ old('name') }}"&gt;
+    @error('name') &lt;p class="field-error"&gt;{{ $message }}&lt;/p&gt; @enderror
+
+    &lt;label for="email"&gt;ایمیل&lt;/label&gt;
+    &lt;input type="email" name="email" id="email" value="{{ old('email') }}"&gt;
+    @error('email') &lt;p class="field-error"&gt;{{ $message }}&lt;/p&gt; @enderror
+
+    &lt;label for="password"&gt;رمز عبور&lt;/label&gt;
+    &lt;input type="password" name="password" id="password"&gt;
+    @error('password') &lt;p class="field-error"&gt;{{ $message }}&lt;/p&gt; @enderror
+
+    &lt;label for="password_confirmation"&gt;تکرار رمز&lt;/label&gt;
+    &lt;input type="password" name="password_confirmation" id="password_confirmation"&gt;
+
+    &lt;button type="submit"&gt;ثبت‌نام&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li>نامِ فیلدها (<code>name</code>) مهم است؛ در کنترلر با همان‌ها مقدار را می‌خوانیم: <code>$request-&gt;name</code>.</li>
+            <li>فیلدِ <code>password_confirmation</code> با قابلیتِ <code>confirmed</code> کار می‌کند (درس بعد).</li>
+            <li>نمایشِ <code>value</code> را برایِ پسورد نگذاشتیم — درست؛ هیچ‌وقت رمزِ کاربر را به حالتِ قبل برنگردان.</li>
+        </ul>
+    </section>
+
+    <!-- ================= درس ۴ ================= -->
+    <section class="lesson" id="rules">
+        <div class="lesson-head"><span class="lesson-num">۴</span>
+            <h2>قواعدِ اعتبارسنجی</h2>
+        </div>
+
+        <p>داخلِ کنترلر، متدِ <code>validate</code> مجموعه‌ای از «قواعد» را می‌گیرد:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">AuthController.php — متدهای create و store</span></div>
+                <pre><code>public function create(): View
+{
+    return view('auth.register');
+}
+
+public function store(Request $request): RedirectResponse
+{
+    $validated = $request-&gt;validate([
+        'name'     =&gt; ['required', 'string', 'max:255'],
+        'email'    =&gt; ['required', 'email', 'unique:users,email'],
+        'password' =&gt; ['required', 'string', 'min:8', 'confirmed'],
+    ]);
+
+    // ... در درس بعد ذخیره می‌کنیم
+}</code></pre>
+            </div>
+        </div>
+
+        <p>قواعد را می‌توانی با رشتهٔ نواردار (<code>'required|email|min:8'</code>) یا آرایه نوشت — آرایه خواناتر است و کامنتی. مهم‌ترین‌ها برای این دوره:</p>
+
+        <table class="tk10-table">
+            <thead>
+                <tr><th>قاعده</th><th>معنی</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>required</code></td><td>فیلد باید مقدارِ غیرِخالی داشته باشد</td></tr>
+                <tr><td><code>email</code></td><td>باید یک ایمیلِ معتبر باشد</td></tr>
+                <tr><td><code>min:8</code> / <code>max:255</code></td><td>حداقل/حداکثرِ طول یا مقدار</td></tr>
+                <tr><td><code>unique:users,email</code></td><td>در جدولِ users، ستونِ email تکراری نباشد</td></tr>
+                <tr><td><code>confirmed</code></td><td>با فیلدِ <code>{name}_confirmation</code> یکی باشد (رمز و تکرارش)</td></tr>
+                <tr><td><code>same:password_confirmation</code></td><td>با فیلدِ دیگری (به‌نامِ دلخواه) دقیقاً یکی باشد — مثلاً تکرارِ رمز</td></tr>
+                <tr><td><code>nullable</code></td><td>خالی پذیر، ولی اگر پر شد باید بقیه‌ی قواعد را رد کند</td></tr>
+            </tbody>
+        </table>
+
+        <div class="note tip"><div class="note-title"> لیستِ کامل</div>
+            <p>ده‌ها قاعده‌ی دیگر هست (date، integer، exists:table,col، in:، regex…). برای پروژه از
+                <code>exists:categories,id</code> و <code>integer</code> و <code>numeric</code> هم استفاده می‌کنیم.
+                فهرستِ کامل در بخشِ ۱۰ داکِ Validation.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۵ ================= -->
+    <section class="lesson" id="validated">
+        <div class="lesson-head"><span class="lesson-num">۵</span>
+            <h2>validated() و ذخیره‌ی امن</h2>
+        </div>
+
+        <p>اگر validation رد نشود، متدِ <code>validate</code> فقط <strong>داده‌یِ تأییدشده</strong> را برمی‌گرداند؛
+            اگر رد شود، همان لحظه کاربر را به صفحه‌ی فرم برمی‌گرداند و خطاها را «فلش» می‌کند. بنابراین ادامه‌ی کدِت
+            فقط وقتی می‌رسد که همه‌چیز امن است:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">blade — بعد از validate</span></div>
+                <pre><code>$user = User::create([
+    'name'     =&gt; $validated['name'],
+    'email'    =&gt; $validated['email'],
+    'password' =&gt; Hash::make($validated['password']),
+]);
+
+return to_route('register')->with('success', 'ثبت‌نام انجام شد!');</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li>به‌جای <code>$request-&gt;all()</code> که همه‌چیزِ بیرونی را می‌دهد، <code>$validated</code> را به
+                <code>create</code> بده — حتی اگر <code>#[Fillable]</code> هم باشد، این «کوتاه‌ترین مسیرِ اعتماد» است.</li>
+            <li>رمز را هرگز خام ذخیره نکن؛ با <code>Hash::make()</code> هش کن (در درس ۱۲ هم همین الگوست).</li>
+            <li><code>to_route('...')</code> یعنی redirect به یک روتِ نام‌دار؛ و <code>with('success', ...)</code> یک
+                پیامِ فلش می‌فرستد که در دیدِ بعدی <code>session('success')</code> خوانده می‌شود.</li>
+        </ul>
+
+        <div class="note info"><div class="note-title"> اگر validation رد شود؟</div>
+            <p>خودِ Laravel کار را انجام می‌دهد: redirect به «صفحه‌ی قبل» + فلشِ خطاها + فلشِ ورودی‌هایِ قدیمی.
+                کارِ تو فقط این است که درِ بلید نمایششان بدهی — در بخشِ بعدی همین درس.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۶ ================= -->
+    <section class="lesson" id="errors">
+        <div class="lesson-head"><span class="lesson-num">۶</span>
+            <h2>@error و نمایشِ پیام‌ها</h2>
+        </div>
+
+        <p>بعد از ردِ validation، متغیرِ <code>$errors</code> در همه‌ی بلیدها در دسترس است (یک
+            <code>MessageBag</code>). سریع‌ترین نمایش، همین بلاکِ <code>@error</code> که در فرمِ درس ۳ گذاشتیم:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade</span></div>
+                <pre><code>@error('email')
+    &lt;p class="field-error"&gt;{{ $message }}&lt;/p&gt;
+@enderror</code></pre>
+            </div>
+        </div>
+
+        <p>و برای «نمایشِ همه‌ی خطاها» یکجا (مثلاً بالای فرم):</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade</span></div>
+                <pre><code>@if ($errors-&gt;any())
+    &lt;ul class="alert alert-danger"&gt;
+        @foreach ($errors-&gt;all() as $error)
+            &lt;li&gt;{{ $error }}&lt;/li&gt;
+        @endforeach
+    &lt;/ul&gt;
+@endif</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>@error('email')</code> فقط وقتی بدنه‌اش اجرا می‌شود که برایِ همین فیلد خطا داشته باشیم؛ داخلش
+                <code>$message</code> همان پیامِ خطاست.</li>
+            <li><code>$errors-&gt;any()</code> می‌گوید «خطایی هست؟» و <code>all()</code> همه را لیست می‌دهد.</li>
+            <li>پیام‌هایِ پیش‌فرض انگلیسی‌اند؛ برایِ فارسی‌کردن: در فایلِ <code>.env</code> مقدارِ <code>APP_LOCALE=fa</code> را اضافه کن،
+                بعد <code>php artisan lang:publish</code> و پر کردنِ پوشه‌ی <code>lang/fa/validation.php</code>.</li>
+        </ul>
+    </section>
+
+    <!-- ================= درس ۷ ================= -->
+    <section class="lesson" id="old">
+        <div class="lesson-head"><span class="lesson-num">۷</span>
+            <h2>old() و بازپر کردنِ فرم</h2>
+        </div>
+
+        <p>وقتی validation رد شود، «همه‌ی ورودیِ فرم» به‌صورتِ خودکار در سشن فلش می‌شود. با تابعِ
+            <code>old('name')</code> می‌توانی مقداری را که کاربر گفته بود، دوباره در همان فیلد چال کنی تا لازم نباشد همه‌چیز را از نو بنویسد:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade</span></div>
+                <pre><code>&lt;input type="text" name="name" value="{{ old('name') }}"&gt;
+
+@error('name')
+    &lt;p class="field-error"&gt;{{ $message }}&lt;/p&gt;
+@enderror</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>old('name')</code> یعنی «مقداری که در ارسالِ قبلیِ فرم، در فیلدِ name بود»؛ اگر نبود، خالی/null.</li>
+            <li>فقط خطایِ یک فیلد را می‌خواهی؟ <code>@error('name')</code> همان کار را می‌کند.</li>
+            <li>برایِ پسوردها <code>old()</code> نمی‌گذار؛ ارزشِ محرمانه نباید دوباره داخلِ HTML بنشیند.
+                ولی برایِ <code>select</code> و <code>checkbox</code> حتماً بگذار تا انتخابِ کاربر بعد از خطا پاک نشود:
+                <code>&lt;option value="{{ $c-&gt;id }}" {{ old('category_id') == $c-&gt;id ? 'selected' : '' }}&gt;</code>
+                و برایِ چک‌باکس: <code>{{ old('agree') ? 'checked' : '' }}</code>.</li>
+        </ul>
+
+        <div class="note tip"><div class="note-title"> یادت بماند</div>
+            <p>این سه‌گانه (<code>validate</code> → <code>@error</code> → <code>old</code>) الگویِ ثابتِ Laravel است؛
+                درِ هر فرمی همین سه تا را کنارِ هم می‌بینی.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۸ ================= -->
+    <section class="lesson" id="project-step">
+        <div class="lesson-head"><span class="lesson-num">۸</span>
+            <h2>گام پروژه: فرمِ ایجادِ محصول</h2>
+        </div>
+
+        <div class="proj-step"><div class="proj-title"> از فرمِ ثبت‌نام به فروشگاه</div>
+            <p>حالا «ایجادِ محصول» را از درونِ سایت ممکن می‌کنیم — با همان الگو: روت، کنترلر، validate، ذخیره، redirect.
+            </p>
+        </div>
+
+        <ol>
+            <li>
+                روت‌ها:
+                <code>Route::get('/products/create', [ProductController::class, 'create'])-&gt;name('products.create')</code>
+                و
+                <code>Route::post('/products', [ProductController::class, 'store'])-&gt;name('products.store')</code>.
+            </li>
+            <li>
+                فرم در <code>products/create.blade.php</code>: فیلدهای نام، توضیح (textarea)، قیمت، یک
+                <code>&lt;select name="category_id"&gt;</code> (با <code>@foreach ($categories as $category)</code> از
+                کنترلر)، و <code>@csrf</code>. برایِ هر فیلد، <code>old('...')</code> و <code>@error</code>.
+            </li>
+            <li>
+                در <code>create()</code> متدِ کنترلر: <code>return view('products.create', ['categories' =&gt; Category::all()])</code>.
+            </li>
+            <li>
+                در <code>store()</code>:
+            </li>
+        </ol>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">ProductController.php</span></div>
+                <pre><code>public function store(Request $request): RedirectResponse
+{
+    $validated = $request-&gt;validate([
+        'name'        =&gt; ['required', 'string', 'max:255'],
+        'description' =&gt; ['nullable', 'string'],
+        'price'       =&gt; ['required', 'integer', 'min:0'],
+        'category_id' =&gt; ['required', 'exists:categories,id'],
+    ]);
+
+    Product::create($validated);
+
+    return to_route('products.index')
+        -&gt;with('success', 'محصول با موفقیت اضافه شد.');
+}</code></pre>
+            </div>
+        </div>
+
+        <ol start="5">
+            <li>
+                <code>exists:categories,id</code> یعنی «category_id باید در جدولِ categories، ستونِ id وجود داشته باشد»
+                — وگرنه کسی می‌تواند عددِ دلخواه بفرستد. این‌طور حتی اگر کاربر فیلد را دستکاری کند، جلویش گرفته می‌شود.
+            </li>
+            <li>
+                در <code>products/index.blade.php</code> پیامِ موفقیت را نشان بده:
+                <code>@if (session('success'))</code> و فلشِ <code>session('success')</code>.
+            </li>
+        </ol>
+
+        <div class="note info"><div class="note-title"> بعدی</div>
+            <p>«ویرایش و حذفِ درون‌سایتی» با همان قواعد، در گامِ ۵ پروژه‌ی پایانی (درس ۹۹) کامل می‌شود.
+                فقط دقت کن که برای ویرایش، قاعده‌ی <code>unique</code> باید «به‌جز خودِ این محصول» چک شود — یک چالشِ خوب در تمرین‌ها.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۹ ================= -->
+    <section class="lesson" id="exercises">
+        <div class="lesson-head"><span class="lesson-num">۹</span>
+            <h2>تمرین‌ها؛ حالا نوبت توست!</h2>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۱: فرمِ محصول را کامل کن</div>
+            <ol>
+                <li>بلیدِ <code>products/create.blade.php</code> را با selectِ دسته‌بندی و <code>old()</code> بساز.</li>
+                <li>اگر فرم را خالی بفرستی، باید هر فیلدِ required زیرش پیامِ لازم را نشان دهد.</li>
+                <li>قیمتِ غیرعددی بفرست تا ببینی <code>integer</code> چه می‌کند.</li>
+            </ol>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۲: ثبت‌نام بعد از ۸ کاراکتر</div>
+            <ol>
+                <li>در فرمِ ثبت‌نام، رمز را با کمتر از ۸ نویسه بفرست؛ پیامِ min:8 را ببین.</li>
+                <li>رمز و تکرارش را متفاوت بنویس؛ پیامِ <code>confirmed</code> را ببین.</li>
+                <li>ایمیلی را دوباره ثبت کن؛ پیامِ <code>unique</code> را ببین.</li>
+            </ol>
+        </div>
+
+        <div class="note info"><div class="note-title"> چالش</div>
+            <p>در فرمِ ویرایشِ محصول، قاعده‌ی <code>unique</code> نباید با «خودِ محصولِ در حالِ ویرایش» گیر کند.
+                راهنما: <code>Rule::unique('products', 'name')-&gt;ignore($product-&gt;id)</code> — بعداً در داکِ
+                Available Validation Rules بگردش و تستش کن.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= نکات طلایی ================= -->
+    <div class="golden"><h3> چیزی که از این بخش توی ذهنت بماند</h3>
+        <ol>
+            <li>هر فرمِ ویرایشی دو روت دارد: GET (نشان بده) و POST (قبول کن).</li>
+            <li>در همه‌ی فرم‌های POST/PUT/DELETE، <code>@csrf</code>؛ وگرنه 419.</li>
+            <li>قبل از هر ذخیره‌ای: <code>$request-&gt;validate([...])</code> — داده‌ی بیرونی هرگز قابلِ اعتماد نیست.</li>
+            <li>تولیدِ ورودیِ امن: از <code>$validated</code> (یا <code>safe()</code>) بساز، نه <code>$request-&gt;all()</code>.</li>
+            <li>نمایشِ خطا: <code>@error('field') {{ $message }} @enderror</code>.</li>
+            <li>بازپر کردن: <code>old('field')</code> در inputها — نه برای رمزها.</li>
+            <li>رابطه‌ها در validation: <code>exists:table,column</code>؛ در ویرایش، unique را با <code>ignore</code> به‌جزِ خودش کن.</li>
+        </ol>
+    </div>
+
+    <!-- ================= مطالعه‌ی بیشتر ================= -->
+    <div class="tk10-more"> مطالعه‌ی بیشتر (انگلیسی):
+        <a href="https://laravel.com/docs/13.x/validation#validation-quickstart" target="_blank" rel="noopener">شروعِ سریعِ Validation</a> —
+        <a href="https://laravel.com/docs/13.x/validation#quick-writing-the-validation-logic" target="_blank" rel="noopener">نوشتنِ منطقِ اعتبارسنجی</a>،
+        <a href="https://laravel.com/docs/13.x/validation#quick-displaying-the-validation-errors" target="_blank" rel="noopener">نمایشِ خطاها و @error</a>،
+        <a href="https://laravel.com/docs/13.x/validation#repopulating-forms" target="_blank" rel="noopener">بازپر کردنِ فرم با old()</a>،
+        <a href="https://laravel.com/docs/13.x/validation#working-with-validated-input" target="_blank" rel="noopener">validated() و safe()</a>،
+        <a href="https://laravel.com/docs/13.x/validation#available-validation-rules" target="_blank" rel="noopener">فهرستِ قواعد</a> و
+        <a href="https://laravel.com/docs/13.x/csrf#csrf-introduction" target="_blank" rel="noopener">CSRF و @csrf</a>.
+    </div>
+
+    <!-- ================= ناوبری ================= -->
+    <nav class="lesson-nav" aria-label="ناوبری بین بخش‌ها">
+        <a href="00-فهرست.html">فهرست درس‌ها</a>
+        <a href="09-Eloquent-روابط.html">→ بخش قبل: Eloquent روابط و Tinker</a>
+        <a href="11-Middleware.html">بعدی: Middleware ←</a>
+    </nav>
+
+</div>
+<script src="../assets/js/rayvo.js"></script>
+</body>
+</html>

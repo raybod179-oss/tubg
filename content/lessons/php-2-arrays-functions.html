@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سطح ۰ · درس ۳ | مبانی PHP ۲: آرایه و تابع</title><meta name="description" content="آرایه‌ها و تابع‌ها پایه‌ی هر کد لاراولی‌اند؛ کالکشن‌ها، کانفیگ‌ها و نتیجه‌ی دیتابیس همه آرایه‌اند.">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">سطح ۰ · درس ۳</span><h1>مبانی PHP ۲: آرایه و تابع</h1><p>آرایه‌ها و تابع‌ها پایه‌ی هر کد لاراولی‌اند؛ کالکشن‌ها، کانفیگ‌ها و نتیجه‌ی دیتابیس همه آرایه‌اند.</p></header>
+<section class="step"><h2>۱. آرایه‌ی ساده و انجمنی</h2><p>آرایه‌ی ساده با اندیس عددی و آرایه‌ی انجمنی با کلید متنی (مثل ردیف یک جدول):</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">آرایه</span></div><pre><code>&lt;?php
+$colors = ['قرمز', 'آبی'];
+$colors[] = 'سبز';          // افزودن
+echo count($colors);        // 3
+
+$product = ['name' =&gt; 'هدفون', 'price' =&gt; 450000];
+echo $product['name'];</code></pre></div></div></section><section class="step"><h2>۲. حلقه روی آرایه</h2><p><code>foreach</code> با کلید و مقدار:</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">foreach</span></div><pre><code>&lt;?php
+foreach ($product as $key =&gt; $value) {
+    echo "$key: $value&lt;br&gt;";
+}
+
+$prices = [100, 250, 80];
+echo array_sum($prices);          // 430
+sort($prices);                    // مرتب‌سازی</code></pre></div></div></section><section class="step"><h2>۳. تابع</h2><p>تابع کار تکراری را یک‌جا می‌نویسد. نوع ورودی و خروجی را بنویس تا خطا زود پیدا شود.</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">function</span></div><pre><code>&lt;?php
+function finalPrice(int $price, int $discount = 0): int
+{
+    return $price - ($price * $discount / 100);
+}
+
+echo finalPrice(200000, 10); // 180000</code></pre></div></div></section><section class="step"><h2>۴. تابع بی‌نام و array_map</h2><p>در لاراول زیاد می‌بینی: تابع کوتاه <code>fn</code>.</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">fn</span></div><pre><code>&lt;?php
+$names = ['علی', 'سارا'];
+$upper = array_map(fn ($n) =&gt; "کاربر: $n", $names);
+$cheap = array_filter([50, 500, 90], fn ($p) =&gt; $p &lt; 100);</code></pre></div></div></section><section class="step"><h2>۵. تمرین</h2><p>تابعی بنویس که آرایه‌ای از قیمت‌ها را بگیرد و میانگین آن را برگرداند؛ سپس فقط قیمت‌های بالاتر از میانگین را با <code>array_filter</code> بیرون بکش.</p></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>استفاده از <code>$arr[name]</code> بدون کوتیشن.</li><li>فراموش‌کردن <code>return</code> در تابع.</li><li>تغییر آرایه‌ی اصلی با <code>sort</code> بدون توجه به اینکه آرایه را عوض می‌کند.</li></ol></div>
+<nav class="lesson-nav"><a href="php-1-basics.html">→ بخش قبل: مبانی PHP ۱</a><a href="php-3-oop.html">بعدی: مبانی PHP ۳: شی‌گرایی ←</a></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

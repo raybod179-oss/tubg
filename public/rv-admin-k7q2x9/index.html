@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>پنل مدیریت | Rayvo</title>
+<style>
+@font-face{font-family:Vazirmatn;src:url(/assets/fonts/Vazirmatn-FD-Regular.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:Vazirmatn;src:url(/assets/fonts/Vazirmatn-FD-Bold.woff2) format("woff2");font-weight:700;font-display:swap}
+:root{--bg:#0f1115;--card:#181b22;--line:#2a2f3a;--tx:#e8eaf0;--mut:#9aa3b2;--ac:#6c8cff;--ok:#2fbf71;--bad:#ef5350;--warn:#f5a623}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.7 Vazirmatn,Tahoma,sans-serif;padding:env(safe-area-inset-top) 0 40px}
+.w{max-width:860px;margin:0 auto;padding:14px}
+h1{font-size:19px;margin:6px 0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+input{width:100%;background:#0f1115;border:1px solid var(--line);color:var(--tx);border-radius:10px;padding:11px 12px;font:inherit;margin-bottom:8px}
+input:focus{outline:2px solid var(--ac);border-color:transparent}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:#222733;color:var(--tx);border-radius:10px;padding:8px 12px}
+button.p{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:700}
+button.d{color:var(--bad)}
+button:disabled{opacity:.5}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>*{flex:1 1 140px}
+.top{display:flex;align-items:center;gap:8px;justify-content:space-between;flex-wrap:wrap}
+.top .row{flex:0 0 auto}.top .row>*{flex:0 0 auto}
+.err{color:var(--bad);min-height:1.4em;font-size:14px}
+.st{margin:4px 0 10px;color:var(--mut);font-size:14px}
+.s{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;background:#141720}
+.s.off{opacity:.65}
+.s h3{margin:0 0 2px;font-size:16px}
+.s .ph{color:var(--mut);font-size:13px;direction:ltr;text-align:right}
+.code{font:700 16px ui-monospace,Menlo,Consolas,monospace;direction:ltr;text-align:center;background:#0f1115;border:1px dashed var(--line);border-radius:10px;padding:8px;margin:8px 0;cursor:pointer;letter-spacing:.5px;user-select:all}
+.b{display:inline-block;font-size:12px;border-radius:99px;padding:1px 9px;margin-left:4px}
+.b.on{background:#12351f;color:var(--ok)}.b.off{background:#3a1b1b;color:var(--bad)}.b.used{background:#2d2a14;color:var(--warn)}.b.new{background:#1c2438;color:var(--ac)}
+.acts{display:flex;gap:6px;flex-wrap:wrap}.acts button{flex:1 1 90px;font-size:13px;padding:7px 6px}
+.chk{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.chk:last-child{border:0}.chk .m{width:20px}.chk small{color:var(--mut);display:block;direction:ltr;text-align:right;word-break:break-all}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#222733;border:1px solid var(--line);border-radius:10px;padding:8px 16px;display:none;z-index:9}
+</style></head><body><div class="w">
+<div id="login" class="card" hidden>
+  <h1>ورود مدیر</h1>
+  <form id="lf" autocomplete="on">
+    <input id="em" type="email" dir="ltr" placeholder="ایمیل" autocomplete="username" required>
+    <input id="ph" type="tel" dir="ltr" placeholder="شماره‌ی موبایل" autocomplete="tel" required>
+    <input id="pw" type="password" dir="ltr" placeholder="رمز" autocomplete="current-password" required>
+    <button class="p" style="width:100%" type="submit">ورود</button>
+    <div class="err" id="le"></div>
+  </form>
+</div>
+<div id="app" hidden>
+  <div class="top"><h1>پنل دانشجوها</h1><div class="row"><button id="stBtn">وضعیت سیستم</button><button id="out">خروج</button></div></div>
+  <div class="card" id="stBox" hidden></div>
+  <div class="card">
+    <form id="cf"><div class="row"><input id="nm" placeholder="نام خریدار" maxlength="80" required><input id="np" type="tel" dir="ltr" placeholder="شماره (اختیاری)"></div>
+    <button class="p" style="width:100%" type="submit">ساخت کد دسترسی</button><div class="err" id="ce"></div></form>
+  </div>
+  <input id="q" placeholder="جستجو: نام، شماره یا کد">
+  <div class="st" id="sum"></div>
+  <div id="list"></div>
+</div>
+</div>
+<div id="toast"></div>
+<script>
+(function(){
+"use strict";
+var $=function(i){return document.getElementById(i)};
+var data=[];
+function toast(t){var e=$("toast");e.textContent=t;e.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(function(){e.style.display="none"},1800)}
+function api(path,body){
+  var o=body===undefined?{credentials:"same-origin"}:{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json","X-RV":"1"},body:JSON.stringify(body)};
+  return fetch("/api/admin/"+path,o).then(function(r){return r.json().catch(function(){return{}}).then(function(d){if(r.status===401&&path!=="login"){show(false)}if(!r.ok)throw new Error(d.error||"خطا");return d})})
+}
+function show(inApp){$("login").hidden=inApp;$("app").hidden=!inApp}
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function fdate(ts){if(!ts)return"";try{return new Date(ts).toLocaleDateString("fa-IR")}catch(e){return""}}
+function copy(t,msg){
+  function fb(){var a=document.createElement("textarea");a.value=t;a.style.position="fixed";a.style.opacity="0";document.body.appendChild(a);a.select();try{document.execCommand("copy");toast(msg||"کپی شد")}catch(e){toast("کپی نشد")}document.body.removeChild(a)}
+  if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(t).then(function(){toast(msg||"کپی شد")},fb);else fb();
+}
+function message(s){
+  return "سلام "+s.name+" 👋\nدسترسی شما به دوره‌ی جامع Laravel (Rayvo) فعال شد.\n\nآدرس ورود: "+location.origin+"/login.html\nکد دسترسی: "+s.code+"\n\nنکته: کد فقط روی یک مرورگر کار می‌کند. با همان مرورگری که اول وارد می‌شوید ادامه بدهید و کد را به کسی ندهید.\nپشتیبانی: @RayvoSupport";
+}
+function act(path,body,ok){return api(path,body).then(function(d){toast(ok||"انجام شد");return load()}).catch(function(e){toast(e.message)})}
+function render(){
+  var q=$("q").value.trim().toLowerCase(),box=$("list");box.textContent="";
+  var rows=data.filter(function(s){return!q||(s.name+" "+s.phone+" "+s.code).toLowerCase().indexOf(q)>=0});
+  var a=data.filter(function(s){return s.active}).length,u=data.filter(function(s){return s.used}).length;
+  $("sum").textContent=data.length+" نفر · "+a+" فعال · "+u+" وارد شده";
+  if(!rows.length){box.appendChild(el("div","st",data.length?"موردی پیدا نشد":"هنوز کدی نساخته‌ای"));return}
+  rows.forEach(function(s){
+    var c=el("div","s"+(s.active?"":" off"));
+    c.appendChild(el("h3","",s.name));
+    if(s.phone)c.appendChild(el("div","ph",s.phone));
+    var bs=el("div","");
+    bs.appendChild(el("span","b "+(s.active?"on":"off"),s.active?"فعال":"غیرفعال"));
+    bs.appendChild(el("span","b "+(s.used?"used":"new"),s.used?("وارد شده "+fdate(s.usedAt)):"هنوز وارد نشده"));
+    c.appendChild(bs);
+    var cd=el("div","code",s.code);cd.title="کپی کد";cd.onclick=function(){copy(s.code,"کد کپی شد")};c.appendChild(cd);
+    var ac=el("div","acts");
+    var b1=el("button","p","کپی پیام");b1.onclick=function(){copy(message(s),"پیام کپی شد")};
+    var b2=el("button","",s.active?"غیرفعال":"فعال");b2.onclick=function(){act("toggle",{code:s.code,active:!s.active},s.active?"غیرفعال شد":"فعال شد")};
+    var b3=el("button","","ریست");b3.title="آزاد کردن قفل مرورگر";b3.onclick=function(){if(confirm("قفل مرورگر «"+s.name+"» آزاد شود؟ (کد همان می‌ماند)"))act("reset",{code:s.code},"ریست شد")};
+    var b4=el("button","","کد جدید");b4.onclick=function(){if(confirm("کد قدیمی باطل و یک کد جدید ساخته شود؟"))act("regen",{code:s.code},"کد جدید ساخته شد")};
+    var b5=el("button","d","حذف");b5.onclick=function(){if(confirm("«"+s.name+"» برای همیشه حذف شود؟"))act("delete",{code:s.code},"حذف شد")};
+    [b1,b2,b3,b4,b5].forEach(function(b){ac.appendChild(b)});c.appendChild(ac);box.appendChild(c);
+  });
+}
+function load(){return api("list").then(function(d){data=d.students||[];show(true);render()}).catch(function(e){if(e.message==="نیاز به ورود")show(false);else toast(e.message)})}
+$("lf").addEventListener("submit",function(e){e.preventDefault();var b=this.querySelector("button");b.disabled=true;$("le").textContent="";
+  api("login",{email:$("em").value,phone:$("ph").value,password:$("pw").value}).then(function(){$("pw").value="";return load()}).catch(function(x){$("le").textContent=x.message}).then(function(){b.disabled=false})});
+$("cf").addEventListener("submit",function(e){e.preventDefault();var b=this.querySelector("button");b.disabled=true;$("ce").textContent="";
+  api("create",{name:$("nm").value,phone:$("np").value}).then(function(d){$("nm").value="";$("np").value="";copy(message(d.student),"ساخته شد؛ پیام آماده کپی شد");return load()}).catch(function(x){$("ce").textContent=x.message}).then(function(){b.disabled=false})});
+$("q").addEventListener("input",render);
+$("out").addEventListener("click",function(){api("logout",{}).then(function(){show(false)})});
+$("stBtn").addEventListener("click",function(){
+  var box=$("stBox");box.hidden=false;box.textContent="در حال بررسی...";
+  api("status").then(function(d){box.textContent="";
+    d.checks.forEach(function(c){var r=el("div","chk");r.appendChild(el("span","m",c.ok?"✅":"❌"));var t=el("div","",c.name);if(c.detail){t.appendChild(el("small","",c.detail))}r.appendChild(t);box.appendChild(r)});
+    var all=d.checks.every(function(c){return c.ok});box.appendChild(el("div","st",all?"همه‌چیز سالم است.":"مورد قرمز را برای پشتیبانی بفرست."))}).catch(function(e){box.textContent=e.message})});
+load().then(function(){if($("app").hidden)show(false)});
+})();
+</script></body></html>

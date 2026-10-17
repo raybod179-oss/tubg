@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بخش ۱۲ | احراز هویت (Auth)</title>
+    <meta name="description" content="آموزش احراز هویت در لاراول ۱۳: Auth::attempt، محافظت روت با middleware auth، auth()->user()، @auth/@guest، لاگین/لاگاوت، استارتر کیت‌ها و Gate::define">
+
+    <link rel="icon" href="../assets/img/favicon.png">
+    <link rel="stylesheet" href="../assets/css/rayvo.css">
+    <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script>
+
+    <style>
+        .tk12-file { display:inline-block; background:#eef2ff; color:#4338ca; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:12.5px; direction:ltr; padding:2px 9px; border-radius:6px; border:1px solid #c7d2fe; }
+        .tk12-term { background:#0f172a; color:#e2e8f0; direction:ltr; text-align:left; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:12.5px; line-height:1.9; padding:14px 16px; border-radius:10px; overflow-x:auto; white-space:pre; }
+        .tk12-term .p { color:#38bdf8; }
+        .tk12-term .c { color:#94a3b8; }
+        .tk12-term .o { color:#4ade80; }
+        .tk12-term .x { color:#f87171; }
+        .tk12-more { margin-top:14px; font-size:12.5px; color:#64748b; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:8px 12px; }
+        .tk12-more a { color:#4f46e5; text-decoration:none; font-weight:600; }
+        .tk12-more a:hover { text-decoration:underline; }
+        .tk12-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; }
+        .tk12-card { background:#fff; border:1px solid var(--border); border-radius:12px; padding:16px 18px; }
+        .tk12-card h4 { margin:0 0 8px; color:#4338ca; font-size:14px; }
+        .tk12-card p { margin:0; color:#475569; font-size:13px; line-height:1.9; }
+        .tk12-row { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:center; background:#fff; border:1px solid var(--border); border-radius:12px; padding:16px; }
+        .tk12-step { background:#f8fafc; border:1px solid #e2e8f0; color:#334155; border-radius:8px; padding:10px 14px; font-size:13px; font-weight:600; }
+        .tk12-step.ok { background:#ecfdf5; border-color:#a7f3d0; color:#065f46; }
+        .tk12-step.no { background:#fef2f2; border-color:#fecaca; color:#991b1b; }
+        .tk12-arrow { color:#cbd5e1; }
+    </style>
+</head>
+<body>
+<div class="course-page"><!-- ================= سربرگ ================= -->
+    <header class="course-header">
+        <span class="badge">بخش ۱۲</span>
+        <h1>احراز هویت (Auth)</h1>
+        <p>در بخش ۱۰ فرمِ ثبت‌نام را ساختیم؛ الان «ورود» و «وضعیتِ کاربرِ لاگین‌کرده» را اضافه می‌کنیم، روت‌ها را قفل می‌کنیم و با اهمیتِ درسِ قبل (middleware) یک پنلِ مدیریتی واقعی می‌سازیم.</p>
+    </header>
+
+    <!-- ================= فهرست ================= -->
+    <nav class="toc" aria-label="فهرست مطالب">
+        <h2>توی این بخش چه چیزهایی یاد می‌گیریم؟</h2>
+        <ol>
+            <li><a href="#intro">احرازِ هویت چیست و چرا</a></li>
+            <li><a href="#login">روت‌ها و فرمِ ورود</a></li>
+            <li><a href="#attempt">Auth::attempt و چرخه‌ی ورود</a></li>
+            <li><a href="#current">کاربرِ فعلی: Auth::user()</a></li>
+            <li><a href="#protect">محافظتِ روت‌ها با auth</a></li>
+            <li><a href="#blade">@auth و @guest در بلید</a></li>
+            <li><a href="#logout">خروج و امنیتِ سشن</a></li>
+            <li><a href="#starter">استارتر کیت‌های رسمی</a></li>
+            <li><a href="#gate">Gate ساده با Gate::define</a></li>
+            <li><a href="#project-step">گام پروژه: لاگین + نقش admin</a></li>
+            <li><a href="#exercises">تمرین‌ها</a></li>
+        </ol>
+    </nav>
+
+    <!-- ================= درس ۱ ================= -->
+    <section class="lesson" id="intro">
+        <div class="lesson-head"><span class="lesson-num">۱</span>
+            <h2>احرازِ هویت چیست و چرا</h2>
+        </div>
+
+        <p>«احرازِ هویت» یعنی اثباتِ «کیستی» کاربر. Laravel این را با دو مفهوم انجام می‌دهد:
+            <strong>guard</strong> (چطور وضعیتِ کاربر برای هر درخواست چک می‌شود) و <strong>provider</strong>
+            (کاربرها از کجا خوانده می‌شوند).
+        </p>
+
+        <div class="tk12-grid"><div class="tk12-card"><h4>Guard</h4>
+                <p>پیش‌فرضِ وب، <code>session</code> است: بعد از ورود موفق، یک کوکیِ سشن با شناسه‌اش برایِ مرورگر صادر می‌شود و هر درخواستِ بعدی با همان سشن «کاربرش» را می‌شناسد.</p>
+            </div>
+            <div class="tk12-card"><h4>Provider</h4>
+                <p>پیش‌فرض <code>Eloquent</code> است با مدلِ <code>App\Models\User</code>. یعنی «کاربر» در جدولِ users است و Eloquent آن را برمی‌گرداند.</p>
+            </div>
+            <div class="tk12-card"><h4>config/auth.php</h4>
+                <p>تنظیماتِ guardها و providerها این‌جاست. وقتی پروژه‌هایِ پیشرفته‌تر (مثلِ admin جدا) می‌خواهی، همین‌جا guard اضافه می‌کنی.</p>
+            </div>
+        </div>
+
+        <p>یعنی کارِ اصلی فقط ساختنِ «ورود/خروج» است؛ بقیه‌ی امکانات از قبل در چارچوب آماده است.</p>
+
+        <div class="note info"><div class="note-title"> از کجا ادامه می‌دهیم؟</div>
+            <p>فرمِ ثبت‌نامِ بخشِ ۱۰ کاربر می‌سازد (با هش‌کردنِ <code>Hash::make</code>). حالا آن کاربر باید بتواند «وارد» شود و بعدِ ورود «بماند». همه‌ی این‌ها همین‌جا است.</p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۲ ================= -->
+    <section class="lesson" id="login">
+        <div class="lesson-head"><span class="lesson-num">۲</span>
+            <h2>روت‌ها و فرمِ ورود</h2>
+        </div>
+
+        <p>مثلِ درسِ ۱۰، دو روت: نمایشِ فرم و پردازشِ فرم:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">routes/web.php</span></div>
+                <pre><code>Route::get('/login', [AuthController::class, 'create'])-&gt;name('login');
+Route::post('/login', [AuthController::class, 'store'])-&gt;name('login.store');
+Route::post('/logout', [AuthController::class, 'logout'])-&gt;name('logout');</code></pre>
+            </div>
+        </div>
+
+        <p>و فرمِ ورود — با همان سلاحِ درسِ ۱۰ (<code>@csrf</code>، <code>old()</code>، <code>@error</code>):</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">resources/views/auth/login.blade.php</span></div>
+                <pre><code>&lt;form method="POST" action="{{ route('login.store') }}"&gt;
+    @csrf
+
+    &lt;label for="email"&gt;ایمیل&lt;/label&gt;
+    &lt;input type="email" name="email" id="email" value="{{ old('email') }}"&gt;
+    @error('email') &lt;p class="field-error"&gt;{{ $message }}&lt;/p&gt; @enderror
+
+    &lt;label for="password"&gt;رمز عبور&lt;/label&gt;
+    &lt;input type="password" name="password" id="password"&gt;
+    @error('password') &lt;p class="field-error"&gt;{{ $message }}&lt;/p&gt; @enderror
+
+    &lt;button type="submit"&gt;ورود&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+            </div>
+        </div>
+
+<div class="note info"><div class="note-title"> چرا <code>name('login')</code>؟</div>
+            <p>زودتر می‌بینی: middlewareِ <code>auth</code> وقتی کاربرِ لاگین‌نکرده را می‌بیند، او را به همین «روتِ نام‌دارِ login» ریدایرکت می‌کند. بدونِ نامِ روت، middleware نمی‌داند کجا بفرستد.</p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۳ ================= -->
+    <section class="lesson" id="attempt">
+        <div class="lesson-head"><span class="lesson-num">۳</span>
+            <h2>Auth::attempt و چرخه‌ی ورود</h2>
+        </div>
+
+        <p>قلبِ ورود، متدِ <code>Auth::attempt()</code> است: مشخصات را می‌گیرد، کاربر را از provider پیدا می‌کند،
+            هشِ رمز را با <code>bcrypt</code> چک می‌کند (پس <em>هیچ‌وقت</em> خودت <code>Hash::check</code> نزن) و در صورتِ تأیید، سشن را اصطلاحاً «لاگین» می‌کند:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">AuthController.php</span></div>
+                <pre><code>use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
+
+public function store(Request $request): RedirectResponse
+{
+    $credentials = $request-&gt;validate([
+        'email'    =&gt; ['required', 'email'],
+        'password' =&gt; ['required'],
+    ]);
+
+    if (Auth::attempt($credentials)) {
+        $request-&gt;session()-&gt;regenerate();      // جلویِ session fixation
+        return redirect()-&gt;intended('dashboard');
+    }
+
+    throw ValidationException::withMessages([
+        'email' =&gt; ['مشخصاتِ داده‌شده با سوابقِ ما مطابقت ندارد'],
+    ]);
+}</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>Auth::attempt([...])</code> فقط <code>email</code>/<code>password</code> لازم را می‌خواهد؛ بقیه‌ی کلیدها (مثلاً <code>active =&gt; 1</code>) شرطِ کوئری می‌شوند.</li>
+            <li><code>$request-&gt;session()-&gt;regenerate()</code> یک «سشنِ تازه» می‌گیرد که حمله‌ی session fixation را خنثی کند — همیشه بعدِ ورود.</li>
+            <li><code>redirect()-&gt;intended('dashboard')</code>: اگر کاربر قبلاً وسطِ کار به صفحه‌ای قفل‌شده رفته بود، به همان‌جا برمی‌گردد؛ وگرنه «dashboard».</li>
+            <li>خطایِ «مشخصات درست نیست» را نمی‌گذاری که صفحه بفهمد «ایمیلِ درست ولی پسوردِ غلط» — همین‌طور شناسیِ رمزی کمتر.</li>
+        </ul>
+
+        <div class="tk12-row"><span class="tk12-step">فرمِ ورود POST می‌شود</span>
+            <span class="tk12-arrow">←</span>
+            <span class="tk12-step">validation + Auth::attempt</span>
+            <span class="tk12-arrow">→</span>
+            <span class="tk12-step ok">درست: regenerate + ریدایرکتِ intended</span>
+            <span class="tk12-arrow">/</span>
+            <span class="tk12-step no">نادرست: پیامِ دقیقِ «ایمیل درست ولی رمز غلط»</span>
+        </div>
+    </section>
+
+    <!-- ================= درس ۴ ================= -->
+    <section class="lesson" id="current">
+        <div class="lesson-head"><span class="lesson-num">۴</span>
+            <h2>کاربرِ فعلی: Auth::user()</h2>
+        </div>
+
+        <p>بعد از ورود، کاربرِ لاگین‌کرده را با چند فرمولِ مساوی می‌گیری:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP — هم‌ارزند</span></div>
+                <pre><code>use Illuminate\Support\Facades\Auth;
+
+$user = Auth::user();                      // کاربرِ فعلی (مدل User) یا null
+$id   = Auth::id();                        // شناسه‌ی کاربرِ فعلی
+$ok   = Auth::check();                     // true اگر لاگین باشد
+
+// داخلِ بلید هم همین‌طور:
+{{ auth()-&gt;user()-&gt;name }}                {{-- کمکِ سراسری auth() --}}
+{{ $request-&gt;user()-&gt;email }}             {{-- از خودِ Request --}}</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>auth()-&gt;user()</code> یک helperِ سراسری است که کوتاه‌تر از <code>Auth::user()</code> است و همان کار را می‌کند.</li>
+            <li>در متدِ کنترلر، <code>$request-&gt;user()</code> تمیزترین راه است (همان‌طور در درسِ ۱۱ در <code>CheckRole</code> دیده‌ای).</li>
+            <li>اگر لاگین نباشد، این‌ها به‌جای خطا فقط <code>null</code> می‌دهند. برایِ چکِ «لاگین هستی یا نه» از <code>Auth::check()</code> استفاده کن.</li>
+        </ul>
+
+        <div class="note tip"><div class="note-title"> null کجای ذهن؟</div>
+            <p>رویِ روت‌هایی که <code>auth</code> middleware دارند، کاربرِ فعلی امن است؛ رویِ روتِ عمومی، اول
+                <code>Auth::check()</code> را نکن، بلید را با <code>@auth/@guest</code> شرطی بکن (درسِ ۶).
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۵ ================= -->
+    <section class="lesson" id="protect">
+        <div class="lesson-head"><span class="lesson-num">۵</span>
+            <h2>محافظتِ روت‌ها با auth</h2>
+        </div>
+
+        <p>عینِ درسِ ۱۱: middlewareِ <code>auth</code> (aliasِ از کلاسِ Authenticate) روت را «فقط برایِ لاگین‌کرده‌ها» می‌کند
+            و کاربرِ لاگین‌نکرده را به <code>login</code> ریدایرکت می‌کند:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">routes/web.php</span></div>
+                <pre><code>Route::get('/dashboard', function () {
+    // فقط کاربرِ لاگین‌کرده می‌رسد...
+})-&gt;middleware('auth')-&gt;name('dashboard');
+
+Route::get('/login', [AuthController::class, 'create'])-&gt;name('login');
+
+// گروهِ تمامِ روت‌هایِ محافظت‌شده:
+Route::middleware(['auth'])-&gt;group(function () {
+    Route::get('/cart', [CartController::class, 'index'])-&gt;name('cart');
+    // ...
+});</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li>آدرسِ ریدایرکت را می‌توانی با <code>-&gt;redirectGuestsTo('/login')</code> در <span class="tk12-file">bootstrap/app.php</span> تغییر دهی.</li>
+            <li>برعکس: middlewareِ <code>guest</code> فقط «لاگین‌نکرده‌ها» را رد می‌کند و لاگین‌کرده را به <code>dashboard</code> می‌فرستد — درِ ورود/ثبت‌نام.</li>
+            <li>حواست باشد: روتِ <code>login</code> باید بدونِ <code>auth</code> باشد (مهمان هم باید بهش برسد!)</li>
+        </ul>
+
+        <div class="note warn"><div class="note-title"> قفلِ سمتِ مرورگر کافی نیست</div>
+            <p>مخفی‌کردنِ لینکِ «ورود» با <code>@guest</code> امنیت نمی‌آورد؛ «امنیت» یعنی خودِ روت مثلِ بالا middleware داشته باشد.
+                پنهان‌کاریِ بلید فقط تجربه‌ی کاربری است.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۶ ================= -->
+    <section class="lesson" id="blade">
+        <div class="lesson-head"><span class="lesson-num">۶</span>
+            <h2>@auth و @guest در بلید</h2>
+        </div>
+
+        <p>دو دستورِ اختصاصی برایِ «لاگین است / نیست» در بلید:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade</span></div>
+                <pre><code>@auth
+    &lt;p&gt;خوش آمدی، {{ auth()-&gt;user()-&gt;name }}!&lt;/p&gt;
+@endauth
+
+@guest
+    &lt;a href="{{ route('login') }}"&gt;ورود&lt;/a&gt;
+    &lt;a href="{{ route('register') }}"&gt;ثبت‌نام&lt;/a&gt;
+@endguest</code></pre>
+            </div>
+        </div>
+
+        <p>این دو، مکملِ هم‌اند: <code>@auth</code> یعنی «کاربرِ لاگین‌کرده دارد»، <code>@guest</code> یعنی «ندارد».
+            برایِ بخشِ سربرگِ فروشگاه، این‌طوری چیزِ درست را نشان می‌دهیم:</p>
+
+        <div class="tk12-row"><span class="tk12-step ok">@auth &nbsp;→&nbsp; «خروج» + نامِ کاربر</span>
+            <span class="tk12-arrow">|</span>
+            <span class="tk12-step no">@guest &nbsp;→&nbsp; «ورود» + «ثبت‌نام»</span>
+        </div>
+
+        <div class="note info"><div class="note-title"> و درِ <code>@can</code>؟</div>
+            <p>گیتس (درسِ ۹ همین بخش) هم دستورِ مخصوص خودش را دارد: <code>@can('manage-products')</code> — فوراً بعدش.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۷ ================= -->
+    <section class="lesson" id="logout">
+        <div class="lesson-head"><span class="lesson-num">۷</span>
+            <h2>خروج و امنیتِ سشن</h2>
+        </div>
+
+        <p>خروجِ کامل سه‌گام است — <em>هر سه</em> مالِ «سشن» است، نه فقط یکی:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">AuthController.php</span></div>
+                <pre><code>public function logout(Request $request): RedirectResponse
+{
+    Auth::logout();                      // ۱) حالتِ لاگین را بردار
+
+    $request-&gt;session()-&gt;invalidate();   // ۲) داده‌هایِ سشن را بسوزان
+
+    $request-&gt;session()-&gt;regenerateToken();  // ۳) توکنِ CSRF را تازه کن
+
+    return redirect('/');
+}</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>Auth::logout()</code> خودش وضعیتِ کاربر را برمی‌دارد.</li>
+            <li>ولی برایِ امنیتِ کامل، سشن باید <strong>باطل</strong> (داده‌اش پاک) و <strong>توکنِ CSRF تازه</strong> شود — وگرنه توکنِ قدیمیِ صفحه‌ی قبلی از کار می‌افتد و فرم بعدی خطای ۴۱۹ می‌دهد.</li>
+            <li>میان‌بندِ <code>auth.session</code> هم هست که سشنِ دستگاه‌هایِ دیگر را باطل کند — خارجِ چارچوبِ دوره.</li>
+        </ul>
+    </section>
+
+    <!-- ================= درس ۸ ================= -->
+    <section class="lesson" id="starter">
+        <div class="lesson-head"><span class="lesson-num">۸</span>
+            <h2>استارتر کیت‌های رسمی</h2>
+        </div>
+
+        <p>حواست باشد: در نسخه‌هایِ جدیدِ Laravel (۱۲ و ۱۳) دیگر «Breeze» توصیه نمی‌شود. به‌جایش Laravel
+            «استارتر کیت»های رسمی دارد که کلِ سیستمِ احرازِ هویت را با فرم، validator و پنلِ پروفایل به‌طورِ کامل
+            اسکلت می‌کنند — با <span class="tk12-file">laravel new</span> همان لحظه انتخاب می‌شوند:
+        </p>
+
+        <div class="tk12-grid"><div class="tk12-card"><h4>Livewire</h4>
+                <p>نزدیک‌ترینِ انتخاب به این دوره — بلید + Livewire + Tailwind. برایِ تیم‌هایِ PHP.</p>
+            </div>
+            <div class="tk12-card"><h4>React / Vue / Svelte</h4>
+                <p>با Inertia (SPA درکنارِ روتینگِ کلاسیکِ سمتِ سرور). مدرن‌ترینِ گزینه‌ها.</p>
+            </div>
+            <div class="tk12-card"><h4>موتورِ پشتی: Fortify</h4>
+                <p>همه‌ی کیت‌ها روت/postها و controllerها را از <code>Fortify</code> دارند — همون تمرینِ دستیِ ما در این بخش، ولی آماده.</p>
+            </div>
+        </div>
+
+        <p>پس در یک پروژه‌ی واقعی، به‌جایِ «نصبِ Breeze»، یکی از کیت‌ها را با <code>laravel new</code> انتخاب می‌کنی؛ چون خودِ کدِ auth داخلِ پروژه‌ات است، می‌توانی بعداً همه‌چیز را آن‌طور که این‌جا یاد گرفتی عوض کنی.</p>
+
+        <div class="note info"><div class="note-title"> چرا این درس دستیِ نوشتن را یاد می‌دهد؟</div>
+            <p>چون کیت‌ها بخش زیادی از کد را از پیش نوشته‌اند. وقتی خودت Auth::attempt را دیدی، می‌فهمی آن‌ها چه می‌کنند —
+                و اگر روزی کیتِت جواب نداد، بلدی کجا را نگاه کنی.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۹ ================= -->
+    <section class="lesson" id="gate">
+        <div class="lesson-head"><span class="lesson-num">۹</span>
+            <h2>Gate ساده با Gate::define</h2>
+        </div>
+
+        <p>تا الان «کسی است» را داشتیم (auth). حالا «اجازه‌ی آن کار را دارد؟» — این شد «authorization». ساده‌ترین راهِ
+            قابلِ طراحی، <strong>Gate</strong> است: یک قاعده برایِ یک توانایی، که اول <code>User</code> و بقیه‌ی
+            پارامترها را می‌گیرد:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">App/Providers/AppServiceProvider.php — متد boot</span></div>
+                <pre><code>use App\Models\User;
+use Illuminate\Support\Facades\Gate;
+
+public function boot(): void
+{
+    Gate::define('manage-products', function (User $user) {
+        return $user-&gt;role === 'admin';
+    });
+}</code></pre>
+            </div>
+        </div>
+
+        <p>و مصرفِ آن در کنترلر یا بلید:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP — authorize در کنترلر</span></div>
+                <pre><code>use Illuminate\Support\Facades\Gate;
+
+public function destroy(Product $product): RedirectResponse
+{
+    Gate::authorize('manage-products');   // اگر اجازه نباشد → 403
+
+    $product-&gt;delete();
+    return back();
+}</code></pre>
+            </div>
+        </div>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade —نمایشِ شرطی</span></div>
+                <pre><code>@can('manage-products')
+    &lt;a href="{{ route('products.create') }}"&gt;افزودنِ محصول&lt;/a&gt;
+@endcan</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>Gate::authorize('name', $model)</code> اگر رد شود خودش ۴۰۳ برمی‌گرداند؛ قبولِ کنترلیِ دستی با <code>Gate::allows/denies</code>.</li>
+            <li>برایِ قوانینِ مربوط به یک مدل (مثلِ «این محصول را فقط صاحبش ویرایش کند») <code>Policy</code> بهتر است — در پروژه‌ی پایانی می‌بینی‌اش.</li>
+            <li><code>@can('manage-products')</code> در بلید فقط لینک را مخفی می‌کند؛ امنیتِ واقعی همچنان با Gate در کنترلر است. (لینکِ مخفی + روتِ بی‌دروازه = امنیتِ صفر!)</li>
+        </ul>
+
+        <div class="note tip"><div class="note-title"> چرا Gate بهتر از چکِ دستی است؟</div>
+            <p>با <code>$request-&gt;user()-&gt;role</code> اگر کاربر لاگین نکرده باشد، خطا می‌گیری. ولی Gate خودش برایِ
+                کاربرِ لاگین‌نکرده <code>false</code> برمی‌گرداند — بدونِ کرش. این نکته‌ی خیلی مهمی در auth است.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۱۰ ================= -->
+    <section class="lesson" id="project-step">
+        <div class="lesson-head"><span class="lesson-num">۱۰</span>
+            <h2>گام پروژه: لاگین + نقش admin</h2>
+        </div>
+
+        <div class="proj-step"><div class="proj-title"> تکمیلی: فروشگاهِ واقعی، با ورود و پنلِ مدیریت</div>
+            <p>سه کار: (۱) کاربران «نقش» بگیرند (admin/customer)، (۲) ورودِ واقعی کار کند، (۳) پنلِ <code>/admin</code>
+                که در درسِ ۱۱ ساختیم، پذیرفته‌ای فقط admin.
+            </p>
+        </div>
+
+        <ol>
+            <li><strong>ستونِ role:</strong> یک migration اضافه کن (داخلِ جدولِ کاربران، پیش‌فرضِ customer):</li>
+        </ol>
+
+        <div class="tk12-term">$ php artisan make:migration add_role_to_users_table --table=users
+
+<span class="o">INFO</span>  Migration [<span class="p">database/migrations/…_add_role_to_users_table.php</span>] created successfully.</div>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">داخلِ migration — متد up</span></div>
+                <pre><code>Schema::table('users', function (Blueprint $table) {
+    $table-&gt;string('role')-&gt;default('customer')-&gt;after('email');
+});</code></pre>
+            </div>
+        </div>
+
+        <ol start="2">
+            <li><strong>یک admin بساز:</strong> با ابتدایِ پروژه‌ات یا Tinker:
+                <code>User::where('email', 'admin@shop.test')-&gt;update(['role' =&gt; 'admin'])</code>.</li>
+            <li><strong>روتِ مدیریت را قفل کن</strong> — الآن که ورود داریم، درسِ ۱۱ جواب می‌دهد:</li>
+        </ol>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">routes/web.php</span></div>
+                <pre><code>Route::middleware(['auth', 'check-role:admin'])-&gt;group(function () {
+    Route::get('/admin', [DashboardController::class, 'index'])-&gt;name('admin.dashboard');
+    // ... و هر روتِ مدیریتیِ دیگر
+});</code></pre>
+            </div>
+        </div>
+
+        <ol start="4">
+            <li><strong>دستورهایِ بلید:</strong> درِ سربرگِ سایت، <code>@auth</code>/<code>@guest</code>؛ و فقط به admin
+                لینکِ خوبِ «مدیریت» را بده:
+                <code>@can('manage-products') &lt;a href="{{ route('admin.dashboard') }}"&gt;مدیریت&lt;/a&gt; @endcan</code> (اگر Gateِ درسِ ۹ را بپذیرفت).</li>
+            <li><strong>تکمیلِ ثبت‌نامِ بخشِ ۱۰:</strong> درِ <code>store()</code> به‌جایِ redirect به خودِ ثبت، کاربرِ تازه را ثبت کن و بفرستش به صفحه‌ی <code>login</code>.</li>
+        </ol>
+
+        <div class="note warn"><div class="note-title"> ترتیبِ middleware مهم است</div>
+            <p><code>['auth', 'check-role:admin']</code> — اولِ auth (لاگین لازم است)، بعدِ check-role (نقشِ admin).
+                برعکسِ این ترتیب، مهمانِ بی‌نقش به‌جای «برو لاگین کن» خطای ۴۰۳ می‌گیرد. ترتیبِ middleware درسِ ۱۱ را یادت نرود.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۱۱ ================= -->
+    <section class="lesson" id="exercises">
+        <div class="lesson-head"><span class="lesson-num">۱۱</span>
+            <h2>تمرین‌ها؛ حالا نوبت توست!</h2>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۱: ورودِ پاک</div>
+            <ol>
+                <li>فرمِ ورود + <code>Auth::attempt</code> + regenerate را پیاده کن.</li>
+                <li>با ایمیلِ درست/پسوردِ غلط بفرست: باید فقط پیامِ «مشخصات مطابقت ندارد» ببینی — نه اینکه بگوید کدام‌اش غلط است.</li>
+                <li>بعدِ لاگین، به سربرگ برو که حالتِ <code>@auth</code> نامِ کاربر را نشان بدهد.</li>
+            </ol>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۲: فقط manager می‌تواند حذف کند</div>
+            <ol>
+                <li>یک Gate به اسمِ <code>delete-product</code> تعریف کن که نقشِ <code>manager</code> یا <code>admin</code> را قبول کند.</li>
+                <li>درِ <code>destroy()</code> صداش کن تا مدیرِ بی‌اجازه ۴۰۳ بگیرد.</li>
+                <li>با <code>@can('delete-product')</code> دکمه‌ی حذفِ فقطِ متعلقِ مجازها را نشان بده.</li>
+            </ol>
+        </div>
+
+        <div class="note info"><div class="note-title"> چالش</div>
+            <p>یک «پیش‌گشت» بساز: وقتی کاربرِ لاگین‌نکرده به <code>/cart</code> می‌رود، بعدِ لاگین باید دقیقاً همان
+                <code>/cart</code> را ببیند، نه dashboard. راهنما: خودِ <code>redirect()-&gt;intended()</code> این کار را
+                با middlewareِ auth انجام می‌دهد — بعدِ لاگین، «مقصدِ ذخیره‌شده» را ببین.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= نکات طلایی ================= -->
+    <div class="golden"><h3> چیزی که از این بخش توی ذهنت بماند</h3>
+        <ol>
+            <li>guard=چطور (سشن)، provider=کجا (users). همه‌ی ورود به دو متدِ Auth::attempt و Auth::logout ختم می‌شود.</li>
+            <li>بعدِ ورود: <code>session()-&gt;regenerate()</code>؛ بعدِ خروج: logout + invalidate + regenerateToken.</li>
+            <li>کاربرِ فعلی: <code>auth()-&gt;user()</code> / <code>$request-&gt;user()</code> — رویِ روتِ محافظت‌شده امن است.</li>
+            <li>روتِ محافظت‌شده فقط با middleware: <code>-&gt;middleware('auth')</code>؛ مهمان‌ها با <code>guest</code>.</li>
+            <li><code>@auth/@guest</code> UI است، <code>auth</code> و <code>Gate</code> امنیت است — مرز را نگه دار.</li>
+            <li>در Laravel ۱۳ Breeze legacy است؛ کیتِ فعلی → Livewire / React / Vue (Fortify) با <code>laravel new</code>.</li>
+            <li>Gate یعنی قاعده‌ی authorize برایِ «توانایی»؛ <code>@can</code> فقط نمایش است.</li>
+        </ol>
+    </div>
+
+    <!-- ================= مطالعه‌ی بیشتر ================= -->
+    <div class="tk12-more"> مطالعه‌ی بیشتر (انگلیسی):
+        <a href="https://laravel.com/docs/13.x/authentication#introduction" target="_blank" rel="noopener">آشنایی با Authentication</a> —
+        <a href="https://laravel.com/docs/13.x/authentication#retrieving-the-authenticated-user" target="_blank" rel="noopener">کاربرِ فعلی: Auth::user</a>،
+        <a href="https://laravel.com/docs/13.x/authentication#protecting-routes" target="_blank" rel="noopener">محافظتِ روت‌ها با auth</a>،
+        <a href="https://laravel.com/docs/13.x/authentication#authenticating-users" target="_blank" rel="noopener">ورودِ دستی: Auth::attempt</a>،
+        <a href="https://laravel.com/docs/13.x/authentication#logging-out" target="_blank" rel="noopener">خروج و امنیتِ سشن</a>،
+        <a href="https://laravel.com/docs/13.x/starter-kits#authentication" target="_blank" rel="noopener">استارتر کیت‌ها و Fortify</a> و
+        <a href="https://laravel.com/docs/13.x/authorization#writing-gates" target="_blank" rel="noopener">نوشتنِ Gate</a>.
+    </div>
+
+    <!-- ================= ناوبری ================= -->
+    <nav class="lesson-nav" aria-label="ناوبری بین بخش‌ها">
+        <a href="00-فهرست.html">فهرست درس‌ها</a>
+        <a href="11-Middleware.html">→ بخش قبل: Middleware</a>
+        <a href="13-Seeder-Factory-Pagination.html">بعدی: Seeder، Factory و Pagination ←</a>
+    </nav>
+
+</div>
+<script src="../assets/js/rayvo.js"></script>
+</body>
+</html>

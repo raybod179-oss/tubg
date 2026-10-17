@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بخش ۱۳ | Seeder، Factory و Pagination</title>
+    <meta name="description" content="آموزش Seeder، Factory و Pagination در لاراول ۱۳: db:seed، make:seeder، make:factory، fake()، paginate() و ->links()">
+
+    <link rel="icon" href="../assets/img/favicon.png">
+    <link rel="stylesheet" href="../assets/css/rayvo.css">
+    <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script>
+
+    <style>
+        .tk13-file { display:inline-block; background:#eef2ff; color:#4338ca; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:12.5px; direction:ltr; padding:2px 9px; border-radius:6px; border:1px solid #c7d2fe; }
+        .tk13-term { background:#0f172a; color:#e2e8f0; direction:ltr; text-align:left; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:12.5px; line-height:1.9; padding:14px 16px; border-radius:10px; overflow-x:auto; white-space:pre; }
+        .tk13-term .p { color:#38bdf8; }
+        .tk13-term .c { color:#94a3b8; }
+        .tk13-term .o { color:#4ade80; }
+        .tk13-term .x { color:#f87171; }
+        .tk13-more { margin-top:14px; font-size:12.5px; color:#64748b; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:8px 12px; }
+        .tk13-more a { color:#4f46e5; text-decoration:none; font-weight:600; }
+        .tk13-more a:hover { text-decoration:underline; }
+        .tk13-rows { background:#fff; border:1px solid var(--border); border-radius:12px; padding:16px; }
+        .tk13-rows .row { display:flex; gap:12px; align-items:center; padding:10px 6px; border-bottom:1px dashed #f1f5f9; font-size:14px; }
+        .tk13-rows .row:last-child { border-bottom:none; }
+        .tk13-rows .idx { background:#f1f5f9; color:#64748b; border-radius:8px; padding:2px 10px; font-size:12px; font-weight:800; }
+        .tk13-rows .nm { color:#1f2937; font-weight:600; }
+        .tk13-rows .pr { color:#be185d; font-weight:700; }
+        .tk13-pager { display:flex; gap:8px; justify-content:center; margin-top:12px; }
+        .tk13-pager .pg { background:#f8fafc; border:1px solid #e2e8f0; color:#475569; border-radius:8px; padding:4px 12px; font-size:13px; }
+        .tk13-pager .pg.now { background:#4f46e5; border-color:#4f46e5; color:#fff; }
+        .tk13-pager .pg.dis { color:#cbd5e1; }
+    </style>
+</head>
+<body>
+<div class="course-page"><!-- ================= سربرگ ================= -->
+    <header class="course-header">
+        <span class="badge">بخش ۱۳</span>
+        <h1>Seeder، Factory و Pagination</h1>
+        <p>تا این‌جا داده را با Tinker دستی ساختی. حالا با «بذرکاری» صد ردیفِ واقع‌گرایانه در یک فرمان می‌سازیم و صفحه‌ای که هزاران محصول دارد را به «صفحه‌هایِ ۱۲‌تایی» می‌شکنیم.</p>
+    </header>
+
+    <!-- ================= فهرست ================= -->
+    <nav class="toc" aria-label="فهرست مطالب">
+        <h2>توی این بخش چه چیزهایی یاد می‌گیریم؟</h2>
+        <ol>
+            <li><a href="#why">داده‌ی آزمایشی و مشکلِ داده‌ی دستی</a></li>
+            <li><a href="#seeder">ساختِ Seeder با make:seeder</a></li>
+            <li><a href="#seedrun">اجرا: db:seed</a></li>
+            <li><a href="#factory">Factory با make:factory</a></li>
+            <li><a href="#factory-use">استفاده‌ی عملی از factory</a></li>
+            <li><a href="#seeds">Seeder با factory و ترتیبِ seeding</a></li>
+            <li><a href="#paginate">paginate() در کنترلر</a></li>
+            <li><a href="#links">->links() و نمایش شماره صفحه</a></li>
+            <li><a href="#project-step">گام پروژه: فروشگاهِ پُر از محصول</a></li>
+            <li><a href="#exercises">تمرین‌ها</a></li>
+        </ol>
+    </nav>
+
+    <!-- ================= درس ۱ ================= -->
+    <section class="lesson" id="why">
+        <div class="lesson-head"><span class="lesson-num">۱</span>
+            <h2>داده‌ی آزمایشی و مشکلِ داده‌ی دستی</h2>
+        </div>
+
+        <p>برایِ توسعه و تست، به داده‌ی «کافی و واقع‌گرایانه» نیاز داریم: ۵ دسته، ۴۰ محصول، چند کاربر. ساختنِ همه
+            با Tinker نه‌تنها خسته‌کننده است، بلکه باید آن را برایِ هم‌تیمی یا دیتابیسِ تازه‌نصب‌شده هم تکرار کنیم.
+            Laravel دو ابزار دارد که این را «قابلِ بازتولید» می‌کند:
+        </p>
+
+        <div class="tk13-rows"><div class="row"><span class="idx">Seeder</span><span class="nm">داده‌ی کنترل‌شده و مشخص</span><span class="pr">— دسته‌هایِ پایه، کاربرِ admin…</span></div>
+            <div class="row"><span class="idx">Factory</span><span class="nm">داده‌ی تصادفیِ انبوه با fake()</span><span class="pr">— ۴۰ محصولِ واقع‌گرایانه</span></div>
+        </div>
+
+        <ul>
+            <li>Seeder برایِ «داده‌ای که معلوم است و باید باشد» (مثلِ admin)؛ Factory برایِ «مقادیرِ تولدی انبوه».</li>
+            <li>داده‌ی seed همیشهِ پایگاهِ خالی‌شده را بازتولید می‌کند: یک دستور، همان وضعیت.</li>
+            <li>چون ریشه‌ی بسیاری از تست‌ها هم به همین factory هاست، یادگیری‌اش دو بخش است.</li>
+        </ul>
+
+        <div class="note info"><div class="note-title"> تلفیقِ فصل‌ها</div>
+            <p>این درس ادامه‌ی درسِ ۸ (کار با Eloquent) و درسِ ۷ (ساخت جدول‌ها) است: seed و factory
+                بخشِ پایگاهِ داده را کامل می‌کنند و صفحه‌ی فروشگاه همان خروجی را نشان می‌دهد.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۲ ================= -->
+    <section class="lesson" id="seeder">
+        <div class="lesson-head"><span class="lesson-num">۲</span>
+            <h2>ساختِ Seeder با make:seeder</h2>
+        </div>
+
+        <div class="tk13-term">$ php artisan make:seeder CategorySeeder
+
+<span class="o">INFO</span>  Seeder [<span class="p">database/seeders/CategorySeeder.php</span>] created successfully.</div>
+
+        <p>کلاسِ ساخته‌شده فقط یک متدِ <code>run()</code> دارد که وقتی <code>db:seed</code> اجرا شد، صدا زده می‌شود:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">database/seeders/CategorySeeder.php</span></div>
+                <pre><code>&lt;?php
+
+namespace Database\Seeders;
+
+use App\Models\Category;
+use Illuminate\Database\Seeder;
+
+// اول مطمئن شو روی مدل، #[Fillable('name')] داری (درس ۸):
+//   #[Fillable('name')]
+//   class Category extends Model { ... }
+
+class CategorySeeder extends Seeder
+{
+    public function run(): void
+    {
+        Category::create(['name' =&gt; 'کتاب']);
+        Category::create(['name' =&gt; 'نوشت‌افزار']);
+        Category::create(['name' =&gt; 'گجت‌']);
+    }
+}</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li>داخلِ <code>run()</code> همان کدِ Eloquentِ عادی را بگذار؛ <code>create()</code> به mass-assignmentِ عادی (همان <code>#[Fillable]</code>یِ درسِ ۸) احترام می‌گذارد.</li>
+            <li>پس مطمئن شو روی مدلِ <code>Category</code> هم <code>#[Fillable('name')]</code> گذاشته‌ای، وگرنه <code>create()</code> خطا می‌دهد.</li>
+            <li>Seederهایِ دیگر را با آرایه‌ی <code>$this-&gt;call([...])</code> پشت‌سر هم اجرا کن (در بخشِ ۶ همین درس).</li>
+            <li>دقیقاً همین ترتیب به ما می‌دهد «یک فرمان = دیتابیسِ پر».</li>
+        </ul>
+    </section>
+
+    <!-- ================= درس ۳ ================= -->
+    <section class="lesson" id="seedrun">
+        <div class="lesson-head"><span class="lesson-num">۳</span>
+            <h2>اجرا: db:seed</h2>
+        </div>
+
+        <div class="tk13-term">$ php artisan db:seed                     <span class="c"># اجرایِ DatabaseSeeder</span>
+
+<span class="o">INFO</span>  Seeding database.
+
+$ php artisan db:seed --class=CategorySeeder   <span class="c"># فقط یک seeder</span>
+
+$ php artisan migrate:fresh --seed             <span class="c"># بازسازیِ کامل + بذر</span>
+
+$ php artisan db:seed --force                  <span class="c"># درِ تولید؛ بدونِ پرسش</span></div>
+
+        <ul>
+            <li>پیش‌فرض، کلاسِ <code>Database\Seeders\DatabaseSeeder</code> اجرا می‌شود؛ با <code>--class=...</code> فقطِ مشخص‌شده.</li>
+            <li><code>migrate:fresh --seed</code> پرکاربردترین است: همه‌ی جداول را می‌ریزد و دوباره می‌سازد و سپس بذر می‌کند.</li>
+            <li>درِ محیطِ production، اگر دستوریِ مخرب ببینی، قبل از اجرا از تو <em>پرسش</em> می‌کند؛ <code>--force</code> می‌گوید «همین حالا».</li>
+        </ul>
+
+        <div class="note warn"><div class="note-title"> migrate:fresh عواقب دارد</div>
+            <p><code>migrate:fresh</code> همه‌ی داده‌ی موجود را نابود می‌کند. فقط درِ توسعه/تست خوب است —
+                هرگز رویِ دیتابیسِ واقعی اجرایش نکن (این هم یکی از دلایلِ همان پرسشِ production است).
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۴ ================= -->
+    <section class="lesson" id="factory">
+        <div class="lesson-head"><span class="lesson-num">۴</span>
+            <h2>Factory با make:factory</h2>
+        </div>
+
+        <div class="tk13-term">$ php artisan make:factory ProductFactory
+
+<span class="o">INFO</span>  Factory [<span class="p">database/factories/ProductFactory.php</span>] created successfully.</div>
+
+        <p>قلبِ factory، متدِ <code>definition()</code> است: «چه مقادیرِ پیش‌فرضِ تصادفی بده؟» از helperِ
+            <code>fake()</code> (فِیکر) برایِ تولدیِ واقع‌گرایانه استفاده کن:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">database/factories/ProductFactory.php</span></div>
+                <pre><code>&lt;?php
+
+namespace Database\Factories;
+
+use App\Models\Category;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+class ProductFactory extends Factory
+{
+    public function definition(): array
+    {
+        return [
+            'name'        =&gt; fake()-&gt;words(3, true),
+            'description' =&gt; fake()-&gt;paragraph(),
+            'price'       =&gt; fake()-&gt;numberBetween(10000, 500000),
+            'category_id' =&gt; Category::factory(),  // یک دسته‌ی تازه
+        ];
+    }
+}</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>fake()-&gt;name()</code>، <code>fake()-&gt;paragraph()</code>، <code>fake()-&gt;numberBetween()</code> و صدها رشته‌ی دیگرِ فیکر در دسترس است.</li>
+            <li>طرفِ کلیدی: درِ <code>category_id</code> یک «factory» گذاشتیم — یعنی هنگامِ ساختِ محصول، خودکار یک دسته هم ساخته می‌شود (رابطه‌ی belongsToِ فصلِ ۹).</li>
+            <li>برایِ ستون‌هایِ مجرد (مثلِ ایمیلِ تکرارناشدنی) از <code>fake()-&gt;unique()-&gt;...</code> استفاده کن.</li>
+        </ul>
+
+        <div class="note tip"><div class="note-title"> تا چه جور factory مدلِ من را می‌شناسد؟</div>
+            <p>مدل باید traitِ <code>HasFactory</code> را import داشته باشد؛ سپس قراردادِ نام: factory در
+                نام‌فضایِ <code>Database\Factories\ProductFactory</code> + توافقِ نامِ مدل. مدلِ <code>Product</code>ِ ما همین شرط را دارد.
+                (برایِ مواردِ خاص، Attributeِ <code>#[UseFactory(...)]</code> هست.)
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۵ ================= -->
+    <section class="lesson" id="factory-use">
+        <div class="lesson-head"><span class="lesson-num">۵</span>
+            <h2>استفاده‌ی عملی از factory</h2>
+        </div>
+
+        <p>بعدِ تعریفِ factory، درِ Tinker یا seed از طریقِ استاتیکِ <code>::factory()</code> درِ دسترس است:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP — انواعِ ساخت</span></div>
+                <pre><code>use App\Models\User;
+use App\Models\Product;
+
+// فقط درِ حافظه (درِ دیتابیس ذخیره نمی‌کند):
+$user = User::factory()-&gt;make();
+
+// درِ واقعیتِ پایگاه ۵۰ کاربر بساز:
+$users = User::factory()-&gt;count(50)-&gt;create();
+
+// با جای‌گذاریِ بعضی فیلدها:
+$user = User::factory()-&gt;create([
+    'email' =&gt; 'admin@shop.test',
+    'role'  =&gt; 'admin',
+]);
+
+// همان factory درِ رابطه‌ها (فصلِ ۹):
+$products = Product::factory()-&gt;count(40)-&gt;create();</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>make()</code> فقط نمونه‌سازی، <code>create()</code> نمونه‌سازی + <code>save()</code> (رویِ record).</li>
+            <li>آرگومانِ <code>create([...])</code> فقط همان کلیدها را بازنویسی می‌کند؛ بقیه از <code>definition()</code> می‌آید.</li>
+            <li><code>-&gt;count(40)</code> و <code>-&gt;state([...])</code> (یا مقدارِ مستقیم در create) همه‌ی مهارتِ ماست.</li>
+        </ul>
+
+        <div class="note info"><div class="note-title"> به‌هم‌رسانی: کاربرِ adminِ فصلِ ۱۲</div>
+            <p>با <code>User::factory()-&gt;create(['role' =&gt; 'admin', 'email' =&gt; 'admin@shop.test'])</code>
+                دیگر لازم نیست بعداً دستی role را عوض کنیم — از همان seed کلید می‌شود. این «یک فرمان = وضعیتِ کاملِ
+                توسعه» است.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۶ ================= -->
+    <section class="lesson" id="seeds">
+        <div class="lesson-head"><span class="lesson-num">۶</span>
+            <h2>Seeder با factory و ترتیبِ seeding</h2>
+        </div>
+
+        <p>به‌ترین ترکیب: <code>DatabaseSeeder</code> چند seeder را با ترتیبِ درست صدا می‌زند، و هر seeder از factory برایِ انبوهِ داده استفاده می‌کند:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">database/seeders/ProductSeeder.php</span></div>
+                <pre><code>&lt;?php
+
+namespace Database\Seeders;
+
+use App\Models\Product;
+use Illuminate\Database\Seeder;
+
+class ProductSeeder extends Seeder
+{
+    public function run(): void
+    {
+        Product::factory()-&gt;count(40)-&gt;create();
+    }
+}</code></pre>
+            </div>
+        </div>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">database/seeders/DatabaseSeeder.php</span></div>
+                <pre><code>use App\Models\User;
+
+public function run(): void
+{
+    // ترتیب مهم: اولِ دسته، بعدِ محصول
+    $this-&gt;call([
+        CategorySeeder::class,
+        ProductSeeder::class,
+    ]);
+
+    // و کاربرِ admin (درسِ ۱۲):
+    User::factory()-&gt;create([
+        'name'  =&gt; 'مدیر فروشگاه',
+        'email' =&gt; 'admin@shop.test',
+        'role'  =&gt; 'admin',
+    ]);
+}</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>Category::factory()</code> داخلِ ProductFactory، دسته‌بندیِ تصادفی می‌سازد — کارِ خودش را می‌کند و به <code>CategorySeeder</code> نیازی ندارد.</li>
+            <li>ترتیبی که در <code>call([...])</code> می‌نویسی همان ترتیبِ اجراست: قبل ازِ وابسته، مرجعِ اصلی.</li>
+        </ul>
+
+        <div class="note warn"><div class="note-title"> ترتیبِ اجرا</div>
+            <p>اگر محصول به دسته‌بندی نیاز دارد، <code>CategorySeeder</code> را در <code>call</code> اول بگذار؛ وگرنه
+                کلیدِ خارجیِ محصول به دسته‌ای اشاره می‌کند که هنوز ساخته نشده. حالا <code>db:seed</code> را بزن و ۴۰ محصول تحویل بگیر.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۷ ================= -->
+    <section class="lesson" id="paginate">
+        <div class="lesson-head"><span class="lesson-num">۷</span>
+            <h2>paginate() در کنترلر</h2>
+        </div>
+
+        <p>حالا که نیم‌صد محصول داریم، یک لیستِ «همه و یکجا» بهتر است صفحه‌بندی شود. الگویِ <code>paginate(n)</code>:
+            هم کوئریِ LIMIT/OFFSET را بر اساسِ <code>?page=</code> می‌سازد و هم تعدادِ کل را حساب می‌کند (یک
+            <code>LengthAwarePaginator</code> می‌دهد):
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">ProductController.php</span></div>
+                <pre><code>use Illuminate\View\View;
+
+public function index(): View
+{
+    $products = Product::query()
+        -&gt;with('category')            // جلوگیری از N+1 (فصلِ ۹)
+        -&gt;paginate(12);
+
+    return view('products.index', ['products' =&gt; $products]);
+}</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>paginate(12)</code> یعنی «۱۲ ردیف درِ هر صفحه»؛ صفحه از query string گرفته می‌شود
+                (<code>?page=2</code>، <code>?page=3</code>).</li>
+            <li>با query builder هم کار می‌کند: <code>DB::table('products')-&gt;paginate(12)</code>.</li>
+            <li>اگر فقط «بعدی/قبلی» بخواهی و شماره‌ی صفحه ندانی، <code>simplePaginate()</code> سریع‌تر است؛
+                <code>cursorPaginate()</code> برایِ دیتاستِ بزرگ — درِ این دوره <code>paginate()</code> کافی است.</li>
+            <li>برایِ حفظِ فیلترها در لینک‌هایِ صفحات: <code>-&gt;appends(request()-&gt;query())</code>.</li>
+        </ul>
+    </section>
+
+    <!-- ================= درس ۸ ================= -->
+    <section class="lesson" id="links">
+        <div class="lesson-head"><span class="lesson-num">۸</span>
+            <h2>-&gt;links() و نمایشِ شماره‌ی صفحه</h2>
+        </div>
+
+        <p>بلیدِ محصولات با «شماره‌ی صفحه» از خودِ paginator:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">resources/views/products/index.blade.php</span></div>
+                <pre><code>@foreach ($products as $product)
+    &lt;div class="card"&gt;
+        &lt;h3&gt;{{ $product-&gt;name }}&lt;/h3&gt;
+        &lt;p&gt;{{ $product-&gt;price }} تومان&lt;/p&gt;
+    &lt;/div&gt;
+@endforeach
+
+{{-- لینک‌هایِ صفحات (پیش‌فرض با استایلِ Tailwind): --}}
+{{ $products-&gt;links() }}
+
+{{-- با ۳ عدد در هر طرف: ۱ ۲ ۳ [۴] ۵ ۶ ۷ --}}
+{{ $products-&gt;onEachSide(3)-&gt;links() }}</code></pre>
+            </div>
+        </div>
+
+        <p>اگر خواستی شماره‌ها را با متنِ فارسی نشان بدهی، مواردِ عددیِ paginator را بخوان:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade — نمایشِ شماره‌ها</span></div>
+                <pre><code>&lt;p class="muted"&gt;
+    نمایش {{ $products-&gt;firstItem() }} تا {{ $products-&gt;lastItem() }}
+    از {{ $products-&gt;total() }} محصول
+    — صفحه‌ی {{ $products-&gt;currentPage() }} از {{ $products-&gt;lastPage() }}
+&lt;/p&gt;</code></pre>
+            </div>
+        </div>
+
+        <div class="tk13-rows"><div class="row"><span class="idx">۴۰</span><span class="nm">محصولِ seedشده</span></div>
+            <div class="row"><span class="idx">۱۲</span><span class="nm">درِ صفحه</span><span class="pr">— یعنی ۴ صفحه</span></div>
+            <div class="row"><span class="idx">2</span><span class="nm">?page=2</span><span class="pr">— پرشِ مستقیم به صفحه‌ی دو</span></div>
+        </div>
+
+        <div class="note info"><div class="note-title"> فرمِ لینک‌ها Tailwind است</div>
+            <p>پیش‌فرضِ <code>links()</code> کلاس‌هایِ Tailwind می‌سازد. پروژه‌ی تو همین استایل‌ها را دارد
+                <li>برایِ تغییرِ قالبِ لینک‌هایِ صفحه‌بندی، فایل‌هایِ پیش‌فرضِ Tailwind را منتشر کن و ویرایششان کن.</li>
+                <code>php artisan vendor:publish --tag=laravel-pagination</code> آن‌ها را در <code>resources/views/vendor</code> کپی می‌کند.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۹ ================= -->
+    <section class="lesson" id="project-step">
+        <div class="lesson-head"><span class="lesson-num">۹</span>
+            <h2>گام پروژه: فروشگاهِ پُر از محصول</h2>
+        </div>
+
+        <div class="proj-step"><div class="proj-title"> تکمیلی: دیتابیسِ زنده با ۴۰ محصولِ صفحه‌بندی‌شده</div>
+            <p>تا پیش از این، ۳-۴ محصولِ Tinker بود؛ امروز با یک فرمان به «فروشگاهِ واقعی» تبدیلش می‌کنیم.</p>
+        </div>
+
+        <ol>
+            <li><strong>۲ seeder بساز:</strong> <code>make:seeder CategorySeeder</code> و <code>make:seeder ProductSeeder</code>.</li>
+            <li><strong>۲ factory بساز:</strong> <code>make:factory ProductFactory</code> (با <code>fake()</code> برای نام/توضیح/قیمت
+                و <code>category_id =&gt; Category::factory()</code>) و <code>make:factory UserFactory</code> برای کاربران.</li>
+            <li><strong>DatabaseSeeder را کامل کن:</strong> با <code>$this-&gt;call([CategorySeeder::class, ProductSeeder::class])</code>
+                و آوردنِ کاربرِ admin (درسِ ۱۲).</li>
+            <li><strong>اجرا کن:</strong> <code>php artisan migrate:fresh --seed</code> و بعد با Tinker ببین
+                <code>Product::count()</code> چند است.</li>
+            <li><strong>فهرست را صفحه‌بندی کن:</strong> درِ <code>products.index</code> از <code>Product::with('category')-&gt;paginate(12)</code> استفاده کن
+                و درِ بالایِ لیست، <code>$products-&gt;links()</code> و کادرِ «نمایش ۱ تا ۱۲ از ۴۰» را بگذار.</li>
+        </ol>
+
+        <div class="note info"><div class="note-title"> ادامه‌ی راه</div>
+            <p><li>از دستورهایِ <code>db:seed</code> و <code>migrate:fresh --seed</code> استفاده کن.</li>
+                تکمیل می‌شود؛ پس یک بار خوب درش بیا.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۱۰ ================= -->
+    <section class="lesson" id="exercises">
+        <div class="lesson-head"><span class="lesson-num">۱۰</span>
+            <h2>تمرین‌ها؛ حالا نوبت توست!</h2>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۱: ۳۰۰ کاربرِ تصادفی</div>
+            <ol>
+                <li><code>UserSeeder</code> بساز که ۳۰۰ کاربر (با <code>User::factory()-&gt;count(300)-&gt;create()</code>) بسازد.</li>
+                <li>یک «state» به نامِ <code>admin()</code> درِ UserFactory بساز که <code>role</code> را <code>admin</code> کند
+                    و یک نمونه‌اش را بساز.</li>
+                <li>داخلِ DatabaseSeeder یک کاربرِ شناخته‌شده (ایمیلِ خودت) با این state اضافه کن.</li>
+            </ol>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۲: صفحه‌ی مشتریانِ ۲۰‌تایی</div>
+            <ol>
+                <li>روتِ <code>/customers</code> با <code>paginate(20)</code> از User اضافه کن.</li>
+                <li>می‌توانی خروجیِ صفحه را در قالبِ HTML ببینی؛ همین را در مرورگر باز کن.</li>
+                <li><code>/customers?page=2</code> را در مرورگر ببین — آیا ردیفِ اولِ صفحه‌ی دو، درستِ ردیفِ ۲۱ است؟</li>
+            </ol>
+        </div>
+
+        <div class="note info"><div class="note-title"> چالش</div>
+            <p>دکمه‌ی «جستجو» برایِ صفحه‌ی محصولات را اضافه کن: بعد از جستجو، <code>paginate()</code> باید
+                <code>?search=کلمه</code> را در لینک‌هایِ صفحات حفظ کند. راهنما: <code>withQueryString()</code>
+                <li><code>page</code> در <code>query string</code> نگه داشته می‌شود.</li>
+                ۲ هم باقی بماند.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= نکات طلایی ================= -->
+    <div class="golden"><h3> چیزی که از این بخش توی ذهنت بماند</h3>
+        <ol>
+            <li>Seeder = داده‌یِ مشخص و قابلِ بازتولید (admin، دسته‌ها)؛ Factory = داده‌ی تصادفیِ انبوه.</li>
+            <li><code>run()</code> کلاسِ seeder و <code>definition()</code> با <code>fake()</code> کلاسِ factory — هر دو با artisan.</li>
+            <li>اجرا: <code>db:seed</code>، <code>--class=</code>، <code>migrate:fresh --seed</code>، و <code>--force</code> برایِ production.</li>
+            <li>مدل traitِ <code>HasFactory</code> و factoryِ دارایِ نام‌گذاریِ توافقی؛ <code>::factory()-&gt;count(n)-&gt;create([...])</code>.</li>
+            <li>داخلِ <code>definition()</code> می‌توانی factoryِ رابطه را بگذاری (مثلِ <code>category_id</code>) — همگامِ فصلِ ۹.</li>
+            <li><code>paginate(n)</code> تولیدِ LIMIT/OFFSET و دانستنِ تعدادِ کل؛ <code>$products-&gt;links()</code> تکمیلِ UI.</li>
+            <li>نمایشِ شماره‌ها: <code>firstItem/lastItem/total/currentPage/lastPage</code>.</li>
+        </ol>
+    </div>
+
+    <!-- ================= مطالعه‌ی بیشتر ================= -->
+    <div class="tk13-more"> مطالعه‌ی بیشتر (انگلیسی):
+        <a href="https://laravel.com/docs/13.x/seeding#writing-seeders" target="_blank" rel="noopener">نوشتنِ Seeder</a> —
+        <a href="https://laravel.com/docs/13.x/seeding#running-seeders" target="_blank" rel="noopener">اجرایِ db:seed</a>،
+        <a href="https://laravel.com/docs/13.x/eloquent-factories#generating-factories" target="_blank" rel="noopener">ساختِ Factory</a>،
+        <a href="https://laravel.com/docs/13.x/eloquent-factories#creating-models-using-factories" target="_blank" rel="noopener">ساختِ مدل با factory</a>،
+                <li>صفحه‌بندی در Eloquent با متدِ <code>paginate()</code> انجام می‌شود.</li>
+        <a href="https://laravel.com/docs/13.x/pagination#displaying-pagination-results" target="_blank" rel="noopener">نمایشِ نتیجه‌ها با links()</a>.
+    </div>
+
+    <!-- ================= ناوبری ================= -->
+    <nav class="lesson-nav" aria-label="ناوبری بین بخش‌ها">
+        <a href="00-فهرست.html">فهرست درس‌ها</a>
+        <a href="12-Auth.html">→ بخش قبل: Auth و احرازِ هویت</a>
+        <a href="14-Storage-و-آپلود.html">بعدی: Storage و آپلود ←</a>
+    </nav>
+
+</div>
+<script src="../assets/js/rayvo.js"></script>
+</body>
+</html>

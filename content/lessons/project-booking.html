@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>پروژه‌ی سوم | پروژه‌ی سوم: سیستم رزرو وقت</title><meta name="description" content="سیستم رزرو نوبت آنلاین با انتخاب خدمت، نمایش ساعت‌های خالی، پنل کاربر و پنل ادمین. این پروژه برای دوره‌ی «Laravel از 0 تا 1000» توسط Rayvo (رایبد اک">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">پروژه‌ی سوم</span><h1>پروژه‌ی سوم: سیستم رزرو وقت</h1><p>سیستم رزرو نوبت آنلاین با انتخاب خدمت، نمایش ساعت‌های خالی، پنل کاربر و پنل ادمین. این پروژه برای دوره‌ی «Laravel از 0 تا 1000» توسط Rayvo (رایبد اکبرلو) ساخته شده است.</p></header>
+<section class="step"><h2>۱. دانلود با یک کلیک</h2><p><p><a href="../downloads/laravel-booking-source.zip" download style="display:inline-block;background:#0b6bcb;color:#fff;padding:12px 22px;border-radius:10px;text-decoration:none;font-weight:700">⬇ دانلود laravel-booking-source.zip</a></p><p>58 فایل: مدل، مایگریشن، کنترلر، ویو، پنل مدیریت، داده‌ی آزمایشی و تست. این zip یک «لایه‌ی روی لاراول» است، نه پروژه‌ی کامل؛ پوشه‌ی vendor را Composer نصب می‌کند.</p><p> این فایل‌ها بازنویسی می‌شوند: <code>routes/web.php</code>، <code>app/Models/User.php</code> و <code>database/seeders/DatabaseSeeder.php</code>. فقط روی پروژه‌ی تازه استخراج کن.</p></p></section><section class="step"><h2>۲. نصب و اجرا</h2><p>PHP 8.3+ و Composer 2 لازم است. دیتابیس پیش‌فرض SQLite است و چیزی برای راه‌اندازی ندارد. ترمینال VS Code را در پوشه‌ی دلخواه باز کن:</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">ترمینال</span></div><pre><code>composer create-project laravel/laravel laravel-booking
+cd laravel-booking
+
+# ویندوز (PowerShell):
+tar -xf "$env:USERPROFILE\Downloads\laravel-booking-source.zip" -C .
+# مک / لینوکس:
+unzip -o ~/Downloads/laravel-booking-source.zip -d .
+
+php artisan migrate --seed
+php artisan storage:link
+php artisan serve</code></pre></div></div></section><section class="step"><h2>۳. اگر با MySQL (XAMPP یا Laragon) کار می‌کنی</h2><p>اگر با MySQL کار می‌کنی، XAMPP یا Laragon را باز و MySQL را Start کن. در <code>http://127.0.0.1/phpmyadmin/</code> دیتابیسی به اسم <code>laravel_booking</code> با collation برابر <code>utf8mb4_unicode_ci</code> بساز، این مقدارها را در <code>.env</code> بگذار و دیتابیس را از نو بساز:</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">.env</span></div><pre><code>DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=laravel_booking
+DB_USERNAME=root
+DB_PASSWORD=
+
+php artisan migrate:fresh --seed</code></pre></div></div></section><section class="step"><h2>۴. حساب‌ها و آدرس‌ها</h2><p>مدیر: <code>admin@book.test</code> و کاربر: <code>user@book.test</code> با گذرواژه‌ی <code>password</code>. آدرس‌ها: <code>/</code> خانه، <code>/book</code> رزرو، <code>/my-bookings</code> نوبت‌های من، <code>/admin</code> پنل مدیریت.</p></section><section class="step"><h2>۵. امکانات</h2><p>کاربر: انتخاب خدمت و روز، دیدن ساعت‌های خالی به‌صورت زنده (JavaScript و JSON)، ثبت نوبت، لغو تا چند ساعت قبل. ادمین: داشبورد، CRUD خدمات (مدت و قیمت)، تغییر وضعیت نوبت (در انتظار، تأیید، انجام، لغو)، ثبت روزهای تعطیل. منطق: جلوگیری از رزرو هم‌پوشان، حداقل فاصله از «الان»، قیمت snapshot، محدودیت نرخ.</p></section><section class="step"><h2>۶. تنظیم ساعت کار</h2><p>همه‌ی تنظیمات در یک فایل است؛ ساعت شروع و پایان، فاصله‌ی نوبت‌ها، روزهای تعطیل هفته و مهلت لغو:</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">config</span></div><pre><code>// config/booking.php
+'open' =&gt; '09:00',
+'close' =&gt; '17:00',
+'step' =&gt; 30,
+'off_days' =&gt; [5],   // 5 = جمعه
+'cancel_hours' =&gt; 2,</code></pre></div></div></section><section class="step"><h2>۷. قلب پروژه: محاسبه‌ی ساعت‌های خالی</h2><p>فایل <code>app/Services/SlotService.php</code>: از ساعت شروع تا پایان کار جلو می‌رود، هر بازه را با نوبت‌های ثبت‌شده مقایسه می‌کند و شرط هم‌پوشانی <code>start &lt; end_other و end &gt; start_other</code> را می‌سنجد. ثبت نوبت هم دوباره همین بررسی را داخل تراکنش انجام می‌دهد، چون ممکن است بین دیدن ساعت و ثبت، دیگری گرفته باشد. نکته‌ی صادقانه: برای ترافیک خیلی سنگین (چند ثبت هم‌زمان) باید قفل سطح دیتابیس اضافه کنی؛ تمرین خوبی برای سطح ۳ است.</p></section><section class="step"><h2>۸. هر بخش به کدام درس برمی‌گردد</h2><p>روت و کنترلر (۲ و ۳)، Blade و کامپوننت (۵ و ۶)، Migration (۷)، Eloquent (۸ و ۹)، Validation (۱۰)، Middleware (۱۱)، Auth (۱۲)، Service (سطح ۳)، تست (سطح ۲).</p></section><section class="step"><h2>۹. اجرای تست و تمرین</h2><p></p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">تست</span></div><pre><code>php artisan test</code></pre></div></div></section><section class="step"><h2>۱۰. تمرین</h2><p>چند پزشک یا کارمند اضافه کن و هر نوبت را به یکی نسبت بده؛ ایمیل تأیید با Notification و صف بفرست؛ یادآوری روز قبل را با Scheduler بساز؛ تاریخ شمسی نشان بده؛ درگاه پرداخت برای پیش‌پرداخت وصل کن.</p></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>استخراج zip بیرون از پوشه‌ی پروژه؛ پوشه‌ی app باید کنار artisan باشد.</li><li>نگرفتن ساعت‌های خالی به‌خاطر ساعت کار یا روز تعطیل در <code>config/booking.php</code>.</li><li>روشن‌نبودن MySQL هنگام استفاده از دیتابیس MySQL.</li></ol></div>
+<nav class="lesson-nav"><a href="project-news.html">→ بخش قبل: پروژه‌ی دوم: سایت خبری</a><a href="project-marketplace.html">بعدی: مارکت‌پلیس ←</a></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

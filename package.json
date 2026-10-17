@@ -1,0 +1,11 @@
+{
+  "name": "rayvo-laravel-course",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Rayvo Laravel course - protected by access codes (Netlify Functions + Blobs)",
+  "dependencies": {
+    "@netlify/blobs": "^8.2.0"
+  },
+  "engines": { "node": ">=20" }
+}

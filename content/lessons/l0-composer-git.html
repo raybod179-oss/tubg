@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سطح ۰ · درس 1 | Composer و Git در عمل</title><meta name="description" content="Composer پکیج‌های PHP را مدیریت می‌کند و Git تاریخچه‌ی کد را نگه می‌دارد؛ هر دو در هر پروژه‌ی لاراولی لازمند.">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">سطح ۰ · درس 1</span><h1>Composer و Git در عمل</h1><p>Composer پکیج‌های PHP را مدیریت می‌کند و Git تاریخچه‌ی کد را نگه می‌دارد؛ هر دو در هر پروژه‌ی لاراولی لازمند.</p></header>
+<section class="step"><h2>۱. Composer</h2><p></p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">composer</span></div><pre><code>composer require spatie/laravel-permission   # نصب پکیج
+composer install                           # نصب از composer.lock
+composer update                            # به‌روزرسانی
+composer dump-autoload                     # رفع Class not found</code></pre></div></div></section><section class="step"><h2>۲. Git روزمره</h2><p></p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">git</span></div><pre><code>git status
+git add .
+git commit -m "توضیح تغییر"
+git log --oneline
+git switch -c feature/cart   # شاخه‌ی جدید</code></pre></div></div></section><section class="step"><h2>۳. gitignore</h2><p>پوشه‌ی <code>vendor</code> و فایل <code>.env</code> هرگز Commit نمی‌شوند؛ پروژه‌ی تازه‌ی لاراول از قبل آن‌ها را در <code>.gitignore</code> دارد.</p></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>Commit کردن vendor یا .env.</li><li>ویرایش دستی composer.lock.</li></ol></div>
+<nav class="lesson-nav"><a href="sql-basics.html">→ بخش قبل: مبانی SQL با phpMyAdmin</a><span></span></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

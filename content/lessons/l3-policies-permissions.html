@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سطح ۳ · درس 1 | نقش‌ها و دسترسی‌ها (Policy و Permission)</title><meta name="description" content="وقتی نقش‌ها بیش از «ادمین و مشتری» شدند، Policy برای دسترسی به یک رکورد و Permission برای دسترسی به یک کار به‌کار می‌آید.">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">سطح ۳ · درس 1</span><h1>نقش‌ها و دسترسی‌ها (Policy و Permission)</h1><p>وقتی نقش‌ها بیش از «ادمین و مشتری» شدند، Policy برای دسترسی به یک رکورد و Permission برای دسترسی به یک کار به‌کار می‌آید.</p></header>
+<section class="step"><h2>۱. Policy</h2><p></p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Policy</span></div><pre><code>php artisan make:policy PostPolicy --model=Post
+
+// PostPolicy.php
+public function update(User $user, Post $post): bool
+{
+    return $user-&gt;id === $post-&gt;user_id;
+}
+
+// کنترلر
+Gate::authorize('update', $post);
+// Blade
+@can('update', $post) ... @endcan</code></pre></div></div></section><section class="step"><h2>۲. نقش و دسترسی با Spatie</h2><p>پکیج رایج برای نقش و دسترسی چندسطحی:</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Spatie</span></div><pre><code>composer require spatie/laravel-permission
+php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider"
+php artisan migrate
+
+// User: use HasRoles;
+$user-&gt;assignRole('editor');
+$user-&gt;givePermissionTo('publish posts');
+Route::middleware('can:publish posts')-&gt;group(...);</code></pre></div></div></section><section class="step"><h2>۳. تمرین</h2><p>نقش «ویراستار» بساز که فقط پست‌های خودش را ویرایش کند و «مدیر» که همه را.</p></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>بررسی دسترسی فقط در منو و نه در کنترلر؛ همیشه سمت سرور چک کن.</li><li>نوشتن شرط نقش‌ها با رشته‌های پراکنده؛ از Permission نام‌دار استفاده کن.</li></ol></div>
+<nav class="lesson-nav"><a href="l2-payment-gateway.html">→ بخش قبل: اتصال درگاه پرداخت</a><a href="l3-clean-code.html">بعدی: Service و Repository و کد تمیز ←</a></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

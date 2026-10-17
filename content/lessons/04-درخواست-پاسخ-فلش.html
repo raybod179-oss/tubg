@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بخش ۰۴ | درخواست، پاسخ و فلش</title>
+    <meta name="description" content="آموزش درخواست و پاسخ در Laravel: خواندن ورودی‌ها، اطلاعات درخواست، ساختن پاسخ، ریدایرکت، سشن و فلش و دیباگ با dd و dump">
+
+    <link rel="icon" href="../assets/img/favicon.png">
+    <link rel="stylesheet" href="../assets/css/rayvo.css">
+    <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script>
+
+    <style>
+        .tk4-flow { display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:center; background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px 14px; }
+        .tk4-flow .box { background:#f1f5f9; border:1px solid #e2e8f0; border-radius:8px; padding:8px 14px; font-size:13.5px; color:#334155; font-weight:600; }
+        .tk4-flow .box.hot { background:#eef2ff; border-color:#c7d2fe; color:#4338ca; }
+        .tk4-flow .arr { color:#cbd5e1; font-size:16px; }
+        .tk4-table { background:#fff; color:#1f2937; direction:ltr; text-align:left; border-collapse:collapse; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:12.5px; line-height:1.8; width:100%; border-radius:10px; overflow:hidden; border:1px solid var(--border); }
+        .tk4-table th { background:#f8fafc; color:#475569; font-weight:700; padding:10px 14px; border-bottom:2px solid #e2e8f0; text-align:left; }
+        .tk4-table td { padding:9px 14px; border-bottom:1px solid #f1f5f9; vertical-align:top; }
+        .tk4-table tr:last-child td { border-bottom:none; }
+        .tk4-table .dim { color:#94a3b8; }
+        .tk4-table .code { color:#4338ca; font-size:12px; }
+        .tk4-browser { background:#fff; color:#1f2937; direction:ltr; text-align:left; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:13px; line-height:1.9; padding:16px 20px; border-radius:10px; border:1px solid var(--border); white-space:pre; overflow-x:auto; }
+        .tk4-browser .dim { color:#94a3b8; }
+        .tk4-browser .ok { color:#059669; }
+        .tk4-browser .warn { color:#d97706; }
+        .tk4-dd { background:#111827; color:#d1fae5; direction:ltr; text-align:left; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:13px; line-height:1.9; padding:18px 22px; border-radius:10px; border:1px solid #1e293b; white-space:pre; overflow-x:auto; }
+        .tk4-dd .fn { color:#93c5fd; }
+        .tk4-dd .dim { color:#64748b; }
+        .tk4-more { margin-top:14px; font-size:12.5px; color:#64748b; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:8px 12px; }
+        .tk4-more a { color:#4f46e5; text-decoration:none; font-weight:600; }
+        .tk4-more a:hover { text-decoration:underline; }
+    </style>
+</head>
+<body>
+<div class="course-page"><!-- ================= سربرگ ================= -->
+    <header class="course-header">
+        <span class="badge">بخش ۰۴</span>
+        <h1>درخواست، پاسخ و فلش</h1>
+        <p>در بخش ۰۳ یاد گرفتیم منطق را به کنترلر ببریم. حالا نوبت دو پایانةِ هر درخواست است: «از کجا ورودی بگیریم» و «چیزی که برمی‌گردانیم دقیقاً چیست».</p>
+    </header>
+
+    <!-- ================= فهرست ================= -->
+    <nav class="toc" aria-label="فهرست مطالب">
+        <h2>توی این بخش چه چیزهایی یاد می‌گیریم؟</h2>
+        <ol>
+            <li><a href="#journey">سفرِ یک درخواست تا پاسخ</a></li>
+            <li><a href="#inputs">خواندن ورودی‌ها</a></li>
+            <li><a href="#request-info">خودِ درخواست؛ روش‌ها و هدرها</a></li>
+            <li><a href="#build-response">ساختنِ پاسخ دلخواه</a></li>
+            <li><a href="#redirect">ریدایرکت‌کردن</a></li>
+            <li><a href="#flash">سشن و پیامِ فلش</a></li>
+            <li><a href="#debug">دیباگ با dd و dump</a></li>
+            <li><a href="#project-step">گام پروژه</a></li>
+            <li><a href="#exercises">تمرین‌ها</a></li>
+        </ol>
+    </nav>
+
+    <!-- ================= درس ۱ ================= -->
+    <section class="lesson" id="journey">
+        <div class="lesson-head"><span class="lesson-num">۱</span>
+            <h2>سفرِ یک درخواست تا پاسخ</h2>
+        </div>
+
+        <p>هر چیزی که در روت یا کنترلر <code>return</code> شود، لاروال آن را به یک <strong>پاسخ HTTP</strong> تبدیل می‌کند
+            و با یک «کد وضعیت» به مرورگر می‌فرستد. پس همان‌جایی که تا الان <code>return 'متن'</code> می‌نوشتی،
+            در واقع داری پاسخِ صفحه را می‌سازی. مسیرِ کامل را این‌طور ببین:
+        </p>
+
+        <div class="tk4-flow"><span class="box">مرورگر</span>
+            <span class="arr">→</span>
+            <span class="box">روت</span>
+            <span class="arr">→</span>
+            <span class="box hot">کنترلر</span>
+            <span class="arr">→</span>
+            <span class="box">پاسخ (return)</span>
+            <span class="arr">←</span>
+            <span class="box">مرورگر</span>
+        </div>
+
+        <p>کدِ وضعیت، نتیجه‌ی درخواست را به مرورگر می‌گوید. مهم‌ترین‌ها:</p>
+        <ul>
+            <li><strong>200</strong> = موفق.</li>
+            <li><strong>302</strong> = ریدایرکت (بعداً در همین بخش).</li>
+            <li><strong>404</strong> = پیدا نشد (بخش ۰۳ با <code>abort</code> ساختیمش).</li>
+            <li><strong>403</strong> = مجاز نیستی · <strong>500</strong> = خطای سرور.</li>
+        </ul>
+
+        <p>حالا ببین لاروال هر نوعِ <code>return</code> را چطور تبدیل می‌کند — تا الان فقط ردیفِ اول را دیده‌ای:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">چه برمی‌گردانی؟</span></div>
+                <table class="tk4-table">
+                    <thead>
+                        <tr>
+                            <th>شما برمی‌گردانید</th>
+                            <th>پاسخی که مرورگر می‌گیرد</th>
+                            <th>کی به‌کار می‌آید</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="code">return 'متن ساده';</td>
+                            <td>HTML</td>
+                            <td>ساده که تا الان کرده‌ایم</td>
+                        </tr>
+                        <tr>
+                            <td class="code">return ['key' =&gt; 'value'];</td>
+                            <td class="dim">JSON (خودکار)</td>
+                            <td>API و درخواست‌های جاوااسکریپت</td>
+                        </tr>
+                        <tr>
+                            <td class="code">return view('...');</td>
+                            <td class="dim">HTML</td>
+                            <td>بخش ۰۵ (Blade)</td>
+                        </tr>
+                        <tr>
+                            <td class="code">return response()-&gt;json([...]);</td>
+                            <td class="dim">JSON با کنترل کامل</td>
+                            <td>همین بخش بعدی</td>
+                        </tr>
+                        <tr>
+                            <td class="code">return redirect('/x');</td>
+                            <td class="dim">302 + هدر Location</td>
+                            <td>بعد از عملیات (همین بخش)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="note info"><div class="note-title"> خلاصه</div>
+            <p>«درخواست» چیزی است که می‌آید، «پاسخ» چیزی است که برمی‌گردد؛ و کد وضعیت روایت می‌کند که چه شد.
+                این دو + سشن، تمام مباحثِ بقیه‌ی بخش است.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۲ ================= -->
+    <section class="lesson" id="inputs">
+        <div class="lesson-head"><span class="lesson-num">۲</span>
+            <h2>خواندن ورودی‌ها</h2>
+        </div>
+
+        <p>کاربر داده را با <strong>query string</strong> (<code>?q=کفش</code>) یا بعداً با <strong>فرم</strong> (POST) می‌فرستد.
+            هر دو را از روی همان شیء <code>Request</code> (که در بخش ۰۳ تزریق کردیم) می‌خوانیم:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP — در کنترلر</span></div>
+                <pre><code>public function search(Request $request)
+{
+    $q      = $request-&gt;query('q');                          // فقط از query string
+    $sort   = $request-&gt;input('sort', 'newest');            // از هرجا؛ با مقدار پیش‌فرض
+    $all    = $request-&gt;all();                              // همه‌ی ورودی‌ها (آرایه)
+    $proxy  = $request-&gt;only(['q', 'sort']);                // فقط همین چند کلید
+
+    return "جست‌وجو: $q | مرتب‌سازی: $sort";
+}</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>$request-&gt;query('q')</code> فقط از query string می‌خواند؛ <code>$request-&gt;input('sort')</code> از کل بدنه (query + فرمِ POST).</li>
+            <li>به هر دو می‌توانی مقدارِ پیش‌فرض بدهی: <code>input('sort', 'newest')</code> — اگر نبود، پیش‌فرض برمی‌گردد، نه null.</li>
+            <li><code>only(...)</code> فقط کلیدهای مشخص را برمی‌گرداند؛ <code>except(...)</code> همه‌ی کلیدها «جز» آن‌ها را (برای نرسیدنِ رمزعبور به جای دیگر به‌درد می‌خورد).</li>
+        </ul>
+
+        <p>و «آیا فلان ورودی هست؟» — با این دستورها (حضور در مقابل پُربودن):</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>if ($request-&gt;has('q')) { }        // هست؟ حتی اگر خالی باشد: true
+if ($request-&gt;filled('q')) { }     // هست و پُر است؟ (خالی = false)
+if ($request-&gt;missing('q')) { }    // نیست؟
+if ($request-&gt;hasAny(['q', 'tag'])) { } // دستِ کم یکی هست؟</code></pre>
+            </div>
+        </div>
+
+        <div class="note tip"><div class="note-title"> چند ضروریِ کاربردی</div>
+            <ul>
+                <li><strong>تبدیل خودکار تایپ:</strong> <code>$request-&gt;boolean('active')</code> مقدارهای چک‌باکس مثل <code>"on"</code>/<code>"1"</code> را <code>true</code> می‌کند؛ و <code>$request-&gt;integer('page')</code> عدد تحویل می‌دهد.</li>
+                <li><strong>دسترسیِ کوتاه:</strong> <code>$request-&gt;name</code> همان فیلدِ <code>name</code> است (مثل خواصِ آبجکت).</li>
+                <li><strong>پاک‌سازی خودکار:</strong> لاروال به‌صورت پیش‌فرض فاصله‌های ابتدا/انتهای متن‌ها را می‌تراشد (TrimStrings) و رشته‌ی خالی را <code>null</code> می‌کند. پس لازم نیست خودت <code>trim()</code> بزنی.</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ================= درس ۳ ================= -->
+    <section class="lesson" id="request-info">
+        <div class="lesson-head"><span class="lesson-num">۳</span>
+            <h2>خودِ درخواست؛ روش‌ها و هدرها</h2>
+        </div>
+
+        <p>گاهی به «محتوا»ی درخواست کار ندارد؛ به «خودِ درخواست» کار دارد: چه روشی (GET/POST)، کدام مسیر،
+            آدرس کامل، یک هدر یا IP بازدیدکننده. همه روی همان <code>$request</code> است:
+        </p>
+
+        <div class="demo"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>public function meta(Request $request)
+{
+    $method = $request-&gt;method();       // "GET"
+    $isPost = $request-&gt;isMethod('post');
+
+    $path   = $request-&gt;path();         // "products/2"
+    $admin  = $request-&gt;is('admin/*');  // آیا مسیر admin/... است؟
+
+    $short  = $request-&gt;url();          // بدون query string
+    $full   = $request-&gt;fullUrl();      // با query string
+
+    $agent  = $request-&gt;header('User-Agent');
+    $ip     = $request-&gt;ip();
+
+    $method  = $admin ? 'part of admin' : $path;
+    return "$method | $agent";
+}</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">چه می‌بینی؟</span></div>
+                بازدید از <code>/products/2?q=کفش</code>:
+                <ul style="margin-top:8px;line-height:2">
+                    <li><code>method()</code> → <span class="dim">GET</span></li>
+                    <li><code>path()</code> → <span class="dim">products/2</span></li>
+                    <li><code>is('admin/*')</code> → <span class="dim">false</span></li>
+                    <li><code>url()</code> → <span class="dim">…/products/2</span></li>
+                    <li><code>fullUrl()</code> → <span class="dim">…/products/2?q=کفش</span></li>
+                    <li><code>ip()</code> → <span class="dim">127.0.0.1</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="note tip"><div class="note-title"> به چه درد می‌خورند؟</div>
+            <ul>
+                <li><code>path()</code> و <code>is()</code>: کل صفحه‌های «پنل مدیریت» با <code>is('admin/*')</code> — بعداً برای سطح دسترسی.</li>
+                <li><code>header()</code>: زبان مرورگر، توکن احراز هویت و... — در بخش‌های Middleware و API.</li>
+                <li><code>ip()</code>: نمایش IP مشتری در سفارش، و Rate Limit ضدِ هرزنامه (بخش ۱۵).</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ================= درس ۴ ================= -->
+    <section class="lesson" id="build-response">
+        <div class="lesson-head"><span class="lesson-num">۴</span>
+            <h2>ساختنِ پاسخِ دلخواه</h2>
+        </div>
+
+        <p>وقتی فقط <code>return 'متن'</code> می‌کنی، لاروال خودش کدِ وضعیت 200 و هدرها را می‌سازد.
+            برای کنترلِ کامل، از تابعِ راحتیِ <code>response()</code> استفاده کن — زنجیره‌ای:
+        </p>
+
+        <div class="demo"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>// متن با کد وضعیت و هدر دلخواه
+return response('ساخته شد', 201)
+        -&gt;header('Content-Type', 'text/plain');
+
+// پاسخ JSON برای API / جاوااسکریپت
+return response()-&gt;json([
+    'ok'   =&gt; true,
+    'data' =&gt; ['products' =&gt; []],
+]);
+
+// چند هدر یکجا
+return response('...')
+        -&gt;withHeaders(['X-Debug' =&gt; 'on',
+                       'Cache-Control' =&gt; 'no-store']);</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">چه می‌بینی؟</span></div>
+                برگرداندنِ آرایه:
+                <div class="tk4-browser">HTTP/1.1 200 OK
+<span class="dim">content-type:</span> application/json
+<span class="warn">{</span> <span class="ok">"name"</span><span class="warn">:</span> <span class="ok">"علی"</span><span class="warn">,</span> <span class="ok">"age"</span><span class="warn">:</span> 30 <span class="warn">}</span></div>
+                <span class="dim" style="font-size:0.85em;color:var(--muted)">آرایه‌ی ساده هم خودکار JSON می‌شود؛ بدون اینکه <code>response()-&gt;json()</code> بنویسی.
+                </span>
+            </div>
+        </div>
+
+        <div class="note info"><div class="note-title"> بقیه‌ی پاسخ‌های آماده</div>
+            <p>این‌ها را الان فقط بشناس تا وقتی بدانیم سراغشان می‌رویم:</p>
+            <ul>
+                <li><code>response()-&gt;view('name', $data, 200)</code> → ویو با کد وضعیت (کاربردی وقتی می‌خواهی 404 دلخواه بسازی).</li>
+                <li><code>response()-&gt;download($path, $filename)</code> → دانلود فایل (مثلاً فاکتور) — در بخش Storage کاملش می‌سازیم.</li>
+                <li><code>response()-&gt;file($path)</code> → نمایش فایلِ تصویر/PDF در مرورگر.</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ================= درس ۵ ================= -->
+    <section class="lesson" id="redirect">
+        <div class="lesson-head"><span class="lesson-num">۵</span>
+            <h2>ریدایرکت‌کردن</h2>
+        </div>
+
+        <p>ریدایرکت، یک پاسخ 302 است که به مرورگر می‌گوید «برو به یک آدرس دیگر». پرکاربردترین روش‌هایش:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>// ۱) به یک آدرس ساده
+return redirect('/products');
+
+// ۲) به یک مسیرِ نامدار — با پارامتر
+return redirect()-&gt;route('products.show', ['id' =&gt; 3]);
+
+// ۳) ببر عقب به همان صفحه‌ای که فرم از آن آمده بود
+return back();
+
+// ۴) به یک دامنه‌ی بیرونی (مثلاً درگاه پرداخت)
+return redirect()-&gt;away('https://example.com');</code></pre>
+            </div>
+        </div>
+
+        <div class="note warn"><div class="note-title"> قانونِ طلایی: بعد از عملیاتِ تغییردهنده، ریدایرکت کن</div>
+            <p>هر وقت کاربر چیزی «می‌سازد/می‌فرستد» (POST — بخش ۱۰ با فرم‌ها)، هیچ وقت <code>return 'متن'</code> نده؛
+                با ریدایرکت‌کردن، اگر کاربر <code>F5</code> بزند، عملیات دوباره اجرا نمی‌شود (مثلاً سبدِ تکراری).
+            </p>
+        </div>
+
+        <p>Tوی شبکه، ریدایرکت این‌طور دیده می‌شود (تب <em>Network</em> ابزارِ توسعه‌دهنده را باز کن):</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">خروجی نمونه — هدر پاسخ</span></div>
+                <div class="tk4-browser">HTTP/1.1 <span class="ok">302 Found</span>
+location: <span class="ok">/products/3</span>
+set-cookie: XSRF-TOKEN=…; laravel_session=…</div>
+            </div>
+        </div>
+
+        <div class="note tip"><div class="note-title"> چرا برگشتنِ به «قبلی» مهم است؟</div>
+            <p><code>back()</code> یعنی «همان صفحه‌ی قبلی»؛ فرمی که پر کردی و خطا داد، با <code>back()-&gt;withInput()</code>
+                دوباره پر می‌شود. این کار با سشن اجرا می‌شود — برویم سراغش.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۶ ================= -->
+    <section class="lesson" id="flash">
+        <div class="lesson-head"><span class="lesson-num">۶</span>
+            <h2>سشن و پیامِ فلش</h2>
+        </div>
+
+        <p>HTTP «بی‌حافظه» است: هر درخواست، یک دنیای تازه است. <strong>سشن</strong> این را حل می‌کند —
+            داده‌ی کاربر را بین درخواست‌ها نگه می‌دارد. ساده‌ترین کاربردش <strong>پیامِ فلش</strong> است:
+            «این پیام فقط برای درخواستِ بعدی زنده باشد» (مثلاً پیامِ موفقیت بعد از عملیات):
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP — بعد از یک عملیات موفق</span></div>
+                <pre><code>public function addToCart()
+{
+    // ... محصول توی سبد گذاشته شد
+
+    return redirect()-&gt;route('cart.index')
+        -&gt;with('status', 'به سبد خرید اضافه شد');
+}</code></pre>
+            </div>
+        </div>
+
+        <p>در درخواستِ بعدی، پیام را با تابعِ <code>session('status')</code> می‌خوانیم. (نمایشِ آن در Blade است —
+            در بخش ۰۵ کامل یاد می‌گیری؛ این را همین‌جا فقط ببین):
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade — پیش‌نمایش (بخش ۰۵)</span></div>
+                <pre><code>@if (session('status'))
+    &lt;div class="alert"&gt;{{ session('status') }}&lt;/div&gt;
+@endif</code></pre>
+            </div>
+        </div>
+
+        <p>پایه‌ی همین مفهوم — ذخیره‌ی ماندگارتر در سشن:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>// ذخیره برای چند درخواست (ماندگارتر از فلش)
+session(['cart_count' =&gt; 3]);          // یا:
+$request-&gt;session()-&gt;put('cart_count', 3);
+
+// خواندن با پیش‌فرض
+$count = session('cart_count', 0);
+
+// آیا کلیدی هست؟ — پایه‌ی «اگر چیزی در سبد هست، نشان بده»
+$has = $request-&gt;session()-&gt;has('cart_count');
+
+// خواندن و حذفِ یکجا
+$val = $request-&gt;session()-&gt;pull('cart_count');
+
+// حذف
+session()->forget('cart_count');</code></pre>
+            </div>
+        </div>
+
+        <div class="note tip"><div class="note-title"> فلش در مقابل ورودیِ قدیمی (old)</div>
+            <ul>
+                <li><code>-&gt;with('status', ...)</code> برای «پیام» است و با <code>session('status')</code> خوانده می‌شود.</li>
+                <li><code>-&gt;withInput()</code> ورودی‌های فرم را برای درخواستِ بعدی نگه می‌دارد تا <code>old('name')</code> بتواند فرم را دوباره پر کند — وقتی اعتبارسنجی خطا داد (در بخش ۱۰ با فرم‌ها).</li>
+                <li>فلش یک عمرِ کوتاه دارد: دقیقاً «همان درخواستِ بعدی». اگر بیشتر لازم بود: <code>reflash()</code> یا <code>keep()</code>.</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ================= درس ۷ ================= -->
+    <section class="lesson" id="debug">
+        <div class="lesson-head"><span class="lesson-num">۷</span>
+            <h2>دیباگ با dd و dump</h2>
+        </div>
+
+        <p>وقتی می‌خواهی ببینی چیزی «الان‌ها واقعاً چیست»، دو تابعِ راحت داری. البته فقط برای زمانِ توسعه:
+        </p>
+
+        <div class="demo"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP — فقط دیباگ</span></div>
+                <pre><code>// چاپ کن و بایست
+dd($request-&gt;all(), $request-&gt;method());
+
+// چاپ کن اما ادامه بده
+dump($request-&gt;query());</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">dd(...)</span></div>
+                <div class="tk4-dd">dd($request-&gt;all(), $request-&gt;method());  <span class="dim">// app\Http\Controllers\X</span>
+
+<span class="fn">array</span>:1 [
+  <span class="fn">"q"</span> =&gt; <span class="fn">"کفش"</span>
+]
+<span class="fn">"GET"</span>
+
+<span class="dim">Last 10 lines executed… </span></div>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>dd(...)</code> = <em>dump and die</em>: مقدار را مرتب چاپ می‌کند و اجرا را همان‌جا قطع می‌کند — سریع‌ترین راهِ فهمیدنِ «چه‌چیزی می‌رسد».</li>
+            <li><code>dump(...)</code> مثل dd است ولی اجرا ادامه پیدا می‌کند.</li>
+            <li>هر جایِ کد — روت، کنترلر، حتی داخل حلقه — می‌توانی <code>dd</code> بگذاری و بروی جلو.</li>
+        </ul>
+
+        <div class="note warn"><div class="note-title"> هیچ وقت در عملیاتِ واقعی</div>
+            <p><code>dd</code> و <code>dump</code> فقط روی سیستمِ توسعه. قبل از عملیات، همه را پاک کن.
+                اگر چیزی خواستی «ثبت» شود ولی سایت برگردد، از <code>logger()-&gt;info('پیام', $data)</code> استفاده کن
+                که در <code>storage/logs/laravel.log</code> نوشته می‌شود.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۸ ================= -->
+    <section class="lesson" id="project-step">
+        <div class="lesson-head"><span class="lesson-num">۸</span>
+            <h2>گام پروژه: این‌ها کجای فروشگاه می‌نشینند؟</h2>
+        </div>
+
+        <div class="proj-step"><div class="proj-title"> همین‌جا کاملش نمی‌کنیم؛ فقط نقشه‌اش را ببین</div>
+            <p>این‌جا قصد نداریم کدی بنویسیم — فقط بفهم «هر وسیله‌ای که امروز یاد گرفتی، فردا در کدام صفحه‌ی
+                فروشگاه استفاده می‌شود»:
+            </p>
+        </div>
+
+        <ul>
+            <li><strong>ورودی‌ها (<code>query/input</code>):</strong> فهرستِ محصولات با <code>?search=...</code> و مرتب‌سازی <code>?sort=price</code>؛ و صفحه‌بندی با <code>integer('page')</code>.</li>
+            <li><strong>اطلاعات درخواست:</strong> <code>is('admin/*')</code> برای جداسازی صفحه‌های مدیریت؛ <code>ip()</code> برای ثبت در سفارش.</li>
+            <li><strong>ریدایرکت + فلش:</strong> بعد از «افزودن به سبد» → ریدایرکت به سبد با پیامِ «`با موفقیت اضافه شد`»؛ بعد از ثبت سفارش → صفحه‌ی سفارش با پیامِ موفقیت.</li>
+            <li><strong><code>withInput</code>:</strong> فرمِ «افزودن محصول» در پنلِ مدیریت (وقتی خطای اعتبارسنجی دارد، فرم خالی نشود) — در بخش ۱۰.</li>
+            <li><strong><code>dd</code>:</strong> ابزارِ تو برای فهمیدنِ این‌که واقعاً چه اطلاعاتی از یک صفحه به کنترلر می‌رسد.</li>
+        </ul>
+
+        <div class="note tip"><div class="note-title"> پیاده‌سازیِ واقعی این‌ها کجاست؟</div>
+            <p>همه‌ی این‌ها وقتی معنا می‌شوند که مدل و Blade داشته باشیم؛ پس پیاده‌سازیِ کاملشان –
+                کنترلرِ سبد، فرم‌ها، صفحه‌بندی – در بخش‌های بعد و در «بخش ۹۹: پروژه‌ی پایانی» جمع می‌شود.
+                فعلاً فقط ابزارها را بلدید.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۹ ================= -->
+    <section class="lesson" id="exercises">
+        <div class="lesson-head"><span class="lesson-num">۹</span>
+            <h2>تمرین‌ها؛ حالا نوبت توست!</h2>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۱: ورودی‌شناسی</div>
+            <ol>
+                <li>یک کنترلر <code>EchoController</code> بساز با متدِ <code>peek(Request $request)</code>.</li>
+                <li>همه‌ی ورودی‌ها را با <code>dd($request-&gt;all())</code> نشان بده.</li>
+                <li>روتش را بگذار: <code>/echo</code> و این آدرس‌ها را تست کن: <code>/echo?name=ali&amp;age=30</code> و <code>/echo?name=ali</code>. تفاوتِ <code>filled</code> را با <code>has</code> روی <code>age</code> چه‌طور می‌بینی؟</li>
+            </ol>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۲: ریدایرکت و فلش</div>
+            <ol>
+                <li>یک روت <code>/go</code> بساز که <code>redirect()-&gt;route('products.show', ['id' =&gt; 2])-&gt;with('status', 'به سبد اضافه شد')</code> برگرداند.</li>
+                <li>یک روت دیگر <code>/flash-check</code> بِردار که <code>session('status', 'پیامی نیست')</code> را برگرداند.</li>
+                <li>اول <code>/go</code> را باز کن، بعد <code>/flash-check</code>؛ حالا یک‌بار دیگر <code>/flash-check</code> را رفرش کن — ببین فلش چرا ناپدید شد!</li>
+            </ol>
+        </div>
+
+        <div class="note info"><div class="note-title"> چالش</div>
+            <p>یک روت <code>/info</code> بساز که متد، مسیر، آدرسِ کامل، هدر <code>User-Agent</code> و IP را در یک
+                <strong>آرایه</strong> برگرداند. ببین مرورگر چطور JSON را نشان می‌دهد —
+                بی‌اینکه <code>response()-&gt;json()</code> بنویسی. (اگر لوکال تست می‌کنی، IP یعنی <code>127.0.0.1</code>.)
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= نکات طلایی ================= -->
+    <div class="golden"><h3> چیزی که از این بخش توی ذهنت بماند</h3>
+        <ol>
+            <li>هر <code>return</code>ی به پاسخ HTTP تبدیل می‌شود؛ متن → HTML، آرایه → JSON، و <code>redirect()</code> → 302.</li>
+            <li>ورودی‌ها: <code>query()</code> فقط query string، <code>input()</code> همه‌جا؛ همیشه پیش‌فرض بده.</li>
+            <li>حضور با <code>has</code>، پُربودن با <code>filled</code>؛ گزینش با <code>only/except</code>.</li>
+            <li><code>method/path/is/url/header/ip</code> اطلاعاتِ خودِ درخواست‌اند.</li>
+            <li>پاسخِ دلخواه: <code>response($content, $status)-&gt;header(...)</code> و <code>response()-&gt;json([...])</code>.</li>
+            <li>بعد از هر عملیاتِ تغییردهنده ریدایرکت کن؛ <code>redirect()-&gt;route(...)</code> و <code>back()</code>.</li>
+            <li>فلش فقط برای «درخواستِ بعدی» زنده است: <code>-&gt;with('status', ...)</code> و خواندن با <code>session('status')</code>.</li>
+            <li><code>withInput()</code> ورودی‌های فرم را برای <code>old()</code> نگه می‌دارد (بخش ۱۰).</li>
+            <li><code>dd()</code>/<code>dump()</code> فقط در توسعه؛ در عملیات از <code>logger()</code> استفاده کن.</li>
+        </ol>
+    </div>
+
+    <!-- ================= مطالعه‌ی بیشتر ================= -->
+    <div class="tk4-more"> مطالعه‌ی بیشتر (انگلیسی):
+        <a href="https://laravel.com/docs/13.x/requests#retrieving-input" target="_blank" rel="noopener">خواندن ورودی‌ها</a> و
+        <a href="https://laravel.com/docs/13.x/requests#input-presence" target="_blank" rel="noopener">حضور/پر بودن (has/filled)</a>،
+        <a href="https://laravel.com/docs/13.x/responses#redirects" target="_blank" rel="noopener">ریدایرکت‌ها</a> و
+        <a href="https://laravel.com/docs/13.x/responses#redirecting-with-flashed-session-data" target="_blank" rel="noopener">ریدایرکتِ همراه با فلش</a>،
+        <a href="https://laravel.com/docs/13.x/session#storing-data" target="_blank" rel="noopener">ذخیره و خواندن در سشن</a> و
+        <a href="https://laravel.com/docs/13.x/session#flash-data" target="_blank" rel="noopener">Flash Data</a>.
+    </div>
+
+    <!-- ================= ناوبری ================= -->
+    <nav class="lesson-nav" aria-label="ناوبری بین بخش‌ها">
+        <a href="00-فهرست.html">فهرست درس‌ها</a>
+        <a href="03-کنترلرها.html">→ بخش قبل: کنترلرها</a>
+        <a href="05-Blade-پایه.html">بعدی: Blade پایه ←</a>
+    </nav>
+
+</div>
+<script src="../assets/js/rayvo.js"></script>
+</body>
+</html>

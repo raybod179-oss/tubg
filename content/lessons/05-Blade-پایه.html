@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بخش ۰۵ | Blade پایه</title>
+    <meta name="description" content="آموزش Blade پایه در Laravel: خروجی با {{ }}, دستورات شرطی و حلقه‌ها, @forelse, $loop, @php و کامنت‌ها">
+
+    <link rel="icon" href="../assets/img/favicon.png">
+    <link rel="stylesheet" href="../assets/css/rayvo.css">
+    <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script>
+
+    <style>
+        .tk5-file { display:inline-block; background:#eef2ff; color:#4338ca; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:12.5px; direction:ltr; padding:2px 9px; border-radius:6px; border:1px solid #c7d2fe; }
+        .tk5-table { background:#fff; color:#1f2937; direction:ltr; text-align:left; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:13px; line-height:1.9; padding:18px 20px; border-radius:10px; border:1px solid var(--border); overflow-x:auto; }
+        .tk5-table .muted { color:#94a3b8; }
+        .tk5-table .act { color:#7c3aed; font-style:italic; }
+        .tk5-out { background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px 18px; font-size:14px; line-height:1.9; color:#1f2937; }
+        .tk5-out ul { margin:0; padding-right:20px; }
+        .tk5-muted { color:#94a3b8; font-size:12.5px; }
+        .tk5-more { margin-top:14px; font-size:12.5px; color:#64748b; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:8px 12px; }
+        .tk5-more a { color:#4f46e5; text-decoration:none; font-weight:600; }
+        .tk5-more a:hover { text-decoration:underline; }
+        .tk5-ltr { direction:ltr; text-align:left; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:13px; }
+    </style>
+</head>
+<body>
+<div class="course-page"><!-- ================= سربرگ ================= -->
+    <header class="course-header">
+        <span class="badge">بخش ۰۵</span>
+        <h1>Blade پایه</h1>
+        <p>حالا نوبتِ «نما»ست. Blade موتورِ قالب لاروال است؛ جایی که HTML و PHP را به‌هم می‌دوزیم تا صفحه‌ی واقعی کاربر را بسازیم.</p>
+    </header>
+
+    <!-- ================= فهرست ================= -->
+    <nav class="toc" aria-label="فهرست مطالب">
+        <h2>توی این بخش چه چیزهایی یاد می‌گیریم؟</h2>
+        <ol>
+            <li><a href="#what">Blade چیست؟</a></li>
+            <li><a href="#echo">خروجی با {{ }} و اکسکیپ</a></li>
+            <li><a href="#if">شرط‌ها: @if / @elseif / @else</a></li>
+            <li><a href="#loop">حلقه‌ها: @foreach / @for / @while</a></li>
+            <li><a href="#forelse">@forelse وقتی فهرست خالی است</a></li>
+            <li><a href="#loopvar">متغیر $loop</a></li>
+            <li><a href="#classstyle">@class و @style: کلاس و استایلِ شرطی</a></li>
+            <li><a href="#switch">@switch و حالت‌ها</a></li>
+            <li><a href="#default">مقدار پیش‌فرض با {{ $x ?? '...' }}</a></li>
+            <li><a href="#php">@php و کامنت {{-- --}}</a></li>
+            <li><a href="#project-step">گام پروژه: صفحه‌ی فهرست محصولات</a></li>
+            <li><a href="#exercises">تمرین‌ها</a></li>
+        </ol>
+    </nav>
+
+    <!-- ================= درس ۱ ================= -->
+    <section class="lesson" id="what">
+        <div class="lesson-head"><span class="lesson-num">۱</span>
+            <h2>Blade چیست؟</h2>
+        </div>
+
+        <p>تا این‌جا، کنترلرها <strong>متنِ خام</strong> برمی‌گرداندند: «فهرست محصولات فروشگاه». اما یک سایتِ واقعی
+            باید <strong>HTML</strong> پس بدهد — با لیست، عکس، دکمه و... برای همین لاروال یک
+            <strong>موتور قالب</strong> به نام <strong>Blade</strong> دارد.
+        </p>
+
+        <p>فایل‌های Blade با پسوند <span class="tk5-file">.blade.php</span> در پوشه‌ی
+            <span class="tk5-file">resources/views/</span> قرار می‌گیرند. کنجکاو باش: این‌ها هم PHP هستند،
+            هم HTML — و لاروال آن‌ها را هنگام اجرا «کامپایل» می‌کند. یک مثالِ ساده:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">resources/views/home.blade.php</span></div>
+                <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="fa" dir="rtl"&gt;
+&lt;body&gt;
+    &lt;h1&gt;سلام به فروشگاه ما!&lt;/h1&gt;
+    &lt;p&gt;{{ $message }}&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            </div>
+        </div>
+
+        <p>و در <code>routes/web.php</code> آن را با <code>view()</code> صدا بزن:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>Route::get('/', function () {
+    return view('home', ['message' =&gt; 'خوش آمدی!']);
+});</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>view('home')</code> یعنی فایلِ <code>home.blade.php</code> را برمی‌گردان (پسوند و مسیرِ <code>views/</code> را ننویس).</li>
+            <li>آرایه‌ی دومِ <code>view()</code> متغیرهایی است که به قالب می‌فرستی: کلیدِ <code>message</code> در قالبِ `$message` می‌شود.</li>
+        </ul>
+
+        <div class="note info"><div class="note-title"> workflow چطور است؟</div>
+            <p>روت → کنترلر محاسبه می‌کند → <code>view()</code> داده می‌دهد → Blade HTML می‌سازد → مرورگر نشان می‌دهد.
+                در بخش بعد (۰۶) یاد می‌گیری این را تمیز و ماژولار کنی.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۲ ================= -->
+    <section class="lesson" id="echo">
+        <div class="lesson-head"><span class="lesson-num">۲</span>
+            <h2>خروجی با {{ }} و اکسکیپ</h2>
+        </div>
+
+        <p>برای چاپِ مقدار یک متغیر، آن را بین دو آکولادِ دونفره بگذار: <code>{{ $variable }}</code>.
+            این ساده‌ترین و هم‌زمان <strong>امن‌ترین</strong> راه است:
+        </p>
+
+        <div class="demo"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade</span></div>
+                <pre><code># در روت / controller
+$product = ['name' =&gt; 'کفش &lt;b&gt;ورزشی&lt;/b&gt;', 'price' =&gt; 250000];
+
+# در قالب
+&lt;p&gt;نام: {{ $product['name'] }}&lt;/p&gt;
+&lt;p&gt;قیمت: {{ $product['price'] }} تومان&lt;/p&gt;</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">چه می‌بینی؟</span></div>
+                <div class="tk5-out"><p>نام: کفش &lt;b&gt;ورزشی&lt;/b&gt;</p>
+                    <p>قیمت: 250000 تومان</p>
+                    <p class="tk5-muted">دقت کن: <code>&lt;b&gt;</code> همان‌‌طور متن ساده مانده؛ تبدیل به تگ نشد!</p>
+                </div>
+            </div>
+        </div>
+
+        <p><strong>اکسکیپ (escape)</strong> یعنی لاروال کاراکترهای ویژه‌ی HTML مثل <code>&lt;</code> و <code>&gt;</code> را بی‌خطر می‌کند تا به‌عنوان «متن» نمایش داده شوند، نه «کد». چرا مهم است؟</p>
+
+        <div class="note warn"><div class="note-title"> چرا اکسکیپ امنیت است؟</div>
+            <p>اگر کاربرِ بدجنس در اسمِ محصول بنویسد <code>&lt;script&gt;alert('hacked')&lt;/script&gt;</code> و تو آن را
+                بدون اکسکیپ چاپ کنی، در مرورگرِ همه اجرا می‌شود — به این حمله <strong>XSS</strong> می‌گویند.
+                سینتکسِ <code>{{ $x }}</code> خودش اکسکیپ می‌کند، پس از آن استفاده کن.
+            </p>
+        </div>
+
+        <div class="note tip"><div class="note-title"> هرگز با {!! !!} چاپ نکن</div>
+            <p>نوشتن <code>{!! $x !!}</code> اکسکیپ را <strong>خاموش</strong> می‌کند و HTMLِ خام چاپ می‌شود. این ناامن است.
+                فقط اگر کاملاً مطمئنی که محتوا امن و کنترلی است — همین، و حتی آن‌وقت هم بهتر است راهِ بهتری پیدا کنی.
+            </p>
+        </div>
+
+        <div class="tk5-more"> مطالعه‌ی بیشتر (انگلیسی): <a href="https://laravel.com/docs/13.x/blade#displaying-data" target="_blank" rel="noopener">چاپ و نمایش داده‌ها در Blade</a></div>
+    </section>
+
+    <!-- ================= درس ۳ ================= -->
+    <section class="lesson" id="if">
+        <div class="lesson-head"><span class="lesson-num">۳</span>
+            <h2>شرط‌ها: @if / @elseif / @else</h2>
+        </div>
+
+        <p>همه‌ی شرط‌های Blade با <code>@</code> شروع می‌شوند و با <code>@endif</code> تمام. ساختار مثل PHP است، فقط
+            بدون آکولاد:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade</span></div>
+                <pre><code>@if ($product['price'] &gt; 200000)
+    &lt;p&gt;این یک محصول گران‌قیمت است &lt;/p&gt;
+@elseif ($product['price'] &gt; 100000)
+    &lt;p&gt;قیمتش متوسط است.&lt;/p&gt;
+@else
+    &lt;p&gt;قیمتش عالی است! &lt;/p&gt;
+@endif</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">چه می‌بینی؟</span></div>
+                <div class="tk5-out"><p>این یک محصول گران‌قیمت است </p>
+                    <p class="tk5-muted">چون در مثالِ قبل قیمت ۲۵۰۰۰۰ بود که بیشتر از ۲۰۰۰۰۰ است.</p>
+                </div>
+            </div>
+        </div>
+
+        <p>یک میان‌بر هم هست: <code>@unless</code> یعنی «مگر اینکه» — عکسِ <code>@if</code> است (اگر شرط <strong>نادرست</strong> بود اجرا کن):</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade</span></div>
+                <pre><code>@unless ($product['price'] &gt; 200000)
+    &lt;p&gt;این محصول ارزان است.&lt;/p&gt;
+@endunless</code></pre>
+            </div>
+        </div>
+
+        <div class="note tip"><div class="note-title"> فرمِ خلاصه برای یک خط</div>
+            <p>برای شرطِ «فقط اگر درست بود، چیزی نشان بده» این کوتاه‌تر است:
+                <code>{{ $x ? 'بله' : 'خیر' }}</code> (اپراتور سه‌گانه). ولی اگر بلوک بزرگ می‌خواهی، <code>@if</code> بهتر است.
+            </p>
+        </div>
+
+        <div class="tk5-more"> مطالعه‌ی بیشتر (انگلیسی): <a href="https://laravel.com/docs/13.x/blade#if-statements" target="_blank" rel="noopener">دستورات شرطی، @unless، @isset و @empty</a></div>
+    </section>
+
+    <!-- ================= درس ۴ ================= -->
+    <section class="lesson" id="loop">
+        <div class="lesson-head"><span class="lesson-num">۴</span>
+            <h2>حلقه‌ها: @foreach / @for / @while</h2>
+        </div>
+
+        <p>رایج‌ترین حلقه در Blade، <code>@foreach</code> است — مثلاً برای نمایشِ فهرست محصولات. هر محصول را یک‌بار
+            تکرار می‌کند:
+        </p>
+
+        <div class="demo"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade</span></div>
+                <pre><code>$products = [
+    ['name' =&gt; 'کفش', 'price' =&gt; 250000],
+    ['name' =&gt; 'تی‌شرت', 'price' =&gt; 120000],
+    ['name' =&gt; 'کلاه', 'price' =&gt; 80000],
+];
+
+&lt;ul&gt;
+@foreach ($products as $p)
+    &lt;li&gt;{{ $p['name'] }} — {{ $p['price'] }} تومان&lt;/li&gt;
+@endforeach
+&lt;/ul&gt;</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">چه می‌بینی؟</span></div>
+                <div class="tk5-out"><ul>
+                        <li>کفش — 250000 تومان</li>
+                        <li>تی‌شرت — 120000 تومان</li>
+                        <li>کلاه — 80000 تومان</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <p>اگر به «شماره» هم نیاز داشتی، می‌توانی کلید را هم بگیرید <code>@foreach ($x as $key =&gt; $value)</code>.</p>
+
+        <p><code>@for</code> و <code>@while</code> هم مثل PHP اند ولی کمتر به کار می‌آیند:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade</span></div>
+                <pre><code>@for ($i = 1; $i &lt;= 3; $i++)
+    &lt;span&gt;دور {{ $i }} &lt;/span&gt;
+@endfor
+
+@php $n = 0; @endphp
+@while ($n &lt; 3)
+    &lt;span&gt;تا سه بشمر: {{ $n }} &lt;/span&gt;
+    @php $n++; @endphp
+@endwhile</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">چه می‌بینی؟</span></div>
+                <div class="tk5-out"><span>دور 1 </span><span>دور 2 </span><span>دور 3 </span>
+                    <span>تا سه بشمر: 0 </span><span>تا سه بشمر: 1 </span><span>تا سه بشمر: 2 </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="note info"><div class="note-title"> برای فهرست‌های دیتابیس</div>
+            <p>وقتی در بخش ۰۸ با Eloquent کار کنیم، <code>$products</code> یک «کالکشن» می‌شود ولی همین
+                <code>@foreach</code> دقیقاً همان‌طور درست کار می‌کند.
+            </p>
+        </div>
+
+        <div class="tk5-more"> مطالعه‌ی بیشتر (انگلیسی): <a href="https://laravel.com/docs/13.x/blade#loops" target="_blank" rel="noopener">حلقه‌ها و دستورهای @continue / @break</a></div>
+    </section>
+
+    <!-- ================= درس ۵ ================= -->
+    <section class="lesson" id="forelse">
+        <div class="lesson-head"><span class="lesson-num">۵</span>
+            <h2>@forelse وقتی فهرست خالی است</h2>
+        </div>
+
+        <p><code>@forelse</code> بهترین دوستِ لیست‌هاست: مثل <code>@foreach</code> تکرار می‌کند، ولی اگر چیزی نبود،
+            خودش بخشِ <code>@empty</code> را نشان می‌دهد — بدون اینکه خودت <code>@if</code> جدا بنویسی:
+        </p>
+
+        <div class="demo"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade</span></div>
+                <pre><code>&lt;div&gt;
+@forelse ($products as $p)
+    &lt;p&gt;{{ $p['name'] }} — {{ $p['price'] }} تومان&lt;/p&gt;
+@empty
+    &lt;p&gt;هنوز محصولی ثبت نشده است. &lt;/p&gt;
+@endforelse
+&lt;/div&gt;</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">وقتی $products خالی است</span></div>
+                <div class="tk5-out"><p>هنوز محصولی ثبت نشده است. </p>
+                    <p class="tk5-muted">دقت کن: همین یک بلوک، هم «فهرست» و هم «صفحه‌ی خالی» را پوشش می‌دهد.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="note tip"><div class="note-title"> قانون طلایی لیست‌ها</div>
+            <p>تا وقتی که امکانِ «خالی بودن» وجود دارد، به‌جای <code>@foreach</code> از <code>@forelse</code> استفاده کن.
+                توی فروشگاه (دسته‌ای که هنوز محصول ندارد) این دقیقاً همان چیزی است که لازم داری.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۶ ================= -->
+    <section class="lesson" id="loopvar">
+        <div class="lesson-head"><span class="lesson-num">۶</span>
+            <h2>متغیر $loop</h2>
+        </div>
+
+        <p>داخلِ هر حلقه، یک متغیر آماده به نام <code>$loop</code> وجود دارد که اطلاعاتِ خودِ حلقه را نگه می‌دارد —
+            بی‌نیاز از شمارنده‌ی دستی:
+        </p>
+
+        <div class="demo"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade</span></div>
+                <pre><code>@foreach ($products as $p)
+    &lt;p&gt;
+        &lt;b&gt;{{ $loop-&gt;iteration }}.{{ $p['name'] }}&lt;/b&gt;
+        @if ($loop-&gt;first) &lt;small&gt;(اولین)&lt;/small&gt; @endif
+        @if ($loop-&gt;last)  &lt;small&gt;(آخرین  از {{ $loop-&gt;count }})&lt;/small&gt; @endif
+    &lt;/p&gt;
+@endforeach</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">چه می‌بینی؟</span></div>
+                <div class="tk5-out"><p><b>1.کفش</b> <small>(اولین)</small></p>
+                    <p><b>2.تی‌شرت</b></p>
+                    <p><b>3.کلاه</b> <small>(آخرین از 3)</small></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="tk5-table" style="margin:16px 0">ابزارهای پرکاربرد $loop:
+  $loop-&gt;iteration  → شماره‌ی فعلی (شروع از ۱)
+  $loop-&gt;index      → ایندکس (شروع از ۰)
+  $loop-&gt;first       → true اگر اولین است
+  $loop-&gt;last        → true اگر آخرین است
+  $loop-&gt;count       → تعداد کل آیتم‌ها
+  $loop-&gt;even/$loop-&gt;odd → زوج/فرد (رنگ‌بندی ردیف‌ها)</div>
+
+        <div class="note tip"><div class="note-title"> کاربرد عملی</div>
+            <p>با <code>$loop-&gt;odd</code> می‌توانی ردیف‌های جدول را یک‌درمیان رنگ کنی، یا با <code>$loop-&gt;last</code>
+                ویرگولِ آخرِ فهرست را حذف کنی. حلقه‌های تودرتو هم <code>$loop</code> جدا دارند (یک‌بار در تمرین امتحانش کن).
+            </p>
+        </div>
+
+        <div class="tk5-more"> مطالعه‌ی بیشتر (انگلیسی): <a href="https://laravel.com/docs/13.x/blade#the-loop-variable" target="_blank" rel="noopener">همه‌ی متغیرهای $loop (شامل remaining و depth و parent)</a></div>
+    </section>
+
+    <!-- ================= درس ۷ ================= -->
+    <section class="lesson" id="classstyle">
+        <div class="lesson-head"><span class="lesson-num">۷</span>
+            <h2>@class و @style: کلاس و استایلِ شرطی</h2>
+        </div>
+
+        <p>خیلی وقت‌ها لازم داری یک کلاس CSS یا یک استایل را «بر اساس شرط» روی عنصر بگذاری — مثلاً دکمهای که وقتی
+            ناموجود است قرمز شود، یا ردیفی که در حالت انتخابِ کاربر برجسته است. دو راهِ دست‌وپاگیر پیش رو داری
+            (رشته‌سازیِ دستی و اپراتور سه‌گانه درهم)، ولی Blade دو دستورِ تمیز برای این‌جور چیزها دارد.
+        </p>
+
+        <h3>@class — فهرست کلاس‌ها با شرط</h3>
+
+        <p><code>@class([...])</code> یک آرایه می‌گیرد: کلاس‌هایی که «همیشه» باید باشند با کلیدِ عددی، و کلاس‌هایی که
+            «فقط وقتی شرط درست شد» باید اضافه شوند با کلیدِ رشته‌ای و مقدارِ boolean:
+        </p>
+
+        <div class="demo"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade</span></div>
+                <pre><code>@php
+    $inStock = false;
+@endphp
+
+&lt;div @class([
+    'product-card',                 // همیشه
+    'card-out' =&gt; ! $inStock,        // فقط وقتی ناموجود است
+    'card-hot' =&gt; $product['price'] &gt; 200000,
+])&gt;
+    {{ $product['name'] }}
+&lt;/div&gt;</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">چه چیزی render می‌شود؟</span></div>
+                <div class="tk5-out"><p dir="ltr" class="tk5-ltr">&lt;div class="product-card card-out card-hot"&gt;</p>
+                    <p class="tk5-muted">کلاسِ <code>card-out</code> و <code>card-hot</code> چون شرط‌شان درست است اضافه شده‌اند؛ <code>product-card</code> همیشه هست.</p>
+                </div>
+            </div>
+        </div>
+
+        <ul>
+            <li>کلیدِ عددی = «همیشه اضافه کن».</li>
+            <li>کلیدِ رشته‌ای = «فقط اگر مقدارِ boolean درست بود اضافه کن».</li>
+            <li>خروجی، یک رشته‌ی تمیزِ کلاس است؛ دیگر خبری از <code>if</code> و <code>.</code> درهم نیست.</li>
+        </ul>
+
+        <h3>@style — استایلِ درون‌خطیِ شرطی</h3>
+
+        <p>دقیقاً همان منطق، ولی برای ویژگیِ <code>style</code>:</p>
+
+        <div class="demo"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade</span></div>
+                <pre><code>&lt;p @style([
+    'color: green;' =&gt; $inStock,
+    'color: red;'   =&gt; ! $inStock,
+    'font-weight: bold;' =&gt; $product['price'] &gt; 200000,
+])&gt;
+    {{ $inStock ? 'موجود' : 'ناموجود' }}
+&lt;/p&gt;</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">چه چیزی render می‌شود؟</span></div>
+                <div class="tk5-out"><p dir="ltr" class="tk5-ltr">&lt;p style="color: red; font-weight: bold;"&gt;</p>
+                    <p class="tk5-muted">چون <code>$inStock</code> برابر <code>false</code> است، استایلِ قرمز اجرا شده است.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="note tip"><div class="note-title"> کی class، کی style؟</div>
+            <p>تا می‌شود با <code>@class</code> و کلاسِ CSS کار کن (تمیزتر و قابل استفاده‌ی مجدد است)؛
+                <code>@style</code> برای مقادیرِ داینامیک (مثل عرضِ پیشرفت، رنگِ برگزیده از دیتابیس) است که نمی‌شود از قبل
+                کلاس نوشت.
+            </p>
+        </div>
+
+        <p>نمونه‌ی واقعیِ استفاده‌ی تو در فروشگاه: ردیفِ ناموجود را با <code>@class([... 'row-out' =&gt; $product-&gt;stock &lt;= 0])</code>
+            خاکستری کنی. همان کاری که در چالشِ ۶ با <code>$loop-&gt;odd</code> می‌گفتیم، حالا تمیزتر انجام می‌شود.
+        </p>
+
+        <div class="tk5-more"> مطالعه‌ی بیشتر (انگلیسی): <a href="https://laravel.com/docs/13.x/blade#conditional-classes" target="_blank" rel="noopener">@class و @style؛ کلاس‌ها و استایل‌های شرطی</a></div>
+    </section>
+
+    <!-- ================= درس ۸ ================= -->
+    <section class="lesson" id="switch">
+        <div class="lesson-head"><span class="lesson-num">۸</span>
+            <h2>@switch و حالت‌ها</h2>
+        </div>
+
+        <p>وقتی یک متغیر را با چند مقدارِ مشخص مقایسه می‌کنی، <code>@switch</code> خواناتر از یک‌رشته <code>@if</code> است.
+            دستورِ <code>@break</code> یعنی «از switch بیرون بیا» (در بلید اتوماتیک هم هست، ولی بگذاریمش برای وضوح):
+        </p>
+
+        <div class="demo"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade</span></div>
+                <pre><code>@php $status = 'shipped'; @endphp
+
+@switch($status)
+    @case('pending')
+        &lt;p&gt;در انتظار پرداخت&lt;/p&gt;
+        @break
+    @case('shipped')
+        &lt;p&gt;ارسال شده &lt;/p&gt;
+        @break
+    @default
+        &lt;p&gt;وضعیت نامشخص&lt;/p&gt;
+@endswitch</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">چه می‌بینی؟</span></div>
+                <div class="tk5-out"><p>ارسال شده </p>
+                    <p class="tk5-muted">چون مقدارِ <code>$status</code> برابرِ <code>shipped</code> است.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="note info"><div class="note-title"> چه وقتی @if، چه وقتی @switch؟</div>
+            <p>اگر شرط‌ها «بازه/نسبت» دارند (مثل قیمت) → <code>@if</code>. اگر یک متغیر «مقدارِ دقیق» دارد
+                (مثل وضعیتِ سفارش) → <code>@switch</code>.
+            </p>
+        </div>
+
+        <div class="tk5-more"> مطالعه‌ی بیشتر (انگلیسی): <a href="https://laravel.com/docs/13.x/blade#switch-statements" target="_blank" rel="noopener">@switch / @case / @default / @break</a></div>
+    </section>
+
+    <!-- ================= درس ۸ ================= -->
+    <section class="lesson" id="default">
+        <div class="lesson-head"><span class="lesson-num">۹</span>
+            <h2>مقدار پیش‌فرض با {{ $x ?? '...' }}</h2>
+        </div>
+
+        <p>گاهی مطمئن نیستی متغیری تعریف شده یا مقدار دارد (مثلاً فیلدِ «توضیح» که خالی است). به‌جای نوشتن
+            <code>@if(isset($x))...</code>، از اپراتورِ <code>??</code> استفاده کن — اگر متغیر نبود یا <code>null</code> بود،
+            مقدارِ بعدش را نشان می‌دهد:
+        </p>
+
+        <div class="demo"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade</span></div>
+                <pre><code>&lt;p&gt;توضیح محصول: {{ $description ?? 'توضیحی ثبت نشده' }}&lt;/p&gt;
+
+# اگر $description = null باشد یا اصلاً تعریف نشده باشد:</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">چه می‌بینی؟</span></div>
+                <div class="tk5-out"><p>توضیح محصول: توضیحی ثبت نشده</p>
+                </div>
+            </div>
+        </div>
+
+        <p>اگر کنترلر همین را هم تعیین کرده باشد (مثلاً <code>$description = 'کفش چرم دست‌دوز'</code>)، همین عبارت مقدارِ
+            واقعی را نشان می‌دهد. یعنی یک عبارت، هم «مقدار» را دارد هم «پیش‌فرض» را — بدون خطا و بدون if اضافه.
+        </p>
+
+        <div class="note tip"><div class="note-title"> به‌جای تابعِ isset</div>
+            <p>در قالب، <code>{{ $x ?? 'پیش‌فرض' }}</code> خوانا و امن است و از <code>@{!! isset($x) ? $x : 'پیش‌فرض' !!}</code>
+                بهتر است. آن را در قالب‌هایت به‌عنوان الگوی همیشگی به‌کار ببر.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۹ ================= -->
+    <section class="lesson" id="php">
+        <div class="lesson-head"><span class="lesson-num">۱۰</span>
+            <h2>@php و کامنت {{-- --}}</h2>
+        </div>
+
+        <p>گاهی داخل قالب به چند خط PHPِ خام نیاز داری (برای آماده‌سازی متغیر و...). با <code>@php ... @endphp</code>
+            می‌توانی PHP بنویسی. اما به‌یاد داشته باش: هرچه منطقِ واقعی کمتر داخل قالب باشد بهتر است — قالب برای «نمایش» است.
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade</span></div>
+                <pre><code>@php
+    $formatted = number_format($product['price']);
+    $discount  = $product['price'] * 0.9;
+@endphp
+
+&lt;p&gt;قیمت: {{ $formatted }} تومان&lt;/p&gt;</code></pre>
+            </div>
+        </div>
+
+        <p>برای «یادداشت» توی قالب هم کامنت‌های مخصوص Blade را استفاده کن. این کامنت‌ها <strong>اصلاً به خروجی HTML
+            نمی‌آیند</strong> (بازدیدکننده‌ی سایت نمی‌بیندشان) — برخلاف کامنتِ عادیِ HTML:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade</span></div>
+                <pre><code>{{-- این کامنت در خروجیِ نهایی دیده نمی‌شود --}}
+
+&lt;!-- این یک کامنتِ عادی HTML است و کاربرِ سایت می‌تواند با «نمایش سورس» ببیندش --&gt;</code></pre>
+            </div>
+        </div>
+
+        <div class="note info"><div class="note-title"> جمع‌بندیِ میان‌برها</div>
+            <p><code>{{ $x }}</code> چاپِ امن • <code>{{ $x ?? 'p' }}</code> چاپ با پیش‌فرض •
+                <code>@php</code> کدنویسی PHP • <code>{{-- --}}</code> کامنتِ نامرئی.
+            </p>
+        </div>
+
+        <div class="tk5-more"> مطالعه‌ی بیشتر (انگلیسی): <a href="https://laravel.com/docs/13.x/blade#raw-php" target="_blank" rel="noopener">کدنویسی PHP داخل قالب (@php و @use)</a> و <a href="https://laravel.com/docs/13.x/blade#comments" target="_blank" rel="noopener">کامنت‌های Blade</a></div>
+    </section>
+
+    <!-- ================= درس ۱۰ ================= -->
+    <section class="lesson" id="project-step">
+        <div class="lesson-head"><span class="lesson-num">۱۱</span>
+            <h2>گام پروژه: صفحه‌ی فهرست محصولات</h2>
+        </div>
+
+        <div class="proj-step"><div class="proj-title"> این بخش کجای فروشگاه می‌نشیند؟</div>
+            <p>حالا که Blade را بلدی، می‌توانیم «نما»ی اولین صفحه‌ی واقعی فروشگاه را بسازیم: لیستِ محصولات.
+                هنوز از دیتابیس خبری نیست (بخش ۰۷ و ۰۸)، پس فعلاً با یک آرایه‌ی ساده کار می‌کنیم.
+            </p>
+        </div>
+
+        <p>یک <code>ProductController</code> ساده و یک قالب Blade برای فهرست محصولات:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">ProductController (بخشی)</span></div>
+                <pre><code>&lt;?php
+
+namespace App\Http\Controllers;
+
+class ProductController extends Controller
+{
+    public function index()
+    {
+        $products = [
+            ['name' =&gt; 'کفش ورزشی', 'price' =&gt; 250000],
+            ['name' =&gt; 'تی‌شرت',    'price' =&gt; 120000],
+            ['name' =&gt; 'کلاه',       'price' =&gt; 80000],
+        ];
+
+        return view('products.index', compact('products'));
+    }
+}</code></pre>
+            </div>
+        </div>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">resources/views/products/index.blade.php</span></div>
+                <pre><code>&lt;ul&gt;
+    @forelse ($products as $p)
+        &lt;li&gt;
+            &lt;b&gt;{{ $loop-&gt;iteration }}.&lt;/b&gt;
+            {{ $p['name'] }} —
+            {{ number_format($p['price']) }} تومان
+        &lt;/li&gt;
+    @empty
+        &lt;li&gt;هنوز محصولی وجود ندارد.&lt;/li&gt;
+    @endforelse
+&lt;/ul&gt;</code></pre>
+            </div>
+            <div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">چه می‌بینی؟</span></div>
+                <div class="tk5-out"><ul>
+                        <li><b>1.</b> کفش ورزشی — 250,000 تومان</li>
+                        <li><b>2.</b> تی‌شرت — 120,000 تومان</li>
+                        <li><b>3.</b> کلاه — 80,000 تومان</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="note info"><div class="note-title"> حالا خودت امتحان کن</div>
+            <p>این قالب را بساز، روتِ <code>/products</code> را به <code>ProductController@index</code> وصل کن و در مرورگر ببین.
+                بعد آرایه را خالی کن تا <code>@empty</code> را هم در عمل ببینی.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۱۱ ================= -->
+    <section class="lesson" id="exercises">
+        <div class="lesson-head"><span class="lesson-num">۱۲</span>
+            <h2>تمرین‌ها؛ حالا نوبت توست!</h2>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۱: کارت محصول</div>
+            <ol>
+                <li>یک آرایه‌ی <code>$product</code> با کلیدهای <code>name</code>، <code>price</code> و <code>stock</code> (موجودی) بساز.</li>
+                <li>در قالب، اگر <code>stock &gt; 0</code> متنِ «موجود است » و در غیر این صورت «ناموجود » نشان بده (با <code>@if/@else</code>).</li>
+                <li>قیمت را با <code>number_format</code> و <code>{{ $x ?? 0 }}</code> نمایش بده.</li>
+            </ol>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۲: فهرست با وضعیت</div>
+            <ol>
+                <li>یک آرایه‌ی چندمحصوله بساز و با <code>@forelse</code> نمایششان بده.</li>
+                <li>برای هر ردیف، شماره‌ی آن را با <code>$loop-&gt;iteration</code> بگذار.</li>
+                <li>آخرین آیتم را با <code>$loop-&gt;last</code> به رنگِ متفاوت (کلاسِ CSS خودت) نشان بده.</li>
+                <li>حالا آرایه را خالی کن و مطمئن شو پیامِ <code>@empty</code> ظاهر می‌شود.</li>
+            </ol>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۳: با @switch</div>
+            <ol>
+                <li>یک متغیر <code>$orderStatus</code> با یکی از مقادیر <code>pending</code>، <code>paid</code>، <code>shipped</code>، <code>cancelled</code> بساز.</li>
+                <li>با <code>@switch</code> برای هرکدام یک پیامِ فارسی نمایش بده؛ <code>@default</code> هم برای هرچیزِ غیرمنتظره.</li>
+                <li>مقدار را عوض کن و نتیجه را تست کن.</li>
+            </ol>
+        </div>
+
+        <div class="note info"><div class="note-title"> چالش</div>
+            <p>با <code>$loop-&gt;odd</code> ردیف‌های فهرست را یک‌درمیان رنگ کن (ردیف‌های فرد یک پس‌زمینه‌ی ملایم داشته باشند).
+                نتیجه را در مرورگر ببین — بعداً در جدول‌های مدیریتیِ پروژه‌ی پایانی به دردت می‌خورد.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= نکات طلایی ================= -->
+    <div class="golden"><h3> چیزی که از این بخش توی ذهنت بماند</h3>
+        <ol>
+            <li>فایل‌های نمایش، <code>.blade.php</code> در <code>resources/views/</code> هستند و با <code>view('name', [...])</code> صدا زده می‌شوند.</li>
+            <li><code>{{ $x }}</code> چاپِ امن است؛ <code>{!! !!}</code> ناامن — هرگز برای داده‌ی کاربری.</li>
+            <li>شرط‌ها: <code>@if/@elseif/@else/@endif</code> و <code>@unless</code>.</li>
+            <li>حلقه‌ها: <code>@foreach/@for/@while</code> و برای لیستِ ممکن‌الخالی بودن، <code>@forelse/@empty</code>.</li>
+            <li><code>$loop</code> اطلاعاتِ حلقه را دارد: <code>iteration</code>، <code>first</code>، <code>last</code>، <code>count</code>.</li>
+            <li>مقایسه‌ی «مقدارِ دقیق» → <code>@switch</code>؛ مقایسه‌ی «بازه» → <code>@if</code>.</li>
+            <li><code>{{ $x ?? 'پیش‌فرض' }}</code> جایگزینِ امن و کوتاهِ <code>isset</code> است.</li>
+            <li>منطق را تا جای ممکن در کنترلر نگه دار؛ داخل قالب فقط آماده‌سازیِ کوتاه با <code>@php</code>.</li>
+            <li>کامنتِ <code>{{-- --}}</code> به خروجی نمی‌آید؛ منطقِ حساس را این‌طور کامنت نکن که چاپ شود.</li>
+        </ol>
+    </div>
+
+    <!-- ================= ناوبری ================= -->
+    <nav class="lesson-nav" aria-label="ناوبری بین بخش‌ها">
+        <a href="00-فهرست.html">فهرست درس‌ها</a>
+        <a href="04-درخواست-پاسخ-فلش.html">→ بخش قبل: درخواست، پاسخ و فلش</a>
+        <a href="06-Blade-چیدمان-و-کامپوننت.html">بعدی: Blade چیدمان و کامپوننت ←</a>
+    </nav>
+
+</div>
+<script src="../assets/js/rayvo.js"></script>
+</body>
+</html>

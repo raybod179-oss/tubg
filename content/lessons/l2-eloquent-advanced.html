@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سطح ۲ · درس ۱ | Eloquent پیشرفته: Scope، Accessor و Eager Loading</title><meta name="description" content="بعد از CRUD و روابط، سه ابزار کدت را کوتاه‌تر و سریع‌تر می‌کند: Scope برای کوئری‌های تکراری، Accessor برای فرمت داده و Eager Loading برای حذف مشکل N+1">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">سطح ۲ · درس ۱</span><h1>Eloquent پیشرفته: Scope، Accessor و Eager Loading</h1><p>بعد از CRUD و روابط، سه ابزار کدت را کوتاه‌تر و سریع‌تر می‌کند: Scope برای کوئری‌های تکراری، Accessor برای فرمت داده و Eager Loading برای حذف مشکل N+1.</p></header>
+<section class="step"><h2>۱. Local Scope</h2><p>شرطی که بارها می‌نویسی را یک‌بار در مدل تعریف کن:</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Scope (لاراول ۱۲ و ۱۳)</span></div><pre><code>// app/Models/Product.php
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
+
+#[Scope]
+protected function active(Builder $query): void
+{
+    $query-&gt;where('is_active', true);
+}
+
+// استفاده
+Product::active()-&gt;latest()-&gt;paginate(12);</code></pre></div></div></section><section class="step"><h2>۲. Accessor</h2><p>ویژگی محاسبه‌شده بساز، مثل قیمت فرمت‌شده:</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Accessor</span></div><pre><code>use Illuminate\Database\Eloquent\Casts\Attribute;
+
+protected function priceFormatted(): Attribute
+{
+    return Attribute::get(fn () =&gt; number_format($this-&gt;price) . ' تومان');
+}
+
+// {{ $product-&gt;price_formatted }}</code></pre></div></div></section><section class="step"><h2>۳. مشکل N+1 و Eager Loading</h2><p>اگر برای هر محصول جدا دسته‌اش را بخوانی، ۱۰۰ محصول یعنی ۱۰۱ کوئری. با <code>with</code> فقط ۲ کوئری:</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">with()</span></div><pre><code>// بد: N+1
+$products = Product::all();
+foreach ($products as $p) { echo $p-&gt;category-&gt;name; }
+
+// خوب
+$products = Product::with('category')-&gt;get();</code></pre></div></div></section><section class="step"><h2>۴. شمارش و جمع روی رابطه</h2><p>بدون لود کردن همه‌ی ردیف‌ها:</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">withCount</span></div><pre><code>$categories = Category::withCount('products')-&gt;get();
+// $category-&gt;products_count</code></pre></div></div></section><section class="step"><h2>۵. تمرین</h2><p>scope به نام <code>cheaperThan($price)</code> بنویس و با <code>Debugbar</code> یا <code>DB::listen</code> تعداد کوئری‌های صفحه‌ی محصولات را قبل و بعد از <code>with</code> مقایسه کن.</p></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>فراموش‌کردن <code>with</code> در حلقه‌ها و ایجاد N+1.</li><li>استفاده از Accessor برای کارهای سنگین (هر بار اجرا می‌شود).</li><li>قراردادن منطق کوئری در ویو به‌جای Scope.</li></ol></div>
+<nav class="lesson-nav"><a href="15-امنیت.html">→ بخش قبل: امنیت پایه‌ی وب</a><a href="l2-testing.html">بعدی: تست‌نویسی ←</a></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

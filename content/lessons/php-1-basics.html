@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سطح ۰ · درس ۲ | مبانی PHP ۱: متغیر، شرط و حلقه</title><meta name="description" content="قبل از لاراول باید زبانش را بفهمی. در این درس PHP را از صفر می‌نویسی و اجرا می‌کنی؛ هیچ پیش‌زمینه‌ای لازم نیست.">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">سطح ۰ · درس ۲</span><h1>مبانی PHP ۱: متغیر، شرط و حلقه</h1><p>قبل از لاراول باید زبانش را بفهمی. در این درس PHP را از صفر می‌نویسی و اجرا می‌کنی؛ هیچ پیش‌زمینه‌ای لازم نیست.</p></header>
+<section class="step"><h2>۱. اولین فایل PHP</h2><p>XAMPP را روشن کن (Apache = Start). پوشه‌ی <code>C:\xampp\htdocs\php-lab</code> را بساز و داخلش فایل <code>index.php</code> را با VS Code بنویس. بعد در مرورگر برو به <code>http://localhost/php-lab/</code>. اگر Laragon داری، پوشه را در <code>C:\laragon\www</code> بساز.</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">php-lab/index.php</span></div><pre><code>&lt;?php
+echo 'سلام Rayvo!';</code></pre></div></div></section><section class="step"><h2>۲. متغیر و انواع داده</h2><p>متغیر در PHP با <code>$</code> شروع می‌شود. چهار نوع پایه: رشته، عدد صحیح، اعشاری و بولی.</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">متغیرها</span></div><pre><code>&lt;?php
+$name  = 'علی';
+$age   = 25;
+$price = 199.5;
+$isPaid = true;
+
+echo "سلام $name، سن تو $age است";
+var_dump($price); // float(199.5)</code></pre></div></div></section><section class="step"><h2>۳. شرط</h2><p>با <code>if / elseif / else</code> تصمیم می‌گیری. مقایسه‌ی دقیق را همیشه با <code>===</code> بنویس.</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">if / else</span></div><pre><code>&lt;?php
+$stock = 0;
+if ($stock &gt; 5) {
+    echo 'موجود';
+} elseif ($stock &gt; 0) {
+    echo 'تعداد کم';
+} else {
+    echo 'ناموجود';
+}</code></pre></div></div></section><section class="step"><h2>۴. حلقه</h2><p><code>for</code> وقتی تعداد تکرار معلوم است و <code>foreach</code> برای آرایه‌ها (در درس بعد عمیق‌تر).</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">حلقه‌ها</span></div><pre><code>&lt;?php
+for ($i = 1; $i &lt;= 5; $i++) {
+    echo "محصول $i&lt;br&gt;";
+}
+
+$items = ['قلم', 'دفتر', 'مداد'];
+foreach ($items as $item) {
+    echo $item . '&lt;br&gt;';
+}</code></pre></div></div></section><section class="step"><h2>۵. تمرین</h2><p>برنامه‌ای بنویس که اعداد ۱ تا ۲۰ را چاپ کند؛ مضرب ۳ را «سه» و مضرب ۵ را «پنج» نشان بدهد (راهنما: عملگر <code>%</code>).</p></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>فراموش‌کردن <code>;</code> در انتهای دستور.</li><li>نوشتن <code>=</code> به‌جای <code>==</code> در شرط.</li><li>باز کردن فایل با دابل‌کلیک به‌جای آدرس <code>localhost</code> (PHP اجرا نمی‌شود).</li></ol></div>
+<nav class="lesson-nav"><a href="setup-environment.html">→ بخش قبل: راه‌اندازی محیط کار</a><a href="php-2-arrays-functions.html">بعدی: مبانی PHP ۲ ←</a></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

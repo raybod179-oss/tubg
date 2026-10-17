@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سطح ۳ · درس 5 | بلادرنگ (Broadcasting)</title><meta name="description" content="وقتی چیزی در سرور اتفاق می‌افتد (سفارش جدید)، بدون رفرش صفحه به مرورگر برسد.">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">سطح ۳ · درس 5</span><h1>بلادرنگ (Broadcasting)</h1><p>وقتی چیزی در سرور اتفاق می‌افتد (سفارش جدید)، بدون رفرش صفحه به مرورگر برسد.</p></header>
+<section class="step"><h2>۱. نصب</h2><p>لاراول ۱۲ و ۱۳ دستور آماده دارد و Reverb سرور WebSocket رسمی لاراول است.</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">artisan</span></div><pre><code>php artisan install:broadcasting
+php artisan reverb:start</code></pre></div></div></section><section class="step"><h2>۲. Event قابل پخش</h2><p></p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Event</span></div><pre><code>class OrderPlaced implements ShouldBroadcast
+{
+    public function __construct(public Order $order) {}
+
+    public function broadcastOn(): array
+    {
+        return [new Channel('orders')];
+    }
+}
+
+OrderPlaced::dispatch($order);</code></pre></div></div></section><section class="step"><h2>۳. دریافت در مرورگر</h2><p></p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Echo</span></div><pre><code>Echo.channel('orders').listen('OrderPlaced', (e) =&gt; {
+    console.log('سفارش جدید', e.order.id);
+});</code></pre></div></div></section><section class="step"><h2>۴. کانال خصوصی</h2><p>برای داده‌ی حساس از <code>PrivateChannel</code> و فایل <code>routes/channels.php</code> استفاده کن تا فقط کاربر مجاز گوش بدهد.</p></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>پخش داده‌ی حساس روی کانال عمومی.</li><li>روشن‌نبودن Worker صف (Eventهای ShouldBroadcast از صف می‌گذرند).</li></ol></div>
+<nav class="lesson-nav"><a href="l3-livewire.html">→ بخش قبل: Livewire: مقدمه</a><a href="l3-docker.html">بعدی: Docker و محیط توسعه ←</a></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

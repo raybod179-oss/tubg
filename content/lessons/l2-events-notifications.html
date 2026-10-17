@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سطح ۲ · درس 6 | Event، Listener و Notification</title><meta name="description" content="Event یعنی «اتفاقی افتاد» (سفارش ثبت شد) و Listener یعنی «واکنش به آن». Notification پیام به کاربر است.">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">سطح ۲ · درس 6</span><h1>Event، Listener و Notification</h1><p>Event یعنی «اتفاقی افتاد» (سفارش ثبت شد) و Listener یعنی «واکنش به آن». Notification پیام به کاربر است.</p></header>
+<section class="step"><h2>۱. ساخت</h2><p>لاراول Listenerها را از روی نوع Event در متد handle خودکار پیدا می‌کند.</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">artisan</span></div><pre><code>php artisan make:event OrderPlaced
+php artisan make:listener SendOrderNotification --event=OrderPlaced</code></pre></div></div></section><section class="step"><h2>۲. استفاده</h2><p></p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Event/Listener</span></div><pre><code>// Event
+class OrderPlaced { public function __construct(public Order $order) {} }
+
+// Listener
+public function handle(OrderPlaced $event): void
+{
+    $event-&gt;order-&gt;user-&gt;notify(new OrderPlacedNotification($event-&gt;order));
+}
+
+// بعد از ثبت سفارش
+OrderPlaced::dispatch($order);</code></pre></div></div></section><section class="step"><h2>۳. Notification</h2><p>هر Notification چند کانال دارد: ایمیل، دیتابیس (زنگوله‌ی سایت) و ...</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Notification</span></div><pre><code>php artisan make:notification OrderPlacedNotification
+
+public function via(object $notifiable): array
+{
+    return ['mail', 'database'];
+}
+
+public function toMail(object $notifiable): MailMessage
+{
+    return (new MailMessage)-&gt;subject('سفارش شما ثبت شد')-&gt;line('ممنون از خرید شما');
+}</code></pre></div></div></section><section class="step"><h2>۴. تمرین</h2><p>وقتی مدیر وضعیت سفارش را «ارسال‌شده» کرد، رویداد و اعلان بساز.</p></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>انجام همه‌چیز داخل کنترلر به‌جای Event؛ کنترلر بزرگ و تست‌ناپذیر می‌شود.</li><li>فراموش‌کردن <code>ShouldQueue</code> برای Listenerهای کند.</li></ol></div>
+<nav class="lesson-nav"><a href="l2-queues.html">→ بخش قبل: صف (Queue) و Job</a><a href="l2-mail-sms.html">بعدی: ایمیل و پیامک ←</a></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

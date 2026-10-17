@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بخش ۱۴ | Storage و آپلود فایل</title>
+    <meta name="description" content="آموزش Storage و آپلود فایل در لاراول ۱۳: filesystems.php، storage:link، store()، Validation فایل، asset() و Storage::delete">
+
+    <link rel="icon" href="../assets/img/favicon.png">
+    <link rel="stylesheet" href="../assets/css/rayvo.css">
+    <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script>
+
+    <style>
+        .tk14-term { background:#0f172a; color:#e2e8f0; direction:ltr; text-align:left; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:12.5px; line-height:1.9; padding:14px 16px; border-radius:10px; overflow-x:auto; white-space:pre; }
+        .tk14-term .p { color:#38bdf8; }
+        .tk14-term .c { color:#94a3b8; }
+        .tk14-term .o { color:#4ade80; }
+        .tk14-term .x { color:#f87171; }
+        .tk14-more { margin-top:14px; font-size:12.5px; color:#64748b; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:8px 12px; }
+        .tk14-more a { color:#4f46e5; text-decoration:none; font-weight:600; }
+        .tk14-more a:hover { text-decoration:underline; }
+        .tk14-file { display:inline-block; background:#eef2ff; color:#4338ca; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:12.5px; direction:ltr; padding:2px 9px; border-radius:6px; border:1px solid #c7d2fe; }
+        .tk14-compare { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:16px 0; }
+        .tk14-compare .col { background:#f8fafc; border:1px solid var(--border); border-radius:10px; padding:14px 18px; }
+        .tk14-compare .col h4 { font-size:14px; font-weight:700; margin-bottom:8px; direction:rtl; text-align:right; }
+        .tk14-compare .col code { font-size:12px; }
+        @media (max-width:760px) {
+            .tk14-compare { grid-template-columns:1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="course-page"><header class="course-header">
+        <span class="badge">بخش ۱۴</span>
+        <h1>Storage و آپلود فایل</h1>
+        <p>فروشگاهِ ما عکسِ محصول ندارد! تا الان فقط داده‌ی متنی کار کردیم. امروز یاد می‌گیریم فایل (تصویر، PDF و...) را از مرورگر بگیریم، درِ سرور ذخیره کنیم و بعداً حذفشان کنیم — بدونِ آن‌که دیتابیس را پر کنیم.</p>
+    </header>
+
+    <nav class="toc" aria-label="فهرست مطالب">
+        <h2>توی این بخش چه چیزهایی یاد می‌گیریم؟</h2>
+        <ol>
+            <li><a href="#why">چرا Storage لازم است؟</a></li>
+            <li><a href="#disks">Disk‌ها در filesystems.php</a></li>
+            <li><a href="#storage-link">ساختِ symbolic link با storage:link</a></li>
+            <li><a href="#upload-basic">آپلودِ ساده در کنترلر</a></li>
+            <li><a href="#upload-validation">اعتبارسنجیِ فایل</a></li>
+            <li><a href="#upload-store">store() و storeAs()</a></li>
+            <li><a href="#display">نمایشِ فایلِ آپلودشده</a></li>
+            <li><a href="#delete">حذفِ فایل با Storage::delete</a></li>
+            <li><a href="#upload-form">فرمِ آپلودِ کامل در بلید</a></li>
+            <li><a href="#project-step">گام پروژه: عکسِ محصول</a></li>
+            <li><a href="#exercises">تمرین‌ها</a></li>
+        </ol>
+    </nav>
+
+    <!-- ================= درس ۱ ================= -->
+    <section class="lesson" id="why">
+        <div class="lesson-head"><span class="lesson-num">۱</span>
+            <h2>چرا Storage لازم است؟</h2>
+        </div>
+
+        <p>تا الان جدولِ <code>products</code> ما فقط نام، توضیح و قیمت داشت. در دنیایِ واقعی، هر محصولِ فروشگاهی عکس دارد. عکس یک فایلِ دودویی (binary) است و جایِ آن در دیتابیس نیست: باید در فایل‌سیستمِ سرور ذخیره شود.</p>
+
+        <p>Laravel مفهومی به نام <strong>Filesystem</strong> دارد که به تو اجازه می‌دهد بدونِ نگرانی از مسیرِ دقیقِ سرور، فایل‌ها را «ذخیره»، «خواندن» و «حذف» کنی.</p>
+
+        <div class="tk14-compare"><div class="col"><h4>فایل ذخیره شود کجا؟</h4>
+                <ul>
+                    <li>درِ <strong>دیتابیس</strong> → فقط نامِ فایل (string)</li>
+                    <li>درِ <strong>فایل‌سیستم</strong> → خودِ فایلِ باینری</li>
+                </ul>
+            </div>
+            <div class="col"><h4>نقشِ Laravel</h4>
+                <ul>
+                    <li>مدیریتِ مسیر با Disk</li>
+                    <li>validate، store، delete، url</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="note info"><div class="note-title">تلفیقِ فصل‌ها</div>
+            <p>این فصل هم‌راهِ فصلِ ۱۰ (فرم‌ها و validation) و فصلِ ۸ (CRUD) است. فرمی می‌سازیم که فایل بگیرد، validate شود، ذخیره شود و عکسِ آن درِ صفحه‌ی محصول نمایش داده شود.</p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۲ ================= -->
+    <section class="lesson" id="disks">
+        <div class="lesson-head"><span class="lesson-num">۲</span>
+            <h2>Disk‌ها در filesystems.php</h2>
+        </div>
+
+        <p>هر «محلِ ذخیره» در لاراول به نامِ <strong>Disk</strong> شناخته می‌شود. تنظیماتِ دیسک‌ها در فایل <span class="tk14-file">config/filesystems.php</span> تعریف شده‌اند:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">config/filesystems.php (بخشِ disks)</span></div>
+                <pre><code>'disks' =&gt; [
+
+    'local' =&gt; [
+        'driver' =&gt; 'local',
+        'root'   =&gt; storage_path('app/private'),
+        'serve'  =&gt; true,   // لاراول ۱۳
+        'throw'  =&gt; false,
+    ],
+
+    'public' =&gt; [
+        'driver' =&gt; 'local',
+        'root'   =&gt; storage_path('app/public'),
+        'url'    =&gt; env('APP_URL').'/storage',
+'visibility' =&gt; 'public',
+        'throw'  =&gt; false,
+    ],
+
+    's3' =&gt; [
+        'driver' =&gt; 's3',
+        'key'    =&gt; env('AWS_ACCESS_KEY_ID'),
+        // ... تنظیماتِ S3
+    ],
+
+],
+
+    // پیوندِ دستی به public/storage
+    'links' =&gt; [
+        public_path('storage') =&gt; storage_path('app/public'),
+    ],</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><strong>local</strong>: فایل‌ها در <span class="tk14-file">storage/app/private</span> ذخیره می‌شوند؛ قابلِ دسترسی از وب نیستند.</li>
+            <li><strong>public</strong>: فایل‌ها در <span class="tk14-file">storage/app/public</span> ذخیره می‌شوند؛ برایِ فایل‌های عمومی مثل عکسِ محصول.</li>
+            <li><strong>s3</strong>: فضایِ ابریِ آمازون؛ درِ پروژه‌های واقعی برایِ هاست‌های ابری.</li>
+        </ul>
+
+        <div class="note tip"><div class="note-title">کدام disk را انتخاب کنیم؟</div>
+            <p>برایِ عکسِ محصولِ فروشگاه، <code>'public'</code> مناسب است. اگر فایل باید پنهان باشد (مثلِ فاکتورِ PDF)، از <code>'local'</code> استفاده کن و لینکِ دانلود را با auth محافظت کن.</p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۳ ================= -->
+    <section class="lesson" id="storage-link">
+        <div class="lesson-head"><span class="lesson-num">۳</span>
+            <h2>ساختِ symbolic link با storage:link</h2>
+        </div>
+
+        <p>فایل‌هایِ diskِ public درِ <span class="tk14-file">storage/app/public</span> ذخیره می‌شوند؛ اما مرورگر فقط از پوشه‌ی <span class="tk14-file">public/</span> محتوا سرو می‌کند. باید یک «پیوندِ نمادین» بسازیم:</p>
+
+        <div class="tk14-term">$ php artisan storage:link
+
+<span class="o"> INFO  </span> The [<span class="p">public/storage</span>] link has been connected to [<span class="p">storage/app/public</span>].</div>
+
+        <ul>
+            <li>بعد از اجرایِ این فرمان، فایلِ <span class="tk14-file">public/storage</span> به <span class="tk14-file">storage/app/public</span> اشاره می‌کند.</li>
+            <li>درِ ویندوز، ممکن است نیاز به دسترسیِ Developer Mode داشته باشی.</li>
+            <li>درِ تولید، این فرمان بخشی از فرایندِ deploy است.</li>
+        </ul>
+
+        <div class="note warn"><div class="note-title">فراموش نکن!</div>
+            <p>اگر <code>storage:link</code> را اجرا نکنی، عکس‌هایِ آپلودشده ۴۰۴ می‌خورند. این رایج‌ترین اشتباهِ مبتدیان است.</p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۴ ================= -->
+    <section class="lesson" id="upload-basic">
+        <div class="lesson-head"><span class="lesson-num">۴</span>
+            <h2>آپلودِ ساده در کنترلر</h2>
+        </div>
+
+        <p>درِ فرمِ HTML، فایل با <code>&lt;input type="file"&gt;</code> گرفته می‌شود. درِ کنترلرِ لاراول، فایلِ آپلودشده از طریقِ <code>$request-&gt;file('name')</code> در دسترس است و با متدِ <code>store()</code> ذخیره می‌شود:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP — آپلودِ ساده</span></div>
+                <pre><code>use Illuminate\Http\Request;
+
+public function store(Request $request)
+{
+    // ۱. فایل را از فرم بگیر
+    $file = $request-&gt;file('image');
+
+    // ۲. درِ diskِ public و پوشه‌ی images ذخیره کن
+    $path = $file-&gt;store('images', 'public');
+    // نتیجه: "images/a1b2c3d4e5.jpg"
+
+    // ۳. مسیرِ ذخیره‌شده را در دیتابیس ذخیره کن
+    Product::create([
+        'name'     =&gt; $request-&gt;input('name'),
+        'price'    =&gt; $request-&gt;input('price'),
+        'image'    =&gt; $path,   // "images/abc.jpg"
+    ]);
+}</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>$request-&gt;file('image')</code> → شیءِ <code>UploadedFile</code> را برمی‌گرداند.</li>
+            <li><code>store('images', 'public')</code> → فایل را با نامِ تصادفیِ Hash درِ <code>storage/app/public/images/</code> ذخیره می‌کند.</li>
+            <li>نامِ فایل خودکار Hash شده است (امنیت: نامِ اصلی فاش نمی‌شود).</li>
+        </ul>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">HTML — فرمِ آپلود</span></div>
+                <pre><code>&lt;form method="POST" action="{{ route('products.store') }}"
+      enctype="multipart/form-data"&gt;
+    @csrf
+
+    &lt;label&gt;نام محصول&lt;/label&gt;
+    &lt;input type="text" name="name"&gt;
+
+    &lt;label&gt;قیمت&lt;/label&gt;
+    &lt;input type="number" name="price"&gt;
+
+    &lt;label&gt;عکس محصول&lt;/label&gt;
+    &lt;input type="file" name="image" accept="image/*"&gt;
+
+    &lt;button type="submit"&gt;ذخیره&lt;/button&gt;
+&lt;/form&gt;</code></pre>
+            </div>
+        </div>
+
+        <div class="note warn"><div class="note-title">enctype را فراموش نکن</div>
+            <p>اگر <code>enctype="multipart/form-data"</code> را ننویسی، فایل به کنترلر نمی‌رسد. هر فرمی که فایل آپلود می‌کند باید این ویژگی را داشته باشد.</p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۵ ================= -->
+    <section class="lesson" id="upload-validation">
+        <div class="lesson-head"><span class="lesson-num">۵</span>
+            <h2>اعتبارسنجیِ فایل</h2>
+        </div>
+
+        <p>آپلودِ بدونِ validation یعنی کاربر می‌تواند فایلِ اجرایی (.exe) یا فایلِ بزرگ آپلود کند. Laravel قواعدِ validationِ مخصوصِ فایل دارد:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP — Validation فایل</span></div>
+                <pre><code>public function store(Request $request)
+{
+    $validated = $request-&gt;validate([
+        'name'  =&gt; 'required|string|max:255',
+        'price' =&gt; 'required|integer|min:0',
+        'image' =&gt; [
+            'required',
+            'image',                // باید تصویر باشد
+            'mimes:jpg,jpeg,png',   // فرمت‌های مجاز
+            'max:2048',             // حداکثر ۲ مگابایت
+        ],
+    ]);
+
+    $path = $request-&gt;file('image')-&gt;store('images', 'public');
+
+    Product::create([...$validated, 'image' =&gt; $path]);
+}</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>image</code>: فایل باید تصویر باشد (بر اساسِ MIME type واقعی).</li>
+            <li><code>mimes:jpg,jpeg,png</code>: فقط این پسوندها مجازند.</li>
+            <li><code>max:2048</code>: حداکثر حجم ۲۰۴۸ کیلوبایت.</li>
+        </ul>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP — قواعدِ رایجِ فایل</span></div>
+                <pre><code>// تصویر با حداکثر ۵ مگابایت
+'image' =&gt; 'required|image|mimes:jpg,png|max:5120',
+
+// PDF با حداکثر ۱۰ مگابایت
+'document' =&gt; 'required|mimes:pdf|max:10240',
+
+// هر فایلی
+'attachment' =&gt; 'required|file|max:2048',
+
+// ابعادِ تصویر
+'image' =&gt; ['required', 'image', 'dimensions:min_width=300,min_height=300'],</code></pre>
+            </div>
+        </div>
+
+        <div class="note tip"><div class="note-title">max و تنظیماتِ PHP</div>
+            <p>مقدارِ <code>max</code> درِ قواعدِ لاراول با <code>upload_max_filesize</code> و <code>post_max_size</code> درِ php.ini هماهنگ باشد. اگر حجمِ فایل از تنظیماتِ PHP بیشتر باشد، PHP خودش فایل را قطع می‌کند.</p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۶ ================= -->
+    <section class="lesson" id="upload-store">
+        <div class="lesson-head"><span class="lesson-num">۶</span>
+            <h2>store() و storeAs()</h2>
+        </div>
+
+        <p>دو روش برایِ ذخیره‌ی فایل داریم:</p>
+
+        <div class="tk14-compare"><div class="col"><h4>store()</h4>
+                <ul>
+                    <li>نامِ فایل خودکار Hash می‌شود</li>
+                    <li>امن: نامِ اصلی فاش نمی‌شود</li>
+                    <li><code>store('images', 'public')</code></li>
+                    <li>نتیجه: <code>images/x8k3f.jpg</code></li>
+                </ul>
+            </div>
+            <div class="col"><h4>storeAs()</h4>
+                <ul>
+                    <li>نامِ فایل را تو تعیین می‌کنی</li>
+                    <li>باید مطمئن شوی نامِ تکراری نباشد</li>
+                    <li><code>storeAs('images', 'cover.jpg', 'public')</code></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP — storeAs</span></div>
+                <pre><code>// storeAs: نامِ فایل را خودت مشخص می‌کنی
+$path = $request-&gt;file('image')
+    -&gt;storeAs('images', 'cover-product-1.jpg', 'public');
+// ذخیره در: storage/app/public/images/cover-product-1.jpg
+
+// storeAs با مسیرِ کامل
+$path = $request-&gt;file('image')
+    -&gt;storeAs('images/products', 'hero.png', 'public');</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>store()</code> → نامِ تصادفی و امن (پیشنهادی).</li>
+            <li><code>storeAs()</code> → نامِ مشخص؛ فقط وقتی لازم است که بخواهی نامِ خاصی داشته باشی.</li>
+            <li>درِ هر دو حالت، مسیرِ برگشت‌شده را درِ دیتابیس ذخیره کن (نه خودِ فایل را).</li>
+        </ul>
+
+        <div class="note info"><div class="note-title">چه چیزی در دیتابیس ذخیره می‌شود؟</div>
+            <p>فقط <strong>رشته‌ی مسیر</strong> مثل <code>images/a1b2c3d4e5.jpg</code>. خودِ فایل درِ فایل‌سیستم است و دیتابیس فقط «کجاست» را نگه می‌دارد.</p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۷ ================= -->
+    <section class="lesson" id="display">
+        <div class="lesson-head"><span class="lesson-num">۷</span>
+            <h2>نمایشِ فایلِ آپلودشده</h2>
+        </div>
+
+        <p>برایِ نمایشِ عکس درِ بلید، از helperِ <code>asset()</code> استفاده کن. مسیرِ ذخیره‌شده درِ دیتابیس را به لینکِ وب تبدیل می‌کند:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade — نمایشِ عکسِ محصول</span></div>
+                <pre><code>&lt;!-- عکسِ محصول از دیتابیس --&gt;
+&lt;img src="{{ asset('storage/' . $product-&gt;image) }}"
+     alt="{{ $product-&gt;name }}"
+     width="300"&gt;
+
+&lt;!-- اگر عکس نداشت، پیش‌فرض نشان بده --&gt;
+@if ($product-&gt;image)
+    &lt;img src="{{ asset('storage/' . $product-&gt;image) }}"
+         alt="{{ $product-&gt;name }}"&gt;
+@else
+    &lt;img src="{{ asset('images/placeholder.png') }}"
+         alt="عکس ندارد"&gt;
+@endif</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>asset('storage/images/abc.jpg')</code> → <code>http://localhost:8000/storage/images/abc.jpg</code></li>
+            <li>مسیرِ برگشت‌شده از <code>store()</code> دقیقاً همان چیزی است که <code>asset()</code> نیاز دارد.</li>
+            <li>اگر عکسِ پیش‌فرض نداری، می‌توانی درِ دیتابیس مقدارِ <code>null</code> بگذاری و درِ بلید شرطی کنی.</li>
+        </ul>
+
+        <div class="note tip"><div class="note-title">Storage facade و URL</div>
+            <p>روشِ جایگزین: <code>Storage::url($path)</code> که دقیقاً همان خروجیِ <code>asset('storage/...')</code> را می‌دهد.</p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۸ ================= -->
+    <section class="lesson" id="delete">
+        <div class="lesson-head"><span class="lesson-num">۸</span>
+            <h2>حذفِ فایل با Storage::delete</h2>
+        </div>
+
+        <p>وقتی محصول را حذف یا ویرایش می‌کنیم، باید فایلِ قدیمی را هم از فایل‌سیستم پاک کنیم. facadeِ <code>Storage</code> متدِ <code>delete()</code> دارد:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP — حذفِ فایل</span></div>
+                <pre><code>use Illuminate\Support\Facades\Storage;
+
+// حذفِ یک فایل از دیسکِ public
+Storage::disk('public')-&gt;delete('images/old-photo.jpg');
+
+// حذفِ چند فایل
+Storage::disk('public')-&gt;delete(['images/pic1.jpg', 'images/pic2.jpg']);
+
+// حذفِ فایلِ محصول قبل از آپلودِ جدید (ویرایش)
+public function update(Request $request, Product $product)
+{
+    $validated = $request-&gt;validate([
+        'name'  =&gt; 'required|string|max:255',
+        'price' =&gt; 'required|integer|min:0',
+        'image' =&gt; 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+    ]);
+
+    if ($request-&gt;hasFile('image')) {
+        // حذفِ عکسِ قدیمی
+if ($product-&gt;image) {
+            Storage::disk('public')-&gt;delete($product-&gt;image);
+        }
+        // ذخیره‌ی عکسِ جدید
+        $validated['image'] = $request-&gt;file('image')
+            -&gt;store('images', 'public');
+    }
+
+    $product-&gt;update($validated);
+}</code></pre>
+            </div>
+        </div>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP — حذفِ محصول و فایل</span></div>
+                <pre><code>public function destroy(Product $product)
+{
+// حذفِ فایلِ عکس
+    if ($product-&gt;image) {
+        Storage::disk('public')-&gt;delete($product-&gt;image);
+    }
+
+    // حذفِ ردیفِ دیتابیس
+    $product-&gt;delete();
+
+    return redirect()-&gt;route('products.index')
+        -&gt;with('success', 'محصول حذف شد.');
+}</code></pre>
+            </div>
+        </div>
+
+        <ul>
+<li>عکس‌ها روی دیسکِ <code>public</code> ذخیره می‌شوند، پس برای حذف هم باید همان دیسک را صدا بزنی: <code>Storage::disk('public')-&gt;delete('images/abc.jpg')</code>.</li>
+            <li><code>Storage::delete(...)</code> بدونِ نامِ دیسک، روی دیسکِ پیش‌فرض (<code>local</code>) کار می‌کند؛ یعنی حذف نمی‌شود و فایل یتیم می‌ماند.</li>
+            <li>همیشه اولِ فایل را حذف کن، بعدِ ردیفِ دیتابیس را.</li>
+        </ul>
+
+        <div class="note warn">
+<div class="note-title"> فایلِ یتیم نساز!</div>
+            <p>اگر فقط ردیفِ دیتابیس را حذف کنی ولی فایل را نه، فایلِ «یتیم» (orphan) روی سرور باقی می‌ماند و فضا می‌گیرد. همیشه حذفِ فایل را درِ <code>destroy()</code> فراموش نکن.</p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۹ ================= -->
+    <section class="lesson" id="upload-form">
+        <div class="lesson-head"><span class="lesson-num">۹</span>
+            <h2>فرمِ آپلودِ کامل در بلید</h2>
+        </div>
+
+        <p>حالا بیا یک فرمِ کاملِ آپلود برایِ محصول بسازیم که همه‌ی مواردِ بالا را داشته باشد:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">resources/views/products/create.blade.php</span></div>
+                <pre><code>@extends('layouts.app')
+
+@section('content')
+&lt;h1&gt;افزودنِ محصول&lt;/h1&gt;
+
+&lt;form method="POST" action="{{ route('products.store') }}"
+      enctype="multipart/form-data"&gt;
+    @csrf
+
+    &lt;div&gt;
+        &lt;label&gt;نام محصول&lt;/label&gt;
+        &lt;input type="text" name="name" value="{{ old('name') }}"&gt;
+        @error('name')
+            &lt;span style="color:red"&gt;{{ $message }}&lt;/span&gt;
+        @enderror
+    &lt;/div&gt;
+
+    &lt;div&gt;
+        &lt;label&gt;قیمت (تومان)&lt;/label&gt;
+        &lt;input type="number" name="price" value="{{ old('price') }}"&gt;
+        @error('price')
+            &lt;span style="color:red"&gt;{{ $message }}&lt;/span&gt;
+        @enderror
+    &lt;/div&gt;
+
+    &lt;div&gt;
+        &lt;label&gt;عکس محصول&lt;/label&gt;
+        &lt;input type="file" name="image" accept="image/*"&gt;
+        @error('image')
+            &lt;span style="color:red"&gt;{{ $message }}&lt;/span&gt;
+        @enderror
+    &lt;/div&gt;
+
+    &lt;button type="submit"&gt;ذخیره&lt;/button&gt;
+&lt;/form&gt;
+@endsection</code></pre>
+            </div>
+        </div>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">resources/views/products/edit.blade.php (بخشِ عکس)</span></div>
+                <pre><code>&lt;div&gt;
+    &lt;label&gt;عکس محصول&lt;/label&gt;
+    &lt;input type="file" name="image" accept="image/*"&gt;
+
+    @if ($product-&gt;image)
+        &lt;div style="margin-top:8px"&gt;
+            &lt;p&gt;عکسِ فعلی:&lt;/p&gt;
+            &lt;img src="{{ asset('storage/' . $product-&gt;image) }}"
+                 width="150" style="border-radius:8px"&gt;
+        &lt;/div&gt;
+    @endif
+
+    @error('image')
+        &lt;span style="color:red"&gt;{{ $message }}&lt;/span&gt;
+    @enderror
+&lt;/div&gt;</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>accept="image/*"</code> درِ مرورگر فقط فایل‌هایِ تصویری نشان می‌دهد (اما جایگزینِ validation نیست).</li>
+            <li>درِ فرمِ ویرایش، عکسِ فعلی را قبل از آپلودِ جدید نشان بده تا کاربر بداند چه چیزی دارد.</li>
+            <li>فیلدِ <code>image</code> درِ ویرایش <code>nullable</code> است: اگر فایل جدیدی آپلود نشد، عکسِ قبلی باقی بماند.</li>
+        </ul>
+    </section>
+
+    <!-- ================= درس ۱۰ ================= -->
+    <section class="lesson" id="project-step">
+        <div class="lesson-head"><span class="lesson-num">۱۰</span>
+            <h2>گام پروژه: عکسِ محصول</h2>
+        </div>
+
+        <div class="proj-step"><div class="proj-title">تکمیلی: فروشگاه با عکسِ محصول</div>
+            <p>تا پیش از این، محصولاتِ فروشگاه فقط متنی بودند. حالا عکسِ واقعی به هر محصول اضافه می‌کنیم.</p>
+        </div>
+
+        <ol>
+            <li><strong>فرمانِ storage:link</strong> را اجرا کن: <code>php artisan storage:link</code></li>
+            <li><strong>Migration جدید</strong> بساز: ستونِ <code>image</code> (nullable string) به جدولِ products اضافه کن: <code>php artisan make:migration add_image_to_products_table</code></li>
+            <li><strong>Migration را اجرا کن:</strong> <code>php artisan migrate</code></li>
+            <li><strong>ProductFactory</strong> را بروزرسانی: فیلدِ <code>'image' =&gt; null</code> اضافه کن (یا عکسِ پیش‌فرض).</li>
+            <li><strong>ProductController</strong> را بروزرسانی: متدهای <code>store()</code> و <code>update()</code> را با validation و آپلودِ فایل تکمیل کن.</li>
+            <li><strong>فرم‌های بلید</strong> (create و edit) را با فیلدِ <code>&lt;input type="file"&gt;</code> و نمایشِ عکس تکمیل کن.</li>
+            <li><strong>نمایش:</strong> درِ <code>products/show.blade.php</code> عکسِ محصول را با <code>asset('storage/...')</code> نشان بده.</li>
+            <li><strong>تست:</strong> یک محصول با عکس بساز، درِ صفحه ببین، ویرایش کن (عکسِ جدید آپلود کن)، حذف کن.</li>
+        </ol>
+
+        <div class="note info"><div class="note-title">ادامه‌ی راه</div>
+            <p>همین الگو (آپلود + ذخیره‌ی مسیر + نمایش + حذف) پایه‌ی آپلودِ تصویر در پروژه‌ی پایانی (بخشِ ۹۹) است.</p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۱۱ ================= -->
+    <section class="lesson" id="exercises">
+        <div class="lesson-head"><span class="lesson-num">۱۱</span>
+            <h2>تمرین‌ها؛ حالا نوبت توست!</h2>
+        </div>
+
+        <div class="exercise"><div class="ex-title">تمرین ۱: آپلودِ چند عکس</div>
+            <ol>
+                <li>فرمی بساز که ۳ عکس همزمان آپلود کند: <code>$request-&gt;file('images')</code> یک آرایه برمی‌گرداند.</li>
+                <li>هر عکس را با <code>foreach</code> درِ پوشه‌ی <code>images/gallery/</code> ذخیره کن.</li>
+                <li>مسیرِ هر عکس را درِ یک جدولِ جداگانه ذخیره کن (رابطه‌ی hasMany).</li>
+            </ol>
+        </div>
+
+        <div class="exercise"><div class="ex-title">تمرین ۲: دانلودِ فایل</div>
+            <ol>
+                <li>یک لینکِ «دانلودِ عکس» درِ صفحه‌ی نمایشِ محصول بگذار.</li>
+                <li>روتِ <code>/products/{product}/download</code> بساز که فایل را با <code>Storage::download()</code> تحویل دهد.</li>
+                <li>نامِ فایلِ دانلودی باید نامِ اصلیِ محصول باشد (مثلاً <code>cover.jpg</code>).</li>
+            </ol>
+        </div>
+
+        <div class="exercise"><div class="ex-title">تمرین ۳: اعتبارسنجیِ ابعاد</div>
+            <ol>
+                <li>Validation را طوری تنظیم کن که عکسِ آپلودی حداقل ۳۰۰×۳۰۰ پیکسل باشد: <code>dimensions:min_width=300,min_height=300</code>.</li>
+                <li>اگر کاربر عکسِ کوچکتر آپلود کند، خطا نشان بده.</li>
+            </ol>
+        </div>
+
+        <div class="note info"><div class="note-title">چالش</div>
+            <p>آپلودِ تصویر را به صورت <strong>AJAX</strong> (بدونِ رفرشِ صفحه) پیاده کن: فایل را با JavaScript بفرست، آدرسِ عکس را بگیر و درِ فرم قرار بده. راهنما: لاراول خودش endpointِ آپلود ندارد؛ باید یک route و کنترلرِ جداگانه بسازی.</p>
+        </div>
+    </section>
+
+    <!-- ================= نکات طلایی ================= -->
+    <div class="golden"><h3>چیزی که از این بخش توی ذهنت بماند</h3>
+        <ol>
+            <li>Disk تعیین‌کننده‌ی «جای ذخیره» است: <code>public</code> برایِ فایلِ عمومی، <code>local</code> برایِ فایلِ خصوصی.</li>
+            <li>حتماً <code>php artisan storage:link</code> اجرا کن وگرنه عکس‌ها ۴۰۴ می‌خورند.</li>
+            <li><code>store('path', 'disk')</code> نامِ تصادفی می‌سازد؛ <code>storeAs()</code> نامِ دلخواهِ تو.</li>
+            <li>فرمِ HTML باید <code>enctype="multipart/form-data"</code> داشته باشد وگرنه فایل ارسال نمی‌شود.</li>
+            <li>Validation فایل: <code>image|mimes:jpg,png|max:2048</code> — امنیت را جدی بگیر.</li>
+            <li>فقط <strong>مسیرِ فایل</strong> (رشته) درِ دیتابیس ذخیره شود، خودِ فایل درِ فایل‌سیستم.</li>
+            <li>حذفِ محصول بدونِ حذفِ فایل = فایلِ یتیم؛ همیشه <code>Storage::disk('public')-&gt;delete()</code> را فراموش نکن.</li>
+        </ol>
+    </div>
+
+    <!-- ================= مطالعه‌ی بیشتر ================= -->
+    <div class="tk14-more">مطالعه‌ی بیشتر (انگلیسی):
+        <a href="https://laravel.com/docs/13.x/filesystem" target="_blank" rel="noopener">File Storage</a> —
+        <a href="https://laravel.com/docs/13.x/filesystem#storing-files" target="_blank" rel="noopener">ذخیره‌ی فایل</a> —
+        <a href="https://laravel.com/docs/13.x/validation#available-validation-rules" target="_blank" rel="noopener">قوانینِ validation</a> —
+        <a href="https://laravel.com/docs/13.x/filesystem#file-visibility" target="_blank" rel="noopener">visibility</a>
+    </div>
+
+    <!-- ================= ناوبری ================= -->
+    <nav class="lesson-nav" aria-label="ناوبری بین بخش‌ها">
+        <a href="00-فهرست.html">فهرست درس‌ها</a>
+        <a href="13-Seeder-Factory-Pagination.html">به بخش قبل: Seeder، Factory و Pagination</a>
+        <a href="15-امنیت.html">بعدی: امنیت پایه‌ی وب</a>
+    </nav>
+
+</div>
+<script src="../assets/js/rayvo.js"></script>
+</body>
+</html>

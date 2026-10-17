@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بخش ۰۶ | Blade چیدمان و کامپوننت</title>
+    <meta name="description" content="آموزش چیدمان در Blade: وراثت قالب با @extends/@yield/@section/@parent، @include و @includeIf، کامپوننت‌های x-، @props و $slot">
+
+    <link rel="icon" href="../assets/img/favicon.png">
+    <link rel="stylesheet" href="../assets/css/rayvo.css">
+    <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script>
+
+    <style>
+        .tk6-file { display:inline-block; background:#eef2ff; color:#4338ca; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:12.5px; direction:ltr; padding:2px 9px; border-radius:6px; border:1px solid #c7d2fe; }
+        .tk6-flow { display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:center; background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px 14px; }
+        .tk6-flow .box { background:#f1f5f9; border:1px solid #e2e8f0; border-radius:8px; padding:8px 14px; font-size:13.5px; color:#334155; font-weight:600; }
+        .tk6-flow .box.hot { background:#eef2ff; border-color:#c7d2fe; color:#4338ca; }
+        .tk6-flow .arr { color:#cbd5e1; font-size:16px; }
+        .tk6-out { background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px 18px; font-size:14px; line-height:1.9; color:#1f2937; }
+        .tk6-out ul { margin:0; padding-right:20px; }
+        .tk6-muted { color:#94a3b8; font-size:12.5px; }
+        .tk6-more { margin-top:14px; font-size:12.5px; color:#64748b; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:8px 12px; }
+        .tk6-more a { color:#4f46e5; text-decoration:none; font-weight:600; }
+        .tk6-more a:hover { text-decoration:underline; }
+        .tk6-tree { background:#fff; border:1px solid var(--border); border-radius:10px; padding:14px 16px; direction:ltr; text-align:left; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:13px; line-height:2; color:#334155; overflow-x:auto; }
+        .tk6-tree .dir { color:#4338ca; font-weight:700; }
+        .tk6-tree .file { color:#059669; }
+        .tk6-browser { background:#fff; color:#1f2937; direction:ltr; text-align:left; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:12.5px; line-height:1.9; padding:0; border-radius:10px; border:1px solid var(--border); overflow:hidden; }
+        .tk6-browser .bar { background:#f8fafc; border-bottom:1px solid #e2e8f0; padding:7px 14px; font-size:11px; color:#64748b; }
+        .tk6-browser .body { padding:16px 20px; white-space:pre; overflow-x:auto; }
+        .tk6-browser .h { color:#7c3aed; }
+    </style>
+</head>
+<body>
+<div class="course-page"><!-- ================= سربرگ ================= -->
+    <header class="course-header">
+        <span class="badge">بخش ۰۶</span>
+        <h1>Blade چیدمان و کامپوننت</h1>
+        <p>تا این‌جا هر صفحه یک «فایل کامل» بود. حالا اسکلتِ مشترک سایت را یک‌بار می‌سازیم و بقیه‌ی صفحات فقط «محتوا»ی خودشان را بریزند — با وراثتِ قالب و کامپوننت‌ها.</p>
+    </header>
+
+    <!-- ================= فهرست ================= -->
+    <nav class="toc" aria-label="فهرست مطالب">
+        <h2>توی این بخش چه چیزهایی یاد می‌گیریم؟</h2>
+        <ol>
+            <li><a href="#why">چرا چیدمان لازم است؟</a></li>
+            <li><a href="#inheritance">وراثت قالب: @extends / @yield / @section</a></li>
+            <li><a href="#parent">@parent و پیش‌فرضِ @yield</a></li>
+            <li><a href="#include">@include و @includeIf</a></li>
+            <li><a href="#xc">کامپوننت‌های x- ، @props و {{ $slot }}</a></li>
+            <li><a href="#attr">attributeها: $attributes و merge</a></li>
+            <li><a href="#project-step">گام پروژه: لایوت فروشگاه</a></li>
+            <li><a href="#exercises">تمرین‌ها</a></li>
+        </ol>
+    </nav>
+
+    <!-- ================= درس ۱ ================= -->
+    <section class="lesson" id="why">
+        <div class="lesson-head"><span class="lesson-num">۱</span>
+            <h2>چرا چیدمان لازم است؟</h2>
+        </div>
+
+        <p>تا این‌جا هر بلیدِ ما یک فایلِ کامل HTML بود: <code>&lt;html&gt;</code>، <code>&lt;body&gt;</code>، منو، فوتر — همه‌چیز.
+            حالا فروشگاه‌مان را تصور کن که ۱۰۰ صفحه دارد؛ همه‌شان همان منو و فوترِ تکراری را دارند. اگر فردا یک لینک عوض شود،
+            یعنی ۱۰۰ فایل را ویرایش کنی؟! واقعاً نه.
+        </p>
+
+        <p>Blade دو راه برای حل این تکرار دارد — و در پروژه‌های واقعی معمولاً <strong>با هم</strong> استفاده می‌شوند:
+        </p>
+
+        <ul>
+            <li><strong>وراثتِ قالب (layouts):</strong> یک «اسکلت» اصلی می‌سازیم (لایوت) و هر صفحه فقط تکه‌ی وسطش را پر می‌کند.</li>
+            <li><strong>کامپوننت‌های <code>x-</code>:</strong> قطعه‌های کوچکِ قابلِ استفاده‌ی دوباره — مثل دکمه، هشدار یا کارتِ محصول — که با داده و خصوصیت صدا زده می‌شوند.</li>
+        </ul>
+
+        <div class="tk6-flow"><span class="box">۱۰۰ صفحه یگانه</span>
+            <span class="arr">→</span>
+            <span class="box">۱ لایوت مشترک</span>
+            <span class="arr">→</span>
+            <span class="box hot">+ محتوای هر صفحه</span>
+            <span class="arr">→</span>
+            <span class="box">HTML کامل</span>
+        </div>
+    </section>
+
+    <!-- ================= درس ۲ ================= -->
+    <section class="lesson" id="inheritance">
+        <div class="lesson-head"><span class="lesson-num">۲</span>
+            <h2>وراثت قالب: @extends / @yield / @section</h2>
+        </div>
+
+        <p>اول یک پوشه‌ی <span class="tk6-file">layouts/</span> داخل <span class="tk6-file">resources/views/</span> بساز
+            و لایوتِ اصلی را در آن بگذار:
+        </p>
+
+        <div class="tk6-tree">resources/views/
+├─ layouts/
+│  └─ <span class="file">app.blade.php</span>   <span class="tk6-muted">← اسکلتِ مشترک</span>
+├─ components/
+├─ home.blade.php
+└─ products.blade.php</div>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">resources/views/layouts/app.blade.php</span></div>
+                <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="fa" dir="rtl"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title&gt;@yield('title', 'فروشگاه')&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+    &lt;header&gt;
+        &lt;h1&gt;لوگوی فروشگاه&lt;/h1&gt;
+        &lt;nav&gt;خانه | محصولات | سبد خرید&lt;/nav&gt;
+    &lt;/header&gt;
+
+    &lt;main&gt;
+        @yield('content')
+    &lt;/main&gt;
+
+    &lt;footer&gt;© ۲۰۲۶ فروشگاه کوچک&lt;/footer&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>@yield('title')</code> و <code>@yield('content')</code> «جای خالی» هستند؛ هر صفحه‌ای که از این لایوت ارث ببرد، این حفره‌ها را پر می‌کند.</li>
+            <li><code>@yield('title', 'فروشگاه')</code> یعنی اگر کسی title ندهد، «فروشگاه» می‌نشیند (پیش‌فرض).</li>
+        </ul>
+
+        <p>حالا یک «صفحه فرزند» که فقط محتوایش را تحویل می‌دهد:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">resources/views/products.blade.php</span></div>
+                <pre><code>@extends('layouts.app')
+
+@section('title', 'فهرست محصولات')
+
+@section('content')
+    &lt;h2&gt;محصولات فروشگاه&lt;/h2&gt;
+    &lt;p&gt;این‌جا فهرست کالاها در می‌آید.&lt;/p&gt;
+@endsection</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>@extends('layouts.app')</code> یعنی «از فایلِ <code>layouts/app.blade.php</code> ارث ببر» (نقطه = خطِ پوشه، بدون پسوند).</li>
+            <li><code>@section('title', '...')</code> حالتِ یک‌خطی است — فقط یک «مقدار»؛ اگر چند خط یا تگ باشد، از <code>@section(...) ... @endsection</code> استفاده کن.</li>
+            <li>لاروال هرجا به <code>@yield('content')</code> برسد، محتوای <code>@section('content')</code> همین فایل را می‌گذارد.</li>
+        </ul>
+
+        <p>روتِ آن مثل همیشه است — صفحه نمی‌داند چه لایوتی دارد یا نداشت:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>Route::get('/products', fn () =&gt; view('products'));</code></pre>
+            </div>
+        </div>
+
+        <div class="demo"><div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">در مرورگر</span></div>
+                <div class="tk6-browser"><div class="bar">فهرست محصولات</div>
+                    <div class="body"><span class="h">لوگوی فروشگاه</span>
+خانه | محصولات | سبد خرید
+
+محصولات فروشگاه
+این‌جا فهرست کالاها در می‌آید.
+
+© ۲۰۲۶ فروشگاه کوچک</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="note info"><div class="note-title"> یعنی چه؟</div>
+            <p>هدر و فوتر فقط یک‌بار در <code>layouts/app.blade.php</code> نوشته شده‌اند؛ اما در <em>هر</em> صفحه‌ای که از آن
+                ارث ببرد، در خروجی ظاهر می‌شوند. حالا تغییر منو = ویرایش فقط یک فایل. 
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۳ ================= -->
+    <section class="lesson" id="parent">
+        <div class="lesson-head"><span class="lesson-num">۳</span>
+            <h2>@parent و پیش‌فرضِ @yield</h2>
+        </div>
+
+        <p>گاهی می‌خواهی محتوای یک section را <strong>کامل نکنی، بلکه به چیزی که هست اضافه کنی</strong>. اینجا
+            <code>@parent</code> به کمک می‌آید: یعنی «اول محتوای والد را بریز، بعد مالِ من را». مثالِ کلاسیک، عنوانِ تب مرورگر است:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">resources/views/products.blade.php</span></div>
+                <pre><code>@extends('layouts.app')
+
+@section('title')
+    @parent
+    | فهرست محصولات
+@endsection</code></pre>
+            </div>
+        </div>
+
+        <p>لایوت ما <code>@yield('title', 'فروشگاه')</code> دارد؛ اگر این صفحه title نداشت، «فروشگاه» می‌شد.
+            حالا با <code>@parent</code> داریم:
+        </p>
+
+        <div class="demo"><div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">عنوانِ تب مرورگر</span></div>
+                <div class="tk6-out"><p>فروشگاه | فهرست محصولات</p>
+                    <p class="tk6-muted">یعنی عنوانِ لایوت (فروشگاه) + خطِ «| فهرست محصولات» — در همه‌ی صفحاتِ فروشگاه یکدست.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="note tip"><div class="note-title"> پیش‌فرض‌دادن یعنی امنیتِ نمایش</div>
+            <p>همیشه برای <code>@yield</code> پیش‌فرض بگذار: مثل عنوانِ سایت. این‌طور صفحه‌های کوچکی که یادشان رفته
+                section بدهند، خالیِ زشت نمی‌شوند و سئو هم متضرر نمی‌شود.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۴ ================= -->
+    <section class="lesson" id="include">
+        <div class="lesson-head"><span class="lesson-num">۴</span>
+            <h2>@include و @includeIf</h2>
+        </div>
+
+        <p>لایوت برای «اسکلتِ کل صفحه» است. برای <strong>قطعه‌های کوچکِ مشترک</strong> — مثل کارتِ محصول، بخشِ خبرنامه یا
+            توضیحات پایینِ صفحه — بلیدِ جدا می‌سازیم و با <code>@include</code> قالبشان می‌کنیم. یک «کارت محصول» بساز:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">resources/views/partials/product-card.blade.php</span></div>
+                <pre><code>&lt;div class="product-card"&gt;
+    &lt;h3&gt;{{ $product['name'] }}&lt;/h3&gt;
+    &lt;p&gt;{{ $product['price'] }} تومان&lt;/p&gt;
+    &lt;a href="/products/{{ $product['id'] }}"&gt;مشاهده&lt;/a&gt;
+&lt;/div&gt;</code></pre>
+            </div>
+        </div>
+
+        <p>و آن را در فهرست، برای هر محصول قالب کن — با ارسالِ داده‌ی اضافه:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">resources/views/products.blade.php</span></div>
+                <pre><code>@extends('layouts.app')
+
+@section('content')
+    &lt;h2&gt;محصولات فروشگاه&lt;/h2&gt;
+
+    @foreach ($products as $product)
+        @include('partials.product-card', ['product' =&gt; $product])
+    @endforeach
+@endsection</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li>به‌طور پیش‌فرض، <strong>همه‌ی متغیرهای صفحه‌ی والد</strong> در قطعه هم در دسترس‌اند؛ آرایه‌ی دومِ <code>@include</code> فقط «اضافه‌ها» است.</li>
+            <li>اگر متغیرِ <code>$product</code> در آرایه‌ی دوم نبود، همان <code>$product</code> حلقه‌ی خودِ والد می‌نشست — برای ماندگاریِ نام، خوب است صریح بدهی.</li>
+            <li><code>@includeIf('...')</code> وقتی نمی‌دانی فایل هست یا نیست (مثلاً قالبِ اختیاریِ یک افزونه) خطا نمی‌دهد و نادیده می‌گیرد.</li>
+        </ul>
+
+        <div class="note warn"><div class="note-title"> اگر فایل نباشد</div>
+            <p><code>@include('partials.xyz')</code> اگر <code>xyz.blade.php</code> وجود نداشته باشد، خطا می‌دهد.
+                برای قطعه‌ای که «احتمالاً نیست» از <code>@includeIf</code> استفاده کن.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۵ ================= -->
+    <section class="lesson" id="xc">
+        <div class="lesson-head"><span class="lesson-num">۵</span>
+            <h2>کامپوننت‌های x- ، @props و {{ $slot }}</h2>
+        </div>
+
+        <p><code>@include</code> خیلی ساده است، ولی «دادن ورودی» به آن فقط با آرایه است. کامپوننت‌های
+            <code>x-</code> همین کار را <strong>تمیزتر</strong> می‌کنند: یک تگِ HTML شبیه خودشان (
+            <code>&lt;x-alert&gt;</code> )، پارامترهای واضح و یک slot برای محتوا.
+            ساده‌ترین نوعش «فایل‌محور» (anonymous) است: فقط یک بلید در
+            <span class="tk6-file">resources/views/components/</span>، بدون هیچ کلاس PHP.
+            یک کامپوننت «هشدار» بساز:
+        </p>
+
+        <div class="tk6-tree">resources/views/
+└─ components/
+   └─ <span class="file">alert.blade.php</span></div>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">resources/views/components/alert.blade.php</span></div>
+                <pre><code>@props([
+    'type'  =&gt; 'info',
+    'title' =&gt; null,
+])
+
+&lt;div class="alert alert-{{ $type }}"&gt;
+    @if ($title)
+        &lt;strong&gt;{{ $title }} — &lt;/strong&gt;
+    @endif
+    {{ $slot }}
+&lt;/div&gt;</code></pre>
+            </div>
+        </div>
+
+        <p>حالا هر جایِ سایت با یک تگ صدا بزن:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade</span></div>
+                <pre><code>&lt;x-alert type="warning" title="توجه"&gt;
+    موجودی این کالا رو به اتمام است.
+&lt;/x-alert&gt;</code></pre>
+            </div>
+        </div>
+
+        <div class="demo"><div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">HTMLِ نهایی</span></div>
+                <div class="tk6-out"><div class="alert alert-warning"><strong>توجه — </strong>موجودی این کالا رو به اتمام است.</div>
+                    <ul>
+                        <li><code>@props</code> پارامترها و پیش‌فرض‌شان را تعریف کرد: <code>type</code> و <code>title</code>.</li>
+                        <li><code>{{ $slot }}</code> یعنی «هرچه بین دو تگ گذاشتی» — این‌جا متنِ هشدار.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <ul>
+            <li>نام تگ از نام فایل می‌آید: <code>alert.blade.php</code> ← <code>&lt;x-alert&gt;</code> (کباب‌نویسی).</li>
+            <li>هر attributeای که در <code>@props</code> تعریف <em>نکُنیم</em>، به کیسه‌ی <code>$attributes</code> می‌رود (درس بعد).</li>
+            <li>slot نباید خالی بماند؛ اگر کامپوننت همیشه باید محتوا داشته باشد، همان را در <code>@props</code> از slot محافظت نکن — فقط در کتابچه توضیح بده.</li>
+        </ul>
+
+        <div class="note info"><div class="note-title"> کلاس‌محور در برابر فایل‌محور</div>
+            <p>وقتی کامپوننت منطقِ PHP داشته باشد (مثلاً محاسبه یا اتصال به دیتا)، نسخه‌ی <strong>کلاس‌محور</strong> با
+                <code>php artisan make:component</code> می‌سازیم. در این درس فایل‌محور کافی است؛ ایده‌ی کلاس‌محور را بعداً
+                در پروژه‌ی پایانی می‌بینی.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۶ ================= -->
+    <section class="lesson" id="attr">
+        <div class="lesson-head"><span class="lesson-num">۶</span>
+            <h2>attributeها: $attributes و merge</h2>
+        </div>
+
+        <p>حالا بگذار کامپوننت از بیرون <strong>شخصی‌سازی</strong> شود — مثلاً کلاسِ CSS یکی از جای‌ها. کافی است وسطِ لایوت،
+            کامپوننت را با ویژگیِ اضافه صدا بزنیم:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade</span></div>
+                <pre><code>&lt;x-alert type="success" title="موفق" class="mt-4"&gt;
+    سبد خرید به‌روز شد.
+&lt;/x-alert&gt;</code></pre>
+            </div>
+        </div>
+
+        <p><code>class</code> عضو <code>@props</code> نیست، پس در کیسه‌ی <code>$attributes</code> می‌نشیند.
+            بیا جعبه‌ی کامپوننت را عوض کنیم تا همه‌ی attributes و یک پیش‌فرضِ class را با هم چاپ کند:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">resources/views/components/alert.blade.php</span></div>
+                <pre><code>@props([
+    'type'  =&gt; 'info',
+    'title' =&gt; null,
+])
+
+&lt;div {{ $attributes-&gt;merge(['class' =&gt; 'alert alert-' . $type]) }}&gt;
+    @if ($title)
+        &lt;strong&gt;{{ $title }} — &lt;/strong&gt;
+    @endif
+    {{ $slot }}
+&lt;/div&gt;</code></pre>
+            </div>
+        </div>
+
+        <div class="demo"><div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">HTMLِ نهایی</span></div>
+                <div class="tk6-out"><div class="alert alert-success mt-4"><strong>موفق — </strong>سبد خرید به‌روز شد.</div>
+                    <p class="tk6-muted">classِ بیرونی (<code>mt-4</code>) با کلاسِ پیش‌فرضِ کامپوننت (<code>alert alert-success</code>) <strong>ادغام</strong> شد.</p>
+                </div>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>{{ $attributes }}</code> همه‌ی ویژگی‌هایی را که در <code>@props</code> تعریف نشده‌اند روی ریشه می‌چسباند.</li>
+            <li><code>-&gt;merge([...])</code> برای <code>class</code> «ادغام» است؛ برای بقیه‌ی ویژگی‌ها یعنی «پیش‌فرض، اگر بیرون داده نشود».</li>
+            <li>به این ترتیب کامپوننت همیشه شبیه خودش می‌ماند اما بیرونش از هر جا قابلِ کنترل است.</li>
+        </ul>
+    </section>
+
+    <!-- ================= درس ۷ ================= -->
+    <section class="lesson" id="project-step">
+        <div class="lesson-head"><span class="lesson-num">۷</span>
+            <h2>گام پروژه: لایوت فروشگاه</h2>
+        </div>
+
+        <div class="proj-step"><div class="proj-title"> اسکلتِ فروشگاه همین امروز</div>
+            <p>تا آخرِ دوره، فروشگاه «فروشگاه کوچک» ساخته می‌شود. الان بهترین وقت است که
+                <strong>لایوت و کامپوننتِ محصول</strong> را بسازیم؛ از این به بعد هر صفحه فقط محتوا اضافه می‌کند.
+            </p>
+        </div>
+
+        <ol>
+            <li>
+                <strong>لایوت:</strong> فایلِ <code>layouts/app.blade.php</code> را بساز مثل درس ۲ —
+                header با لوگو و منوی «خانه | محصولات | سبد خرید»، وسط با <code>@yield('content')</code> و footer با کپ‌رایت.
+            </li>
+            <li>
+                <strong>صفحه‌ی خانه:</strong> <code>home.blade.php</code> با <code>@extends('layouts.app')</code> و
+                یک <code>@section('content')</code> که فقط پیام خوش‌آمد و یک <code>&lt;x-alert&gt;</code> دارد.
+            </li>
+            <li>
+                <strong>کارتِ محصول:</strong> کامپوننتِ <code>components/product-card.blade.php</code> را با
+                <code>@props(['product' =&gt; []])</code> بساز: نام، قیمت و دکمه‌ی «مشاهده».
+            </li>
+            <li>
+                <strong>فهرست:</strong> در <code>products.blade.php</code> یک آرایه‌ی کوچک از محصولات بساز و با
+                <code>@foreach</code> برای هرکدام <code>&lt;x-product-card :product="$product"/&gt;</code> بگذار.
+            </li>
+        </ol>
+
+        <div class="note info"><div class="note-title"> ادامه کجا می‌رود؟</div>
+            <p>در درس بعد (مایگریشن) جدول‌های واقعی ساخته می‌شوند و در ۰۸ (Eloquent) همین
+                <code>product-card</code> به جای آرایه، از دیتابیس پر می‌شود. این لایوت را کسی دوباره نمی‌نویسد. 
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۸ ================= -->
+    <section class="lesson" id="exercises">
+        <div class="lesson-head"><span class="lesson-num">۸</span>
+            <h2>تمرین‌ها؛ حالا نوبت توست!</h2>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۱: دو صفحه با یک لایوت</div>
+            <ol>
+                <li>لایوتی با نام <code>layouts/blog.blade.php</code> بساز: عنوان، نوارِ «صفحه‌ها | درباره» و <code>@yield('content')</code>.</li>
+                <li>دو صفحه‌ی <code>post.blade.php</code> و <code>about.blade.php</code> از آن ارث ببرند و فقط محتوای متفاوت بدهند.</li>
+                <li>در <code>web.php</code> دو روتِ <code>/post</code> و <code>/about</code> بگذار و بدونِ لمسِ لایوت، هر دو را درست ببین.</li>
+            </ol>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۲: یک کامپوننت دکمه</div>
+            <ol>
+                <li><code>components/button.blade.php</code> بساز:
+                    <code>@props(['variant' =&gt; 'primary'])</code> و ریشه `<code>&lt;button {{ $attributes-&gt;merge(['class' =&gt; 'btn btn-'.$variant]) }}&gt;{{ $slot }}&lt;/button&gt;</code>.</li>
+                <li>در صفحه‌ای صدا بزن: <code>&lt;x-button variant="danger" onclick="alert(1)"&gt;حذف&lt;/x-button&gt;</code>.</li>
+                <li>منبع صفحه را ببین — <code>onclick</code> از attributes آمده و کلاس‌ها ادغام شده‌اند.</li>
+            </ol>
+        </div>
+
+        <div class="note info"><div class="note-title"> چالش</div>
+            <p>به <code>layouts/app.blade.php</code> یک section به نام <code>sidebar</code> با
+                <code>@hasSection</code> اضافه کن و در یک صفحه جایگزینش کن؛ در صفحه‌های دیگر پیش‌فرض داده شود.
+                (راهنما: <code>@hasSection('sidebar')</code> و <code>@sectionMissing</code> را در داکِ Blade ببین.)
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= نکات طلایی ================= -->
+    <div class="golden"><h3> چیزی که از این بخش توی ذهنت بماند</h3>
+        <ol>
+            <li>لایوت = اسکلتِ مشترک؛ <code>@yield('name')</code> جای خالی و <code>@yield('name', 'پیش‌فرض')</code> جای خالیِ با امن.</li>
+            <li>صفحه‌ی فرزند: <code>@extends('layouts.app')</code> + <code>@section('name') ... @endsection</code>.</li>
+            <li>با <code>@parent</code> به جای کامل‌کردن، «اضافه» کن (مثل عنوانِ تب).</li>
+            <li><code>@include</code> قطعه‌ی مشترک را قالب می‌کند؛ <code>@includeIf</code> برای فایلِ اختیاری.</li>
+            <li>کامپوننتِ <code>x-</code>: تگِ تمیز، <code>@props</code> برای پارامترها و <code>{{ $slot }}</code> برای محتوا.</li>
+            <li><code>$attributes-&gt;merge(['class' =&gt; 'پیش‌فرض'])</code> = کلاسِ بیرونی را با پیش‌فرضِ کامپوننت ادغام کن.</li>
+        </ol>
+    </div>
+
+    <!-- ================= مطالعه‌ی بیشتر ================= -->
+    <div class="tk6-more"> مطالعه‌ی بیشتر (انگلیسی):
+        <a href="https://laravel.com/docs/13.x/blade#building-layouts" target="_blank" rel="noopener">ساخت لایوت‌ها</a> —
+        <a href="https://laravel.com/docs/13.x/blade#layouts-using-template-inheritance" target="_blank" rel="noopener">وراثت قالب (extends/yield/section)</a>،
+        <a href="https://laravel.com/docs/13.x/blade#including-subviews" target="_blank" rel="noopener">@include و @includeIf</a>،
+        <a href="https://laravel.com/docs/13.x/blade#rendering-components" target="_blank" rel="noopener">کامپوننت‌های x-</a>،
+        <a href="https://laravel.com/docs/13.x/blade#slots" target="_blank" rel="noopener">$slot و رفتارش</a> و
+        <a href="https://laravel.com/docs/13.x/blade#component-attributes" target="_blank" rel="noopener">$attributes و merge</a>.
+    </div>
+
+    <!-- ================= ناوبری ================= -->
+    <nav class="lesson-nav" aria-label="ناوبری بین بخش‌ها">
+        <a href="00-فهرست.html">فهرست درس‌ها</a>
+        <a href="05-Blade-پایه.html">→ بخش قبل: Blade پایه</a>
+        <a href="07-Migration.html">بعدی: Migration ←</a>
+    </nav>
+
+</div>
+<script src="../assets/js/rayvo.js"></script>
+</body>
+</html>

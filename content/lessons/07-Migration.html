@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بخش ۰۷ | Migration و شِمای دیتابیس</title>
+    <meta name="description" content="آموزش Migration در لاراول ۱۳: make:migration، Schema::create، تیپ‌های ستون، foreignId با constrained و cascadeOnDelete، Schema::table، migrate/rollback/status">
+
+    <link rel="icon" href="../assets/img/favicon.png">
+    <link rel="stylesheet" href="../assets/css/rayvo.css">
+    <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script>
+
+    <style>
+        .tk7-file { display:inline-block; background:#eef2ff; color:#4338ca; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:12.5px; direction:ltr; padding:2px 9px; border-radius:6px; border:1px solid #c7d2fe; }
+        .tk7-table { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--border); border-radius:10px; overflow:hidden; font-size:13px; margin-top:6px; }
+        .tk7-table th { background:#f8fafc; color:#334155; text-align:right; padding:8px 12px; border-bottom:1px solid #e2e8f0; }
+        .tk7-table td { padding:7px 12px; border-bottom:1px solid #f1f5f9; color:#475569; vertical-align:top; }
+        .tk7-table tr:last-child td { border-bottom:none; }
+        .tk7-table code { background:#f1f5f9; color:#be185d; border-radius:5px; padding:1px 7px; font-size:12px; }
+        .tk7-term { background:#0f172a; color:#e2e8f0; direction:ltr; text-align:left; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:12.5px; line-height:1.9; padding:14px 16px; border-radius:10px; overflow-x:auto; white-space:pre; }
+        .tk7-term .p { color:#38bdf8; }
+        .tk7-term .c { color:#94a3b8; }
+        .tk7-term .o { color:#4ade80; }
+        .tk7-term .x { color:#fbbf24; }
+        .tk7-out { background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px 18px; font-size:14px; line-height:1.9; color:#1f2937; }
+        .tk7-muted { color:#94a3b8; font-size:12.5px; }
+        .tk7-more { margin-top:14px; font-size:12.5px; color:#64748b; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:8px 12px; }
+        .tk7-more a { color:#4f46e5; text-decoration:none; font-weight:600; }
+        .tk7-more a:hover { text-decoration:underline; }
+    </style>
+</head>
+<body>
+<div class="course-page"><!-- ================= سربرگ ================= -->
+    <header class="course-header">
+        <span class="badge">بخش ۰۷</span>
+        <h1>Migration و شِمای دیتابیس</h1>
+        <p>تا این‌جا داده‌ها در حافظه و آرایه بودند. حالا آنها را «کد-کنترل‌شده» در دیتابیس می‌نشانیم — جدول‌سازی، تغییر و بازگشت، دقیقاً مثل کدِ برنامه.</p>
+    </header>
+
+    <!-- ================= فهرست ================= -->
+    <nav class="toc" aria-label="فهرست مطالب">
+        <h2>توی این بخش چه چیزهایی یاد می‌گیریم؟</h2>
+        <ol>
+            <li><a href="#why">چرا migration؟ خودِ دیتابیس برای چه کم است؟</a></li>
+            <li><a href="#make">ساخت مایگریشن با make:migration</a></li>
+            <li><a href="#create">Schema::create و متدهای up / down</a></li>
+            <li><a href="#types">تیپ‌های رایج ستون</a></li>
+            <li><a href="#fk">کلید خارجی: foreignId و constrained</a></li>
+            <li><a href="#table">تغییر جدولِ موجود با Schema::table</a></li>
+            <li><a href="#cmd">اجرا، وضعیت و بازگشت</a></li>
+            <li><a href="#project-step">گام پروژه: جدول‌های فروشگاه</a></li>
+            <li><a href="#exercises">تمرین‌ها</a></li>
+        </ol>
+    </nav>
+
+    <!-- ================= درس ۱ ================= -->
+    <section class="lesson" id="why">
+        <div class="lesson-head"><span class="lesson-num">۱</span>
+            <h2>چرا migration؟ خودِ دیتابیس برای چه کم است؟</h2>
+        </div>
+
+        <p>ساختن جدول در پنلِ دیتابیس (مثل phpMyAdmin یا جدولِ «run SQL») سریع است؛ اما بلای‌اش این است که این کار
+            <strong>در هیچ‌جا ثبت نمی‌شود</strong>. تصور کن:
+        </p>
+        <ul>
+            <li>تیمت دو نفره است؛ تو یک ستون «قیمت» اضافه می‌کنی، نفرِ بعد هم باید همان را <em>با دست</em> اضافه کند.</li>
+            <li>هفته‌ی بعد باید این ستون را برگردانی — کدام کوئری؟ در کدام سرور؟</li>
+            <li>نسخه‌ی جدید توی گیت است ولی شِمای دیتابیس توی هیچ نسخه‌ای ثبت نشده.</li>
+        </ul>
+
+        <p><strong>Migration</strong> یعنی «کنترل‌نسخه برای شمای دیتابیس». هر تغییرِ ساختاری — ساخت جدول، اضافه‌کردنِ ستون،
+            درست‌کردنِ ایندکس — یک <strong>فایل PHP</strong> می‌شود که مثل بقیه‌ی کدها در گیت می‌رود و با یک دستور اجرا
+            می‌شود. به دستورِ اجرا گفتم: مایگریشن‌ها ردیفِ اجرا را می‌فهمند (تایم‌استمپِ نام فایل) و نظمِ ساختِ جدول‌ها را حفظ می‌کنند.
+        </p>
+
+        <div class="note tip"><div class="note-title"> پس migration چیست؟</div>
+            <p>یک «جریانِ تکرارشدنی» برای ساختن و تکاملِ ساختارِ دیتابیس: هر فایل مایگریشن یعنی یک قدمِ رو به جلو (up)
+                و یاد می‌دهد که چطور عقب برگردد (down). دیگر هیچ‌کس با دست جدول نمی‌سازد.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۲ ================= -->
+    <section class="lesson" id="make">
+        <div class="lesson-head"><span class="lesson-num">۲</span>
+            <h2>ساخت مایگریشن با make:migration</h2>
+        </div>
+
+        <div class="tk7-term"><span class="p">$</span> php artisan make:migration create_products_table
+
+   <span class="o">CREATED</span>  database/migrations/2026_09_07_000000_create_products_table.php</div>
+
+        <ul>
+            <li>نامِ مایگریشن «انگلیسی و اسمی» می‌خواهد: <code>create_products_table</code>.</li>
+            <li>لاروال از همین نام، اسمِ جدول (<code>products</code>) را <strong>حدس می‌زند</strong> و قالبِ آماده‌ی
+                <code>Schema::create</code> برایت می‌نویسد.</li>
+            <li>پیشوندِ فایل یک <strong>تایم‌استمپ</strong> است — ترتیبِ اجرای مایگریشن‌ها با این عدد تعیین می‌شود، نه با تاریخِ گیت.</li>
+            <li>همه‌ی مایگریشن‌ها در <span class="tk7-file">database/migrations/</span> می‌نشینند.</li>
+        </ul>
+
+        <p>اگر فقط تغییر (نه ساخت اولیه) می‌خواهی، اسمِ متفاوت بده تا قالب فرق کند:</p>
+
+        <div class="tk7-term"><span class="p">$</span> php artisan make:migration add_brand_to_products_table
+<span class="p">$</span> php artisan make:migration create_reviews_table</div>
+
+        <div class="note info"><div class="note-title"> فایل قبلی‌ها چه بود؟</div>
+            <p>در نصبِ تازه‌ی لاراول ۱۳، همین پوشه از قبل جدول‌های پیش‌فرض (users، cache، jobs و…) را دارد.
+                می‌توانی <code>php artisan migrate:status</code> بزنی و نتیجه را بعداً با دستورِ اجرا قیاس کنی.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۳ ================= -->
+    <section class="lesson" id="create">
+        <div class="lesson-head"><span class="lesson-num">۳</span>
+            <h2>Schema::create و متدهای up / down</h2>
+        </div>
+
+        <p>هر فایل مایگریشن دو متد دارد. فایل<span class="tk7-file">create_products_table.php</span> را باز کن:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">database/migrations/..._create_products_table.php</span></div>
+                <pre><code>&lt;?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('products', function (Blueprint $table) {
+            $table-&gt;id();
+            $table-&gt;string('name');
+            $table-&gt;text('description');
+            $table-&gt;unsignedBigInteger('price');
+            $table-&gt;timestamps();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('products');
+    }
+};</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>up()</code> = قدمِ روبه‌جلو: جدولِ <code>products</code> را با ستون‌هایش می‌سازد.</li>
+            <li><code>down()</code> = برعکس: همان جدول را حذف می‌کند، تا اگر لازم شد، «عقب‌گرد» ممکن باشد.</li>
+            <li>داخلِ کلاسِ بی‌نامِ کلوسورِ <code>Schema::create</code>، پارامترِ <code>$table</code> از نوع Blueprint است و
+                «ستون‌سازی» را انجام می‌دهد.</li>
+            <li><code>$table-&gt;timestamps()</code> به‌طور خودکار دو ستونِ <code>created_at</code> و <code>updated_at</code> می‌سازد — قراردادی که Eloquent بعداً از آن لذت می‌برد.</li>
+        </ul>
+
+        <div class="note warn"><div class="note-title"> قانونِ طلایی</div>
+            <p>بعد از اینکه یک مایگریشن در تیم/سرور اجرا شد، <strong>آن را ویرایش نکن</strong>؛ اگر چیزی را اشتباه ساخته‌ای،
+                یک مایگریشنِ جدید «اصلاحی» بنویس. چون ویرایشِ قدیمی یعنی مغایرت با ماشینِ بقیه. (در مرحله‌ی یادگیری که فعلی است، از
+                <code>migrate:rollback</code> استفاده کن.)
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۴ ================= -->
+    <section class="lesson" id="types">
+        <div class="lesson-head"><span class="lesson-num">۴</span>
+            <h2>تیپ‌های رایج ستون</h2>
+        </div>
+
+        <p>Blueprint برای هر تیپ یک متد دارد. مهم‌ترین‌ها برای این دوره:
+        </p>
+
+        <table class="tk7-table">
+            <thead>
+                <tr><th>متد</th><th>ستونِ ساخته‌شده</th><th>کاربردِ ما</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>$table-&gt;id()</code></td><td>کلید اصلیِ خودافزایش</td><td>شناسه‌ی هر رکورد (همیشه)</td></tr>
+                <tr><td><code>$table-&gt;string('name')</code></td><td>VARCHAR</td><td>نام، عنوان، ایمیل، اسلاگ — متنِ کوتاه</td></tr>
+                <tr><td><code>$table-&gt;text('desc')</code></td><td>TEXT</td><td>توضیحاتِ بلندِ محصول</td></tr>
+                <tr><td><code>$table-&gt;integer('count')</code></td><td>INTEGER</td><td>موجودی و شمارنده‌ها</td></tr>
+                <tr><td><code>$table-&gt;unsignedBigInteger('price')</code></td><td>UNSIGNED BIGINT</td><td>قیمت (بدون منفی و بزرگ)</td></tr>
+                <tr><td><code>$table-&gt;boolean('is_active')</code></td><td>BOOLEAN</td><td>علامت‌گذاریِ فعال/غیرفعال</td></tr>
+                <tr><td><code>$table-&gt;foreignId('category_id')</code></td><td>UNSIGNED BIGINT</td><td>کلید خارجی (درس بعد)</td></tr>
+                <tr><td><code>$table-&gt;timestamps()</code></td><td>created_at / updated_at</td><td>زمانِ ثبت و ویرایش</td></tr>
+            </tbody>
+        </table>
+
+        <p>و «اصلاح‌کننده‌های» پرتکرار روی هرکدام:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">داخل Schema::create</span></div>
+                <pre><code>$table-&gt;string('email')-&gt;unique();
+$table-&gt;text('bio')-&gt;nullable();
+$table-&gt;integer('stock')-&gt;default(0);
+$table-&gt;foreignId('user_id')-&gt;nullable();</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>-&gt;nullable()</code> یعنی ستون خالی پذیرفته است؛ <code>-&gt;default(0)</code> مقدارِ پیش‌فرض.</li>
+            <li><code>-&gt;unique()</code> یک ایندکسِ یکتا می‌سازد (مثلاً برای ایمیل).</li>
+        </ul>
+    </section>
+
+    <!-- ================= درس ۵ ================= -->
+    <section class="lesson" id="fk">
+        <div class="lesson-head"><span class="lesson-num">۵</span>
+            <h2>کلید خارجی: foreignId و constrained</h2>
+        </div>
+
+        <p>محصول ما به یک <strong>دسته‌بندی</strong> وابسته است. پس اول جدولِ
+            <code>categories</code> را می‌سازیم، بعد داخل <code>products</code> یک ستونِ <code>category_id</code>
+            که «اشاره» به آن داشته باشد:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">..._create_products_table.php</span></div>
+                <pre><code>Schema::create('products', function (Blueprint $table) {
+    $table-&gt;id();
+    $table-&gt;string('name');
+    $table-&gt;text('description');
+    $table-&gt;unsignedBigInteger('price');
+    $table-&gt;foreignId('category_id')
+        -&gt;constrained()
+        -&gt;cascadeOnDelete();
+    $table-&gt;timestamps();
+});</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>$table-&gt;foreignId('category_id')</code> ستونی از جنس کلید (UNSIGNED BIGINT) می‌سازد.</li>
+            <li><code>-&gt;constrained()</code> با <strong>حدس‌زدن</strong> (پاک کردن پسوندِ <code>_id</code> از نام ستون) به جدولِ <code>categories</code> وصلش می‌کند و یک
+                <strong>محدودیتِ کلید خارجی</strong> تعریف می‌کند: مقدارِ این ستون باید در جدولِ مرجع وجود داشته باشد.</li>
+            <li><code>-&gt;cascadeOnDelete()</code>: اگر دسته‌بندی حذف شود، محصولاتِ خودش هم <strong>پاک</strong> می‌شوند (رفتارِ پیش‌فرضِ «جلوگیری کن» یعنی <code>restrict</code> بود؛ اینجا صریحاً cascade می‌گوییم).</li>
+        </ul>
+
+        <div class="note info"><div class="note-title"> چه می‌شود در SQL؟</div>
+            <p>در MySQL این یعنی محدودیتِ <code>FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE CASCADE</code>.
+                در SQLite هم معادلِ خودش. فکر نکن قرار است کوئری بنویسیم — این‌ها را migration می‌سازد.
+            </p>
+        </div>
+
+        <div class="note tip"><div class="note-title"> گزینه‌های حذف</div>
+            <p><code>-&gt;restrictOnDelete()</code> (حذفِ والد را ممنوع کن)، <code>-&gt;nullOnDelete()</code>
+                (به‌جای حذفِ فرزند، این کلید را null کن). برای دسته‌بندی، cascade منطقی است.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۶ ================= -->
+    <section class="lesson" id="table">
+        <div class="lesson-head"><span class="lesson-num">۶</span>
+            <h2>تغییر جدولِ موجود با Schema::table</h2>
+        </div>
+
+        <p>جدول <code>products</code> ساخته شده و اجرا رفته؛ حالا یک ستون اضافه می‌کنیم. با
+            <code>Schema::table</code> (نه <code>create</code>) فایلِ اصلاحی می‌سازیم:
+        </p>
+
+        <div class="tk7-term"><span class="p">$</span> php artisan make:migration add_is_active_to_products_table</div>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">..._add_is_active_to_products_table.php</span></div>
+                <pre><code>return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('products', function (Blueprint $table) {
+            $table-&gt;boolean('is_active')-&gt;default(true);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('products', function (Blueprint $table) {
+            $table-&gt;dropColumn('is_active');
+        });
+    }
+};</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>Schema::table('products', ...)</code> جدولِ موجود را «باز» می‌کند تا چیزی اضافه یا کم کنی؛ جدول را از نو نمی‌سازد.</li>
+            <li>در <code>down()</code> با <code>-&gt;dropColumn('is_active')</code> همان اضافه‌شده را برمی‌گردانی — یعنی هر up یک down دارد.</li>
+            <li>برای برداشتنِ کلِ جدول هم <code>Schema::dropIfExists('products')</code> در downِ مایگریشنِ اولیه نوشته شده بود.</li>
+        </ul>
+
+        <div class="note warn"><div class="note-title"> down باید دقیقِ برعکسِ up باشد</div>
+            <p>اگر down کاری نکند یا اشتباه باشد، رول‌بکِ بعدی یا از کار می‌افتد یا ساختار را خراب می‌کند.
+                برای افزودنِ ستون، در down حذف‌اش کن؛ برای ساختِ جدول، در down حذفِ جدول — این قانون است.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۷ ================= -->
+    <section class="lesson" id="cmd">
+        <div class="lesson-head"><span class="lesson-num">۷</span>
+            <h2>اجرا، وضعیت و بازگشت</h2>
+        </div>
+
+        <p>حالا فرمان‌های اصلی که تا آخر این دوره بارها می‌زنی:</p>
+
+        <div class="tk7-term"><span class="p">$</span> php artisan migrate</div>
+
+        <div class="tk7-term"><span class="p">$</span> php artisan migrate:status
+
+  <span class="c">Ran?  Migration                                Batch</span>
+  <span class="o"></span>  <span class="c">0001_01_01_000000_create_users_table       1</span>
+  <span class="o"></span>  <span class="c">0001_01_01_000001_create_cache_table       1</span>
+  <span class="x"></span>  <span class="x">2026_09_07_000000_create_products_table</span></div>
+
+        <div class="demo"><div class="demo-out"><div class="demo-label"><span>خروجی نمونه</span><span class="demo-tag">توضیحِ ستون‌ها</span></div>
+                <div class="tk7-out"><p><code></code> = اجرا شده؛ <code></code> = در انتظار. ستونِ «Batch» شماره‌ی دسته‌ی اجراست.</p>
+                    <p class="tk7-muted">بعد از <code>migrate</code>، مایگریشنِ ما هم  می‌شود.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="tk7-term"><span class="p">$</span> php artisan migrate:rollback        <span class="c"># برگرداندنِ آخرین دسته (batch) — اجرای downها</span>
+<span class="p">$</span> php artisan migrate:rollback --step=1  <span class="c"># فقط یکی</span>
+<span class="p">$</span> php artisan migrate:fresh            <span class="c"># حذف همه + اجرای مجدد (فقط dev!)</span>
+<span class="p">$</span> php artisan migrate --force         <span class="c"># بدون prompt، برای production</span></div>
+
+        <ul>
+            <li><code>migrate</code> فقط مایگریشن‌های «اجرانشده» را اجرا می‌کند؛ سالم است و تکراری صدمه نمی‌زند.</li>
+            <li><code>migrate:rollback</code> برعکسِ آخرین دسته‌ی کامل (downِ همه‌ی آن‌ها)، نه فقط آخرین فایل.</li>
+            <li><code>migrate:fresh</code> همه‌ی جدول‌ها را می‌اندازد و دوباره می‌سازد — در توسعه مفید، در production مرگبار. آنجا فقط
+                <code>migrate</code> (و <code>--force</code>) را صدا بزن.</li>
+        </ul>
+
+        <div class="note tip"><div class="note-title"> دیتابیس پیش‌فرض</div>
+            <p>نصبِ تازه‌ی لاراول با <strong>SQLite</strong> می‌آید و <strong>بدون هیچ تنظیمی</strong> همین کار می‌کند
+                (فایلِ <span class="tk7-file">database/database.sqlite</span>). اگر MySQL داری، در <span class="tk7-file">.env</span>
+                مقدارهای <code>DB_CONNECTION=mysql</code> و... را بگذار؛ بقیه‌ی این درس‌ها فرقی نمی‌کند.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۸ ================= -->
+    <section class="lesson" id="project-step">
+        <div class="lesson-head"><span class="lesson-num">۸</span>
+            <h2>گام پروژه: جدول‌های فروشگاه</h2>
+        </div>
+
+        <div class="proj-step"><div class="proj-title"> شِمای واقعیِ فروشگاه کوچک</div>
+            <p>دو جدولِ اصلیِ فروشگاه را الان می‌سازیم؛ در درسِ بعدی (Eloquent) با همین‌ها مدل می‌سازیم.
+            </p>
+        </div>
+
+        <ol>
+            <li>
+                <code>php artisan make:migration create_categories_table</code> — داخل
+                <code>up()</code>: <code>id</code>، <code>string('name')</code> و <code>string('slug')-&gt;unique()</code>،
+                به‌علاوه <code>timestamps()</code>. در <code>down()</code>: <code>dropIfExists</code>.
+            </li>
+            <li>
+                <code>php artisan make:migration create_products_table</code> — جدولِ محصول با:
+                <code>string('name')</code>، <code>text('description')</code>، <code>unsignedBigInteger('price')</code>،
+                <code>boolean('is_active')-&gt;default(true)</code> و کلید خارجیِ
+                <code>foreignId('category_id')-&gt;constrained()-&gt;cascadeOnDelete()</code>.
+            </li>
+            <li>
+                <code>php artisan migrate</code> — اجرا کن و بعد <code>php artisan migrate:status</code> —
+                هر دو قرمزِ  باید سبزِ  شوند.
+            </li>
+            <li>
+                اگر چیزی را خطا دیدی: <code>php artisan migrate:rollback</code>، فایل را اصلاح کن و دوباره <code>migrate</code>.
+            </li>
+        </ol>
+
+        <div class="note info"><div class="note-title"> بعدش چه؟</div>
+            <p>در درس ۰۸ یک <code>Product</code> و <code>Category</code> به‌عنوان «مدل» می‌سازیم که همین جدول‌ها را
+                بخوانند و بنویسند — بدونِ حتی یک خط SQLِ دستی. رابطه‌ی category/فرزندِ محصول جایی است که
+                <code>constrained</code> امروز نفس می‌کشد.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۹ ================= -->
+    <section class="lesson" id="exercises">
+        <div class="lesson-head"><span class="lesson-num">۹</span>
+            <h2>تمرین‌ها؛ حالا نوبت توست!</h2>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۱: ستونِ «برند»</div>
+            <ol>
+                <li>مایگریشنِ <code>add_brand_to_products_table</code> بساز.</li>
+                <li>در <code>up()</code> ستونِ <code>string('brand')</code> و در <code>down()</code>
+                    <code>dropColumn('brand')</code> بنویس.</li>
+                <li>اجرا کن، با <code>migrate:status</code> چک کن، بعد <code>rollback</code> بزن و دوباره جلو برو.</li>
+            </ol>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۲: جدولِ دیدگاه‌ها</div>
+            <ol>
+                <li>مایگریشنِ <code>create_reviews_table</code> بساز.</li>
+                <li>ستون‌ها: <code>id</code>، <code>text</code>، <code>tinyInteger('rating')-&gt;default(5)</code> و
+                    <code>foreignId('product_id')-&gt;constrained()-&gt;cascadeOnDelete()</code> با <code>timestamps()</code>.</li>
+                <li>اجرا کن و <code>migrate:status</code> را ببین؛ جدولِ جدید در کنار بقیه ظهور کرده است.</li>
+            </ol>
+        </div>
+
+        <div class="note info"><div class="note-title"> چالش</div>
+            <p>یک ایندکس به ستونِ <code>rating</code> در جدولِ <code>reviews</code> اضافه کن
+                (راهنما: <code>$table-&gt;index('rating')</code> و در <code>down()</code> با <code>dropIndex</code> برش کن).
+                بعد از آن، ایندکس را در <code>migrate:status</code> پیگیری کن.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= نکات طلایی ================= -->
+    <div class="golden"><h3> چیزی که از این بخش توی ذهنت بماند</h3>
+        <ol>
+            <li>migration = کنترل‌نسخه‌ی ساختارِ دیتابیس؛ هر فایل یعنی up (جلو) و down (عقب).</li>
+            <li>ساخت: <code>make:migration create_xxx_table</code>؛ تغییر: <code>make:migration add_yyy_to_xxx_table</code>.</li>
+            <li><code>Schema::create</code> برای جدولِ نو، <code>Schema::table</code> برای جدولِ موجود.</li>
+            <li>تیپ‌های پرکاربرد: <code>id()</code>, <code>string()</code>, <code>text()</code>, <code>integer()</code>, <code>boolean()</code>, <code>timestamps()</code>.</li>
+            <li>رابطه: <code>foreignId('x_id')-&gt;constrained()-&gt;cascadeOnDelete()</code>.</li>
+            <li>اجرا: <code>migrate</code>؛ وضعیت: <code>migrate:status</code>؛ عقب: <code>migrate:rollback</code>؛ بازسازی: <code>migrate:fresh</code> (فقط dev).</li>
+            <li>بعد از اجرا، مایگریشنِ اجراشده را ویرایش نکن — فایل «اصلاحی» بنویس.</li>
+        </ol>
+    </div>
+
+    <!-- ================= مطالعه‌ی بیشتر ================= -->
+    <div class="tk7-more"> مطالعه‌ی بیشتر (انگلیسی):
+        <a href="https://laravel.com/docs/13.x/migrations#generating-migrations" target="_blank" rel="noopener">ساخت مایگریشن</a> —
+        <a href="https://laravel.com/docs/13.x/migrations#migration-structure" target="_blank" rel="noopener">ساختار فایل (up/down)</a>،
+        <a href="https://laravel.com/docs/13.x/migrations#creating-tables" target="_blank" rel="noopener">ساخت جدول با Schema::create</a>،
+        <a href="https://laravel.com/docs/13.x/migrations#available-column-types" target="_blank" rel="noopener">تیپ‌های ستون</a>،
+        <a href="https://laravel.com/docs/13.x/migrations#foreign-key-constraints" target="_blank" rel="noopener">کلیدهای خارجی</a> و
+        <a href="https://laravel.com/docs/13.x/migrations#running-migrations" target="_blank" rel="noopener">اجرا و بازگشت مایگریشن</a>.
+    </div>
+
+    <!-- ================= ناوبری ================= -->
+    <nav class="lesson-nav" aria-label="ناوبری بین بخش‌ها">
+        <a href="00-فهرست.html">فهرست درس‌ها</a>
+        <a href="06-Blade-چیدمان-و-کامپوننت.html">→ بخش قبل: Blade چیدمان و کامپوننت</a>
+        <a href="08-Eloquent-CRUD.html">بعدی: Eloquent CRUD ←</a>
+    </nav>
+
+</div>
+<script src="../assets/js/rayvo.js"></script>
+</body>
+</html>

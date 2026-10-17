@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بخش ۰۹ | Eloquent روابط و Tinker</title>
+    <meta name="description" content="آموزش روابط Eloquent در لاراول ۱۳: hasMany/belongsTo/hasOne/belongsToMany، attach/detach، Eager Loading با with و مشکل N+1، accessors و mutators و آزمایشگاه Tinker">
+
+    <link rel="icon" href="../assets/img/favicon.png">
+    <link rel="stylesheet" href="../assets/css/rayvo.css">
+    <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script>
+
+    <style>
+        .tk9-file { display:inline-block; background:#eef2ff; color:#4338ca; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:12.5px; direction:ltr; padding:2px 9px; border-radius:6px; border:1px solid #c7d2fe; }
+        .tk9-term { background:#0f172a; color:#e2e8f0; direction:ltr; text-align:left; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:12.5px; line-height:1.9; padding:14px 16px; border-radius:10px; overflow-x:auto; white-space:pre; }
+        .tk9-term .p { color:#38bdf8; }
+        .tk9-term .c { color:#94a3b8; }
+        .tk9-term .o { color:#4ade80; }
+        .tk9-term .y { color:#fbbf24; }
+        .tk9-out { background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px 18px; font-size:14px; line-height:1.9; color:#1f2937; }
+        .tk9-out ul { margin:0; padding-right:20px; }
+        .tk9-muted { color:#94a3b8; font-size:12.5px; }
+        .tk9-more { margin-top:14px; font-size:12.5px; color:#64748b; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:8px 12px; }
+        .tk9-more a { color:#4f46e5; text-decoration:none; font-weight:600; }
+        .tk9-more a:hover { text-decoration:underline; }
+        .tk9-tree { background:#fff; border:1px solid var(--border); border-radius:10px; padding:14px 16px; direction:ltr; text-align:left; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:13px; line-height:2; color:#334155; overflow-x:auto; }
+        .tk9-tree .t { color:#4338ca; font-weight:700; }
+        .tk9-tree .k { color:#059669; font-weight:700; }
+        .tk9-tree .m { color:#94a3b8; }
+        .tk9-table { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--border); border-radius:10px; overflow:hidden; font-size:13px; margin-top:6px; }
+        .tk9-table th { background:#f8fafc; color:#334155; text-align:right; padding:8px 12px; border-bottom:1px solid #e2e8f0; }
+        .tk9-table td { padding:7px 12px; border-bottom:1px solid #f1f5f9; color:#475569; vertical-align:top; }
+        .tk9-table tr:last-child td { border-bottom:none; }
+        .tk9-table code { background:#f1f5f9; color:#be185d; border-radius:5px; padding:1px 7px; font-size:12px; }
+    </style>
+</head>
+<body>
+<div class="course-page"><!-- ================= سربرگ ================= -->
+    <header class="course-header">
+        <span class="badge">بخش ۰۹</span>
+        <h1>Eloquent روابط و Tinker</h1>
+        <p>دسته‌بندی و محصول در درس ۰۷ «واردِ جدول نشدند»؛ این‌جا با چند متد، رابطه‌شان را به Eloquent می‌گویی تا خودش پرس‌وجوها را درست بچیند. به‌علاوه: تبدیلِ داده‌ها هنگام خواندن/نوشتن.</p>
+    </header>
+
+    <!-- ================= فهرست ================= -->
+    <nav class="toc" aria-label="فهرست مطالب">
+        <h2>توی این بخش چه چیزهایی یاد می‌گیریم؟</h2>
+        <ol>
+            <li><a href="#why">چرا رابطه لازم است؟</a></li>
+            <li><a href="#hasmany">دسته ↔ محصول: hasMany و belongsTo</a></li>
+            <li><a href="#hasone">یک‌به‌یک: hasOne</a></li>
+            <li><a href="#many">چند‌به‌چند: belongsToMany و جدولِ واسط</a></li>
+            <li><a href="#attach">attach / detach / sync</a></li>
+            <li><a href="#n1">مشکل N+1 و Eager Loading با with()</a></li>
+            <li><a href="#accessor">Accessor و Mutator: دگرگونیِ مقدار</a></li>
+            <li><a href="#tinker">آزمایشگاه با php artisan tinker</a></li>
+            <li><a href="#project-step">گام پروژه: روابطِ فروشگاه</a></li>
+            <li><a href="#exercises">تمرین‌ها</a></li>
+        </ol>
+    </nav>
+
+    <!-- ================= درس ۱ ================= -->
+    <section class="lesson" id="why">
+        <div class="lesson-head"><span class="lesson-num">۱</span>
+            <h2>چرا رابطه لازم است؟</h2>
+        </div>
+
+        <p>در درس ۰۷، جدولِ <code>products</code> یک ستونِ <code>category_id</code> داشت که با
+            <code>foreignId(&quot;...&quot;)-&gt;constrained()</code> به جدولِ <code>categories</code> وصل شد.
+            یعنی در سطحِ <strong>دیتابیس</strong> رابطه هست. اما در سطحِ <strong>کد</strong>، تا هنوز نمی‌دانیم
+            «محصولِ من چه دسته‌بندی دارد». Eloquent با <strong>متدِ رابطه</strong> این را روشن می‌کند:
+        </p>
+
+        <div class="tk9-out"><p> <strong>بدونِ رابطه:</strong></p>
+            <ul>
+                <li>گرفتنِ محصول → خواندنِ <code>category_id</code> → یک پرس‌وجویِ جدا برای دسته‌بندی.</li>
+                <li>هر صفحه‌ای که به محصول و دسته‌اش نیاز دارد، باید این را <em>دوباره</em> بنویسد — و معمولاً غلط.</li>
+            </ul>
+            <p class="tk9-muted"> با رابطه: <code>$product-&gt;category</code> و <code>$category-&gt;products</code> — همین. Eloquent کوئری درست را می‌سازد.</p>
+        </div>
+
+        <p>انواعِ رابطه‌ای که این بخش می‌آموزیم:</p>
+
+        <table class="tk9-table">
+            <thead>
+                <tr><th>نوع</th><th>معنی</th><th>مثالِ این پروژه</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>hasMany</code></td><td>یک، چند تا می‌زاید</td><td>دسته‌بندی ↔ محصول‌ها</td></tr>
+                <tr><td><code>belongsTo</code></td><td>چندتا، به یکی تعلق دارند</td><td>محصول → دسته‌بندی</td></tr>
+                <tr><td><code>hasOne</code></td><td>یک، دقیقاً یک تا دارد</td><td>کاربر ↔ پروفایل</td></tr>
+                <tr><td><code>belongsToMany</code></td><td>چند، با چند (واسط)</td><td>شاید: محصول ↔ برچسب‌ها</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- ================= درس ۲ ================= -->
+    <section class="lesson" id="hasmany">
+        <div class="lesson-head"><span class="lesson-num">۲</span>
+            <h2>دسته ↔ محصول: hasMany و belongsTo</h2>
+        </div>
+
+        <p>روی <strong>محصول</strong> (سمتِ «یکی» از طرفِ چندتاست) رابطه‌ی belongsTo را بگذار:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">app/Models/Product.php</span></div>
+                <pre><code>&lt;?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+#[Fillable('name', 'description', 'price', 'category_id')]
+class Product extends Model
+{
+    public function category(): BelongsTo
+    {
+        return $this-&gt;belongsTo(Category::class);
+    }
+}</code></pre>
+            </div>
+        </div>
+
+        <p>و روی <strong>دسته‌بندی</strong> (سمتِ یک‌تاژ) رابطه‌ی hasMany را:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">app/Models/Category.php</span></div>
+                <pre><code>&lt;?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Category extends Model
+{
+    public function products(): HasMany
+    {
+        return $this-&gt;hasMany(Product::class);
+    }
+}</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>belongsTo</code> در کلیدی که محصول دارد (<code>category_id</code>) می‌گردد؛ <code>hasMany</code> یعنی «همه‌ی رکوردهایِ محصولی که <code>category_id</code>شان من است».</li>
+            <li>نامِ متد را زنده کن؛ <code>$product-&gt;category()</code> یک «کوئری‌بیلدرِ رابطه» برمی‌گرداند که قابلِ ادامه‌دادن است،
+                ولی <code>$product-&gt;category</code> اجرا و <strong>نتیجه</strong> را تحویل می‌دهد.</li>
+        </ul>
+
+        <p>استفاده‌اش:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>$category = Category::find(1);
+
+$products = $category-&gt;products;        // Collection از همه‌ی محصول‌هایِ این دسته
+$cheap    = $category-&gt;products()      // رابطه‌ی قابلِ ادامه
+    -&gt;where('price', '&lt;', 200000)
+    -&gt;get();
+
+$product = Product::find(1);
+$name    = $product-&gt;category-&gt;name;   // نامِ دسته‌یِ این محصول — یک مدل</code></pre>
+            </div>
+        </div>
+
+        <div class="note tip"><div class="note-title"> کلیدهایِ پیش‌فرض</div>
+            <p>Eloquent بدونِ پرسیدن حدس می‌زند: در <code>hasMany(Product::class)</code> دنبالِ ستونِ
+                <code>category_id</code> در جدولِ products است. چون متدمان <code>products()</code> نام دارد،
+                ستونِ موردنظر از رویِ <em>نامِ کلاسِ مادر</em> (Category) ساخته می‌شود، نه نامِ متد — پس هرچی نامِ متد بده، درست کار می‌کند.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۳ ================= -->
+    <section class="lesson" id="hasone">
+        <div class="lesson-head"><span class="lesson-num">۳</span>
+            <h2>یک‌به‌یک: hasOne</h2>
+        </div>
+
+        <p>وقتی هر رکوردِ یک جدول، <strong>دقیقاً</strong> یک رکوردِ جدولِ دیگر را دارد. مثالِ کلاسیک این‌جا نیست ولی
+            برای پروفایلِ کاربر یا «گذرنامه» عادی است. مثلِ hasMany، ولی نتیجه‌اش یک مدل است، نه Collection:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">app/Models/User.php</span></div>
+                <pre><code>use Illuminate\Database\Eloquent\Relations\HasOne;
+
+public function profile(): HasOne
+{
+    return $this-&gt;hasOne(Profile::class);
+}
+
+// $user-&gt;profile-&gt;avatar — بدون هیچ کار اضافه
+</code></pre>
+            </div>
+        </div>
+
+        <div class="note info"><div class="note-title"> رابطه = دوطرفه</div>
+            <p><code>hasOne/hasMany</code> «از والد به سمتِ فرزند» است؛ همیشه یک
+                <code>belongsTo</code> مقابلش (رویِ جدولِ دارایِ کلیدِ خارجی) تعریف بکن تا از آن سمت هم دسترسی‌پذیر باشد.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۴ ================= -->
+    <section class="lesson" id="many">
+        <div class="lesson-head"><span class="lesson-num">۴</span>
+            <h2>چند‌به‌چند: belongsToMany و جدولِ واسط</h2>
+        </div>
+
+        <p>محصول می‌تواند چند «برچسب» داشته باشد و یک برچسب هم به چند محصول بخورد — نه <code>category_id</code> جا دارد
+            و نه طرفِ مقابل. راه‌حل، یک <strong>جدولِ واسط</strong> است:
+        </p>
+
+        <div class="tk9-tree">products            product_tag          tags
+  <span class="t">id</span>  <span class="m">← PK</span>   <span class="t">product_id</span>  <span class="m">FK</span>     <span class="t">id</span>  <span class="m">← PK</span>
+  name              <span class="t">tag_id</span>  <span class="m">FK</span>     name
+  price                                      slug</div>
+
+        <p>فقط دو مدل لازم است؛ جدولِ واسط را مایگریشن خودش می‌سازد، نه چیزِ دیگری:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">app/Models/Product.php</span></div>
+                <pre><code>use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+
+public function tags(): BelongsToMany
+{
+    return $this-&gt;belongsToMany(Tag::class);
+}</code></pre>
+            </div>
+        </div>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">app/Models/Tag.php</span></div>
+                <pre><code>public function products(): BelongsToMany
+{
+    return $this-&gt;belongsToMany(Product::class);
+}</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li>اسمِ جدولِ واسط از ترکیبِ حروف‌الفباییِ دو نام می‌آید: <code>product_tag</code> (اگر خواستی
+                اسمِ دیگری بده: <code>belongsToMany(Tag::class, 'table_name')</code>).</li>
+            <li>ستون‌ها: نامِ مفردِ مدل + <code>_id</code> یعنی <code>product_id</code> و <code>tag_id</code>.</li>
+            <li>هر تگِ خوانده‌شده یک ویژگیِ <code>pivot</code> هم دارد (دسترسی به واسط).</li>
+        </ul>
+
+        <div class="note info"><div class="note-title"> بساز و نام بگذار</div>
+            <p>جدولِ واسط مایگریشن می‌خواهد: <code>php artisan make:migration create_product_tag_table</code>،
+                بعد <code>foreignId</code> برای هر دو و <code>unique</code> روی جفت — تا یک «اتصال» دوبار ثبت نشود.
+                در گامِ پروژه لازمش نیست؛ اگر دوست داشتی خودت کاملش کن.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۵ ================= -->
+    <section class="lesson" id="attach">
+        <div class="lesson-head"><span class="lesson-num">۵</span>
+            <h2>attach / detach / sync</h2>
+        </div>
+
+        <p>برایِ «ربطِ» رکوردها در رابطه‌ی چند‌به‌چند این متدهاست:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP</span></div>
+                <pre><code>$product = Product::find(1);
+$tag     = Tag::find(2);
+
+$product-&gt;tags()-&gt;attach($tag);            // یک ردیف در product_tag
+$product-&gt;tags()-&gt;attach([3, 4]);          // یا با آرایه‌ای از id
+$product-&gt;tags()-&gt;attach([5 =&gt; ['note' =&gt; 'ویژه']]); // با ستونِ اضافه
+
+$product-&gt;tags()-&gt;detach(2);               // برداشتنِ پیوندِ مشخص
+$product-&gt;tags()-&gt;detach([3, 4]);
+
+$product-&gt;tags()-&gt;sync([4, 5, 6]);         // فقط همین‌ها بمانند؛ بقیه جدا/اضافه شوند</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>attach/detach</code> بدونِ لمسِ خودِ رکوردها فقط پیوند را می‌سازد/می‌کند.</li>
+            <li><code>sync([...])</code> وضعیتِ نهایی را تحمیل می‌کند — برایِ صفحه‌ی «برچسب‌هایِ این محصول» که از فرم
+                می‌آید کامل است.</li>
+            <li>کلیدِ واسط، یک <code>pivot</code> مدل است؛ ستونِ اضافه را با <code>-&gt;withPivot('note')</code> معرفی کن.</li>
+        </ul>
+    </section>
+
+    <!-- ================= درس ۶ ================= -->
+    <section class="lesson" id="n1">
+        <div class="lesson-head"><span class="lesson-num">۶</span>
+            <h2>مشکل N+1 و Eager Loading با with()</h2>
+        </div>
+
+        <p>فرض کن صفحه‌ی «فهرستِ دسته‌بندی‌ها» هست که برایِ هر کدام، اولینِ محصولش را نشان می‌دهد:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">بلید — روشِ ساده (و پرکوئری!)</span></div>
+                <pre><code>@foreach ($categories as $category)
+    &lt;p&gt;{{ $category-&gt;name }}
+       — {{ $category-&gt;products()-&gt;first()?->name }}&lt;/p&gt;
+@endforeach</code></pre>
+            </div>
+        </div>
+
+        <div class="tk9-term"><span class="c"># ۱۰ دسته‌بندی داریم → ۱۱ کوئری:</span>
+1  <span class="c">select * from categories</span>
+2  <span class="c">select * from products where category_id = 1 limit 1</span>
+<span class="y">…و باز برای ۲، ۳، ۴، ... تا ۱۰</span></div>
+
+        <p>به این می‌گویند <strong>مشکلِ N+1</strong>: یک کوئری برایِ فهرست + یک کوئری <em>به ازایِ هر ردیف</em>.
+            راهِ درست: <strong>Eager Loading</strong> — رابطه‌ها را <em>قبل</em>، به‌صورتِ دسته‌ای، در ۲ کوئریِ کل بکش:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">کنترلر</span></div>
+                <pre><code>$categories = Category::with('products')-&gt;get();
+// 1 کوئری برای دسته‌بندی‌ها + 1 کوئری برای همه‌ی محصول‌هایِ متعلق به آن‌ها</code></pre>
+            </div>
+        </div>
+
+        <p>حالا در بلید، به‌جایِ <code>products()</code> از <code>products</code> (بدون پرانتز) استفاده کن که همان Collectionِ بارگذاری‌شده را بردارد — بدونِ کوئریِ اضافه:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">بلید</span></div>
+                <pre><code>@foreach ($categories as $category)
+    &lt;p&gt;{{ $category-&gt;name }} — {{ $category-&gt;products-&gt;first()-&gt;name ?? 'بدون محصول' }}&lt;/p&gt;
+@endforeach</code></pre>
+            </div>
+        </div>
+
+        <div class="note warn"><div class="note-title"> تشخیصِ بموقع</div>
+            <p>در توسعه، لاراول می‌تواند lazy loading (همان کوئریِ خودسرِ در حلقه) را با
+                <code>Model::preventLazyLoading()</code> خطا کند — یعنی بلافاصله می‌فهمی کجا و به‌چه رابطه‌ای «دیر» رسیدی.
+                این را در <code>AppServiceProvider::boot()</code> برایِ local روشن کن.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۷ ================= -->
+    <section class="lesson" id="accessor">
+        <div class="lesson-head"><span class="lesson-num">۷</span>
+            <h2>Accessor و Mutator: دگرگونیِ مقدار</h2>
+        </div>
+
+        <p>گاهی موقعِ <strong>خواندن</strong> یا <strong>نوشتن</strong> یک ستون، چیزی بیشتر از مقدارِ خام می‌خواهیم.
+            در لاراول ۱۳ این با کلاسِ <code>Attribute</code> انجام می‌شود (همان الگویِ Attribute::make):
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">app/Models/Product.php</span></div>
+                <pre><code>use Illuminate\Database\Eloquent\Casts\Attribute;
+
+// Accessor: هر وقت خواستی «برچسبِ قیمت»، این را تحویل بگیر
+protected function priceLabel(): Attribute
+{
+    return Attribute::make(
+        get: fn () =&gt; number_format($this-&gt;price) . ' تومان',
+    );
+}
+
+// Accessor برایِ عکس: مسیرِ کامل را برگردان (نه نامِ فایلِ خام)
+protected function image(): Attribute
+{
+    return Attribute::make(
+        get: fn (?string $value) =&gt; $value
+            ? '/storage/' . $value
+            : '/images/placeholder.png',
+    );
+}
+
+// Mutator برایِ قیمت: مقدارِ دریافتی را تمیز کن، بعد ذخیره کن
+protected function price(): Attribute
+{
+    return Attribute::make(
+        set: fn ($value) =&gt; max(0, (int) $value),
+    );
+}</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><strong>Accessor</strong> = کلیدِ <code>get</code>: مقدارِ ستونِ خام را می‌گیرد و به‌هایِ جدید برمی‌گرداند؛
+                وقتی می‌گویی <code>$product-&gt;price_label</code> (بخوان) اجرا می‌شود.</li>
+            <li><strong>Mutator</strong> = کلیدِ <code>set</code>: موقعِ نوشتن اجرا می‌شود؛ خروجیِ یکتا یا
+                آرایه‌ای از جفت‌های ستون/مقدار برایِ ذخیره باشد.</li>
+            <li>نامِ متد = نامِ attribute با <strong>camelCase</strong>: ستونِ <code>price_label</code> ← متدِ <code>priceLabel</code>.</li>
+        </ul>
+
+        <p>در بلید چه می‌کنیم؟ هیچ چیزِ خاصی؛ همین‌طور:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Blade</span></div>
+                <pre><code>&lt;p&gt;{{ $product-&gt;price_label }}&lt;/p&gt;
+&lt;img src="{{ $product-&gt;image }}" alt=""&gt;</code></pre>
+            </div>
+        </div>
+
+        <div class="note tip"><div class="note-title"> یک‌جا فکر کن، نه در بلید</div>
+            <p>هر الگویِ نمایشیِ تکراری («۳۵۰٬۰۰۰ تومان»، «مسیرِ عکس» و...) را به‌جایِ کپی‌کردن در هر بلید، همین‌جا
+                تعریف کن — ساختار مرتب می‌ماند و هر تغییری فقط در یک‌جا لازم می‌شود.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۸ ================= -->
+    <section class="lesson" id="tinker">
+        <div class="lesson-head"><span class="lesson-num">۸</span>
+            <h2>آزمایشگاه با php artisan tinker</h2>
+        </div>
+
+        <p>حالا همه‌چیز را در Tinker «متحرک» ببین — نه فقط بخوان، رابطه‌ها و کوئری‌ها را هم بساز:</p>
+
+        <div class="tk9-term"><span class="p">$</span> php artisan tinker
+<span class="p">&gt;&gt;&gt;</span> <span class="y">$c = App\Models\Category::find(1);</span>
+<span class="o">=&gt;</span> App\Models\Category {#1  id: 1, name: <span class="y">"کالای دیجیتال"</span> }
+<span class="p">&gt;&gt;&gt;</span> <span class="y">$c-&gt;products-&gt;count();</span>
+<span class="o">=&gt;</span> 5
+<span class="p">&gt;&gt;&gt;</span> <span class="y">$c-&gt;products()-&gt;orderByDesc('price')-&gt;first()-&gt;price_label;</span>
+<span class="o">=&gt;</span> <span class="y">"1,250,000 تومان"</span>
+<span class="p">&gt;&gt;&gt;</span> <span class="y">App\Models\Product::first()-&gt;category-&gt;name;</span>
+<span class="o">=&gt;</span> <span class="y">"کالای دیجیتال"</span>
+<span class="p">&gt;&gt;&gt;</span> <span class="y">$product = App\Models\Product::first();</span>
+<span class="p">&gt;&gt;&gt;</span> <span class="y">$product-&gt;tags()-&gt;attach([1, 2]);</span>
+<span class="c">// پیوند ساخته شد (چیزی چاپ نمی‌شود)</span>
+<span class="p">&gt;&gt;&gt;</span> <span class="y">$product-&gt;tags-&gt;pluck('name')-&gt;all();</span>
+<span class="o">=&gt;</span> [<span class="y">"ویژه"</span>, <span class="y">"پرفروش"</span>]</div>
+
+        <div class="note info"><div class="note-title"> چرا «آزمایشگاه»؟</div>
+            <p>هر کوئریِ چندخطی و رابطه‌ای، اول در Tinker. خطایِ کوئری در یک بلیدِ پیچیده سخت‌تر دیده می‌شود؛
+                اینجا در دو دقیقه به جوابِ درست می‌رسی و بعد کدش را به کنترلر منتقل می‌کنی.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۹ ================= -->
+    <section class="lesson" id="project-step">
+        <div class="lesson-head"><span class="lesson-num">۹</span>
+            <h2>گام پروژه: روابطِ فروشگاه</h2>
+        </div>
+
+        <div class="proj-step"><div class="proj-title"> دسته‌بندی و محصول، حالا با هم</div>
+            <p>این همان نقطه‌ای است که «فروشگاه کوچک» زنده می‌شود: رابطه‌ها را وصل کن، قیمت همیشه مرتب باشد،
+                عکس خودش مسیرِ درست را بداند.
+            </p>
+        </div>
+
+        <ol>
+            <li>
+                در <code>Category</code>: <code>products()</code> با <code>hasMany(Product::class)</code>؛
+                در <code>Product</code>: <code>category()</code> با <code>belongsTo(Category::class)</code>.
+            </li>
+            <li>
+                <code>priceLabel()</code> (accessor) و <code>image()</code> (آدرسِ کاملِ تصویر یا placeholder)
+                را به <code>Product</code> اضافه کن؛ در <code>product-card.blade.php</code> درس ۰۶
+                از <code>$product-&gt;price_label</code> استفاده کن.
+            </li>
+            <li>
+                صفحه‌ی «دسته‌بندی‌ها»: <code>Category::with('products')-&gt;get()</code> به‌همراهِ
+                <code>{{ $category-&gt;products-&gt;count() }}</code> — بدون N+1.
+            </li>
+            <li>
+                صفحه‌ی محصول: <code>Product $product</code> (Bindingِ درس ۰۸) و نمایشِ
+                <code>{{ $product-&gt;category-&gt;name }}</code>.
+            </li>
+            <li>
+                اگر حسِ ماجراجویی داری: جدولِ واسطِ <code>product_tag</code> با <code>make:migration create_product_tag_table</code> بساز،
+                مدلِ <code>Tag</code> و <code>belongsToMany</code> را وصل کن، و در Tinker <code>attach/sync</code> را بچش.
+            </li>
+        </ol>
+
+        <div class="note info"><div class="note-title"> بعدی</div>
+            <p>فرم‌ها و اعتبارسنجی در درس ۱۰، وب را «تعاملیِ واقعی» می‌کند: ایجادِ محصول از درونِ خودِ سایت تا
+                لینک‌های <code>store/update/destroy</code> غریزه‌ات شوند. عکسِ واقعی هم در درس ۱۴ (آپلود) می‌رسد.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۱۰ ================= -->
+    <section class="lesson" id="exercises">
+        <div class="lesson-head"><span class="lesson-num">۱۰</span>
+            <h2>تمرین‌ها؛ حالا نوبت توست!</h2>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۱: دیدگاه‌ها زیرِ محصول</div>
+            <ol>
+                <li>در <code>Product</code> متدِ <code>reviews(): HasMany</code> (مدلِ <code>Review</code> از درس ۰۷) را بساز.</li>
+                <li>در <code>Review</code> متدِ <code>product(): BelongsTo</code> را بساز.</li>
+                <li>در Tinker: <code>Product::find(1)-&gt;reviews</code> و <code>Review::first()-&gt;product-&gt;name</code> را بزن.</li>
+            </ol>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۲: N+1 را شکار کن</div>
+            <ol>
+                <li>بلیدی بساز که برایِ هر دسته‌بندی، تعدادِ محصول‌هایش را چاپ کند؛ اول بدون <code>with</code>.</li>
+                <li><code>Model::preventLazyLoading()</code> را در بوتِ AppServiceProvider (محیطِ local) روشن کن — خطا می‌گیرد؟</li>
+                <li>با <code>-&gt;with('products')</code> همان خروجی را بدونِ خطا بگیر و مطمئن شو فقط ۲ کوئری زده شد.</li>
+            </ol>
+        </div>
+
+        <div class="note info"><div class="note-title"> چالش</div>
+            <p>ستونِ <code>slug</code> را در <code>Category</code> بساز و یک accessor به نامِ <code>url()</code> بنویس که آدرسِ «<code>/categories/{slug}</code>» را برگرداند؛ یعنی لینک در بلید به‌جای هاردکد نوشته می‌شود.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= نکات طلایی ================= -->
+    <div class="golden"><h3> چیزی که از این بخش توی ذهنت بماند</h3>
+        <ol>
+            <li>رابطه = متدِ Eloquent رویِ مدل؛ <code>hasMany</code> (بسازد) در والد، <code>belongsTo</code> (متعلق) در فرزند.</li>
+            <li><code>hasOne</code> برایِ یک‌به‌یک؛ <code>belongsToMany</code> برایِ چند‌به‌چند با جدولِ واسط (به‌همراهِ pivot).</li>
+            <li>ربط‌ها: <code>attach</code> (پیوند)، <code>detach</code> (گسستن)، <code>sync</code> (تحمیلِ وضعیتِ نهایی).</li>
+            <li>مشکلِ N+1 = کوئریِ به‌ازای‌هرشیء؛ راهش <code>-&gt;with('relation')</code> و خواندنِ property (بدونِ پرانتز).</li>
+            <li>Accessor (<code>get</code>) موقعِ خواندن، Mutator (<code>set</code>) موقعِ نوشتن — با کلاسِ <code>Attribute</code>.</li>
+            <li>Tinker همان «دستِ آزمایشگاه» است: قبل از کنترلر، کوئری و رابطه را آن‌جا امتحان کن.</li>
+        </ol>
+    </div>
+
+    <!-- ================= مطالعه‌ی بیشتر ================= -->
+    <div class="tk9-more"> مطالعه‌ی بیشتر (انگلیسی):
+        <a href="https://laravel.com/docs/13.x/eloquent-relationships#defining-relationships" target="_blank" rel="noopener">تعریف رابطه‌ها</a> —
+        <a href="https://laravel.com/docs/13.x/eloquent-relationships#one-to-many" target="_blank" rel="noopener">hasMany</a>،
+        <a href="https://laravel.com/docs/13.x/eloquent-relationships#one-to-many-inverse" target="_blank" rel="noopener">belongsTo (معکوس)</a>،
+        <a href="https://laravel.com/docs/13.x/eloquent-relationships#many-to-many" target="_blank" rel="noopener">belongsToMany</a>،
+        <a href="https://laravel.com/docs/13.x/eloquent-relationships#updating-many-to-many-relationships" target="_blank" rel="noopener">attach/detach/sync</a>،
+        <a href="https://laravel.com/docs/13.x/eloquent-relationships#eager-loading" target="_blank" rel="noopener">Eager Loading و N+1</a> و
+        <a href="https://laravel.com/docs/13.x/eloquent-mutators#accessors-and-mutators" target="_blank" rel="noopener">Accessors و Mutators</a>.
+    </div>
+
+    <!-- ================= ناوبری ================= -->
+    <nav class="lesson-nav" aria-label="ناوبری بین بخش‌ها">
+        <a href="00-فهرست.html">فهرست درس‌ها</a>
+        <a href="08-Eloquent-CRUD.html">→ بخش قبل: Eloquent مقدمه و CRUD</a>
+        <a href="10-فرم-ها-Validation.html">بعدی: فرم‌ها و Validation ←</a>
+    </nav>
+
+</div>
+<script src="../assets/js/rayvo.js"></script>
+</body>
+</html>

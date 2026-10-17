@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سطح ۲ · درس 3 | ساخت API و Resource</title><meta name="description" content="API یعنی سایت به‌جای صفحه‌ی HTML، داده‌ی JSON بدهد تا اپ موبایل یا فرانت‌اند جدا از آن استفاده کند.">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">سطح ۲ · درس 3</span><h1>ساخت API و Resource</h1><p>API یعنی سایت به‌جای صفحه‌ی HTML، داده‌ی JSON بدهد تا اپ موبایل یا فرانت‌اند جدا از آن استفاده کند.</p></header>
+<section class="step"><h2>۱. فعال‌کردن API</h2><p>لاراول ۱۲ و ۱۳ به‌طور پیش‌فرض فایل <code>routes/api.php</code> ندارد؛ این دستور آن را می‌سازد و Sanctum را هم نصب می‌کند.</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">artisan</span></div><pre><code>php artisan install:api</code></pre></div></div></section><section class="step"><h2>۲. Resource</h2><p>Resource شکل خروجی JSON را کنترل می‌کند تا ستون‌های داخلی دیتابیس لو نروند.</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Resource</span></div><pre><code>php artisan make:resource ProductResource
+
+// app/Http/Resources/ProductResource.php
+public function toArray(Request $request): array
+{
+    return [
+        'id'    =&gt; $this-&gt;id,
+        'name'  =&gt; $this-&gt;name,
+        'price' =&gt; $this-&gt;price,
+        'category' =&gt; $this-&gt;whenLoaded('category', fn () =&gt; $this-&gt;category-&gt;name),
+    ];
+}</code></pre></div></div></section><section class="step"><h2>۳. روت و کنترلر</h2><p>مسیرهای این فایل خودکار پیشوند <code>/api</code> می‌گیرند.</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">routes/api.php</span></div><pre><code>// routes/api.php
+use App\Http\Resources\ProductResource;
+use App\Models\Product;
+
+Route::get('/products', fn () =&gt;
+    ProductResource::collection(Product::with('category')-&gt;paginate(12))
+);
+
+Route::get('/products/{product}', fn (Product $product) =&gt;
+    new ProductResource($product)
+);</code></pre></div></div></section><section class="step"><h2>۴. تست با مرورگر یا Postman</h2><p>آدرس <code>http://127.0.0.1:8000/api/products</code> را باز کن؛ JSON می‌بینی. برای درخواست‌های POST از Postman یا Insomnia استفاده کن و هدر <code>Accept: application/json</code> را حتماً بگذار.</p></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>نفرستادن هدر <code>Accept: application/json</code> و گرفتن ریدایرکت HTML به‌جای خطای JSON.</li><li>برگرداندن مدل خام و لورفتن ستون‌هایی مثل password.</li></ol></div>
+<nav class="lesson-nav"><a href="l2-testing.html">→ بخش قبل: تست‌نویسی (Feature و Unit)</a><a href="l2-sanctum.html">بعدی: احراز هویت API با Sanctum ←</a></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

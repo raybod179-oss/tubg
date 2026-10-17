@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>شروع دوره | مقدمه، هدف و مرور کلی دوره</title><meta name="description" content="سلام و درود رفقای Rayvo  این دوره‌ی متنی و پروژه‌محور است: بدون ویدیو، با توضیح و کدی که اجرا می‌کنی. هدف این است که کسی که هیچ‌چیز از برنامه‌نویسی و">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">شروع دوره</span><h1>مقدمه، هدف و مرور کلی دوره</h1><p>سلام و درود رفقای Rayvo  این دوره‌ی متنی و پروژه‌محور است: بدون ویدیو، با توضیح و کدی که اجرا می‌کنی. هدف این است که کسی که هیچ‌چیز از برنامه‌نویسی و لاراول نمی‌داند، قدم‌به‌قدم به یک لاراول‌دولوپر تبدیل شود.</p></header>
+<section class="step"><h2>چرا متنی؟</h2><p>چون می‌توانی مستقیم سراغ درس موردنیازت بروی، سریع مرور کنی و وقتت را صرف کدنویسی و تمرین کنی، نه فقط تماشا. کدها را کورکورانه کپی نکن؛ هدف فهمیدن این است که هر بخش چطور کار می‌کند.</p></section><section class="step"><h2>مسیر دوره</h2><p>سطح ۰: ابزارها، PHP و SQL ← سطح ۱: مقدماتی لاراول ← پروژه‌ی فروشگاه (با سورس zip) ← سطح ۲: متوسط ← پروژه‌ی سایت خبری ← پروژه‌ی رزرو وقت ← سطح ۳: پیشرفته ← مارکت‌پلیس چندفروشنده ← سطح ۴: کار و درآمد. هر درس حدود ۴۰ تا ۹۰ دقیقه است؛ با روزی یک تا دو درس، مسیر در حدود دو ماه طی می‌شود.</p></section><section class="step"><h2>نصب هر پروژه‌ی zip (الگوی کلی)</h2><p>همه‌ی پروژه‌های دوره یک «لایه‌ی روی لاراول» هستند. الگوی نصب همیشه یکی است (نام پوشه را عوض کن):</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">نصب پروژه</span></div><pre><code>composer create-project laravel/laravel my-project
+cd my-project
+
+# ویندوز (PowerShell):
+tar -xf "$env:USERPROFILE\Downloads\project-source.zip" -C .
+# مک / لینوکس:
+unzip -o ~/Downloads/project-source.zip -d .
+
+composer install
+cp .env.example .env        # ویندوز: copy .env.example .env
+php artisan key:generate
+php artisan migrate --seed
+php artisan storage:link
+php artisan serve</code></pre></div></div></section><section class="step"><h2>فرمان‌های روزمره</h2><p>این‌ها را بارها استفاده می‌کنی:</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">دستورات</span></div><pre><code>php artisan serve                 # اجرای سایت روی 127.0.0.1:8000
+php artisan migrate:fresh --seed  # ساخت دوباره‌ی دیتابیس (داده‌ها پاک می‌شود)
+php artisan make:model Post -mfc  # مدل + migration + factory + controller
+php artisan route:list            # فهرست روت‌ها
+php artisan optimize:clear        # پاک‌کردن کش‌ها
+php artisan test                  # اجرای تست‌ها
+composer dump-autoload            # رفع خطای Class not found</code></pre></div></div></section><section class="step"><h2>پشتیبانی</h2><p>سؤال داری؟ از کانال‌های Rayvo (تلگرام، بله، یوتیوب و آپارات) پیام بده؛ لینک‌ها پایین هر صفحه است.</p></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>رفتن سراغ پروژه قبل از درس‌های پایه؛ اول سطح ۰ و ۱ را بخوان.</li><li>کپی‌کردن کد بدون اجرا؛ هر کد را خودت بزن و تغییرش بده.</li><li>استخراج zip بیرون از پوشه‌ی پروژه.</li></ol></div>
+<nav class="lesson-nav"><span></span><a href="setup-environment.html">بعدی: راه‌اندازی محیط کار ←</a></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

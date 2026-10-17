@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سطح ۲ · درس 5 | صف (Queue) و Job</title><meta name="description" content="کارهای کند (ارسال ایمیل، ساخت گزارش) را از درخواست کاربر جدا می‌کنیم تا سایت سریع بماند.">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">سطح ۲ · درس 5</span><h1>صف (Queue) و Job</h1><p>کارهای کند (ارسال ایمیل، ساخت گزارش) را از درخواست کاربر جدا می‌کنیم تا سایت سریع بماند.</p></header>
+<section class="step"><h2>۱. تنظیم صف</h2><p>در پروژه‌ی تازه، صف روی دیتابیس است و جدول jobs از قبل در migrationها هست.</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">env</span></div><pre><code># .env
+QUEUE_CONNECTION=database
+
+php artisan migrate</code></pre></div></div></section><section class="step"><h2>۲. ساخت Job</h2><p></p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Job</span></div><pre><code>php artisan make:job SendOrderReport
+
+// app/Jobs/SendOrderReport.php
+class SendOrderReport implements ShouldQueue
+{
+    use Queueable;
+
+    public function __construct(public int $orderId) {}
+
+    public function handle(): void
+    {
+        // کار سنگین اینجا
+    }
+}
+
+// ارسال به صف
+SendOrderReport::dispatch($order-&gt;id);</code></pre></div></div></section><section class="step"><h2>۳. اجرای Worker</h2><p>بدون Worker هیچ Job اجرا نمی‌شود. روی هاست باید با Supervisor همیشه روشن بماند.</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">artisan</span></div><pre><code>php artisan queue:work
+php artisan queue:failed        # Jobهای شکست‌خورده
+php artisan queue:retry all</code></pre></div></div></section><section class="step"><h2>۴. تمرین</h2><p>ارسال ایمیل تأیید سفارش را به یک Job منتقل کن و زمان پاسخ ثبت سفارش را مقایسه کن.</p></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>نزدن <code>queue:work</code> و تعجب از اجرا‌نشدن Job.</li><li>نوشتن کد Job بعد از تغییر و فراموش‌کردن ری‌استارت Worker (<code>queue:restart</code>).</li></ol></div>
+<nav class="lesson-nav"><a href="l2-sanctum.html">→ بخش قبل: احراز هویت API با Sanctum</a><a href="l2-events-notifications.html">بعدی: Event، Listener و Notification ←</a></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

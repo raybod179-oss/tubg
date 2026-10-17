@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>راه‌اندازی محیط کار | دوره‌ی جامع Laravel</title>
+    <meta name="description" content="نصب VS Code، XAMPP یا Laragon، phpMyAdmin، Composer و Git برای شروع لاراول از صفر">
+    <link rel="icon" href="../assets/img/favicon.png">
+    <link rel="stylesheet" href="../assets/css/rayvo.css">
+    <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script>
+    <style>
+        .cmp{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+        .cmp>div{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px}
+        .cmp h4{margin:0 0 8px;color:var(--accent)}
+        .cmp ul{margin:0;padding-inline-start:18px}
+        .tbl{width:100%;border-collapse:collapse;font-size:14px}
+        .tbl th,.tbl td{border:1px solid var(--border);padding:9px 12px;text-align:right;vertical-align:top}
+        .tbl th{background:var(--accent-soft)}
+        .tbl code{direction:ltr;unicode-bidi:embed}
+        .check{list-style:none;padding:0;margin:0}
+        .check li{padding:6px 0 6px 0;border-bottom:1px dashed var(--border)}
+        .check li::before{content:" ";color:var(--accent);font-weight:700}
+        .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px}
+        .flow .b{background:var(--accent-soft);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-weight:600}
+        .flow .a{color:var(--muted)}
+    </style>
+</head>
+<body>
+<div class="course-page"><header class="course-header">
+        <span class="badge">شروع از صفر</span>
+        <h1>راه‌اندازی محیط کار</h1>
+        <p>قبل از نوشتن اولین خط کد باید ابزارها را نصب کنیم: ویرایشگر VS Code، سرور محلی (XAMPP یا Laragon)، phpMyAdmin برای دیدن دیتابیس، Composer و Git. اگر هیچ‌چیز از برنامه‌نویسی نمی‌دانی، نگران نباش؛ قدم‌به‌قدم می‌رویم.</p>
+    </header>
+
+    <nav class="toc" aria-label="فهرست مطالب">
+        <h2>در این درس</h2>
+        <ol>
+            <li><a href="#web">وب چطور کار می‌کند؟</a></li>
+            <li><a href="#vscode">نصب VS Code و افزونه‌ها</a></li>
+            <li><a href="#choose">XAMPP یا Laragon؟</a></li>
+            <li><a href="#xampp">نصب و راه‌اندازی XAMPP</a></li>
+            <li><a href="#laragon">نصب و راه‌اندازی Laragon</a></li>
+            <li><a href="#pma">phpMyAdmin و ساخت دیتابیس</a></li>
+            <li><a href="#tools">Composer، Git و Node</a></li>
+            <li><a href="#trouble">عیب‌یابی خطاهای رایج</a></li>
+            <li><a href="#final">چک‌لیست نهایی و تمرین</a></li>
+        </ol>
+    </nav>
+
+    <!-- ================= وب ================= -->
+    <section class="lesson" id="web">
+        <div class="lesson-head"><span class="lesson-num">۱</span><h2>وب چطور کار می‌کند؟</h2></div>
+        <p>وقتی آدرسی را در مرورگر می‌زنی، سه بازیگر وارد کار می‌شوند. فهمیدن همین سه‌تا نصف مسیر یادگیری لاراول است:</p>
+        <div class="flow"><span class="b">مرورگر (کلاینت)</span><span class="a">← درخواست →</span>
+            <span class="b">سرور وب + PHP</span><span class="a">← کوئری →</span>
+            <span class="b">دیتابیس (MySQL)</span>
+        </div>
+        <ul>
+            <li><strong>مرورگر</strong> درخواست می‌فرستد: «صفحه‌ی محصولات را بده».</li>
+            <li><strong>سرور وب (Apache) با PHP</strong> کد ما را اجرا می‌کند. لاراول همین‌جا زندگی می‌کند.</li>
+            <li><strong>دیتابیس</strong> اطلاعات (کاربران، محصولات، سفارش‌ها) را نگه می‌دارد.</li>
+        </ul>
+        <p>روی کامپیوتر خودت باید هر سه را داشته باشی. بسته‌هایی مثل XAMPP و Laragon همین سه را یک‌جا نصب می‌کنند.</p>
+
+        <div class="note info"><div class="note-title"> آدرس localhost</div>
+            <p>آدرس‌های <code>localhost</code> و <code>127.0.0.1</code> هر دو یعنی «همین کامپیوتر خودم». سایت‌هایی که اینجا می‌سازیم فقط روی دستگاه خودت دیده می‌شوند و کسی از اینترنت به آن‌ها دسترسی ندارد.</p>
+        </div>
+    </section>
+
+    <!-- ================= VS Code ================= -->
+    <section class="lesson" id="vscode">
+        <div class="lesson-head"><span class="lesson-num">۲</span><h2>نصب VS Code و افزونه‌ها</h2></div>
+        <p>VS Code ویرایشگر رایگان و محبوبی است که کدها را در آن می‌نویسیم.</p>
+        <ol>
+            <li>از <code>code.visualstudio.com</code> نسخه‌ی ویندوز (یا مک/لینوکس) را دانلود کن.</li>
+            <li>هنگام نصب این دو گزینه را فعال کن: «Add to PATH» و «Open with Code» (راست‌کلیک روی پوشه‌ها).</li>
+            <li>VS Code را باز کن و از ستون کناری روی آیکن مربع‌ها (Extensions) بزن.</li>
+        </ol>
+        <p>این افزونه‌ها را نصب کن (نام را جستجو کن):</p>
+        <table class="tbl">
+            <thead><tr><th>افزونه</th><th>چه کمکی می‌کند؟</th></tr></thead>
+            <tbody>
+                <tr><td><code>PHP Intelephense</code></td><td>پیشنهاد خودکار کد PHP و پیدا کردن خطا</td></tr>
+                <tr><td><code>Laravel Blade Snippets</code></td><td>رنگ‌بندی و میان‌بُر برای فایل‌های <code>.blade.php</code></td></tr>
+                <tr><td><code>Laravel</code> (افزونه‌ی رسمی)</td><td>پیمایش روت‌ها، ویوها و تنظیمات در پروژه</td></tr>
+                <tr><td><code>DotENV</code></td><td>رنگ‌بندی فایل <code>.env</code></td></tr>
+            </tbody>
+        </table>
+        <div class="note tip"><div class="note-title"> اگر افزونه‌ای پیدا نشد</div>
+            <p>گاهی نام افزونه‌ها یا ناشرشان عوض می‌شود. اگر دقیقاً همین نام را نیافتی، یکی از نزدیک‌ترین نتایج با تعداد دانلود بالا را انتخاب کن؛ برای ادامه‌ی دوره هیچ‌کدام اجباری نیستند.</p>
+        </div>
+    </section>
+
+    <!-- ================= انتخاب ================= -->
+    <section class="lesson" id="choose">
+        <div class="lesson-head"><span class="lesson-num">۳</span><h2>XAMPP یا Laragon؟</h2></div>
+        <p>هر دو سرور محلی‌اند. فقط <strong>یکی</strong> را نصب کن؛ با هم تداخل پیدا می‌کنند.</p>
+        <div class="cmp"><div><h4>XAMPP</h4><ul>
+                <li>معروف‌ترین؛ آموزش‌های زیادی دارد</li>
+                <li>پنل ساده برای روشن/خاموش کردن Apache و MySQL</li>
+                <li>phpMyAdmin به‌صورت آماده همراهش نصب می‌شود</li>
+                <li>ممکن است نسخه‌ی PHP آن برای لاراول قدیمی باشد</li>
+            </ul></div>
+            <div><h4>Laragon (ویندوز)</h4><ul>
+                <li>سبک و سریع؛ تعویض نسخه‌ی PHP آسان</li>
+                <li>همراه Composer و ابزارهای دیگر می‌آید</li>
+                <li>ساخت پروژه‌ی لاراول با چند کلیک</li>
+                <li>برای لاراول معمولاً راحت‌تر است</li>
+            </ul></div>
+        </div>
+        <div class="note warn"><div class="note-title"> قاعده‌ی تصمیم‌گیری</div>
+            <p>اول XAMPP را نصب کن و با دستور <code>php -v</code> نسخه‌ی PHP را ببین. اگر پایین‌تر از نسخه‌ی موردنیاز لاراول بود (این دوره PHP ۸.۳ به بالا را فرض می‌کند)، <strong>XAMPP را حذف کن و Laragon نصب کن</strong>. هر دو را هم‌زمان روشن نگه نداری.</p>
+        </div>
+        <p class="muted small">مک: ابزارهایی مثل Laravel Herd یا Homebrew همین نقش را دارند. لینوکس: PHP و MySQL را از مخزن توزیع خودت نصب کن.</p>
+    </section>
+
+    <!-- ================= XAMPP ================= -->
+    <section class="lesson" id="xampp">
+        <div class="lesson-head"><span class="lesson-num">۴</span><h2>نصب و راه‌اندازی XAMPP</h2></div>
+        <ol>
+            <li>از سایت <code>apachefriends.org</code> نسخه‌ی ویندوز را دانلود و نصب کن. مسیر پیش‌فرض <code>C:\xampp</code> مناسب است.</li>
+            <li>«XAMPP Control Panel» را اجرا کن (بهتر است به‌صورت Administrator).</li>
+            <li>جلوی <strong>Apache</strong> و <strong>MySQL</strong> دکمه‌ی <code>Start</code> را بزن. وقتی سبز شدند، آماده‌اند.</li>
+            <li>در مرورگر این آدرس را باز کن؛ باید صفحه‌ی خوش‌آمدگویی XAMPP را ببینی:</li>
+        </ol>
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>آدرس</span><span class="demo-tag">مرورگر</span></div><pre><code>http://127.0.0.1/</code></pre></div></div>
+
+        <h3>اضافه کردن PHP به PATH</h3>
+        <p>تا بتوانیم در ترمینال دستور <code>php</code> را بزنیم، مسیر PHP را به PATH ویندوز اضافه می‌کنیم:</p>
+        <ol>
+            <li>در Start بنویس: «Edit the system environment variables».</li>
+            <li>دکمه‌ی <code>Environment Variables</code> ← در بخش System variables، <code>Path</code> را انتخاب و <code>Edit</code> بزن.</li>
+            <li><code>New</code> بزن و این مسیر را اضافه کن، سپس همه‌ی پنجره‌ها را با OK ببند:</li>
+        </ol>
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>مسیر</span><span class="demo-tag">PATH</span></div><pre><code>C:\xampp\php</code></pre></div></div>
+        <p>یک ترمینال <strong>جدید</strong> (PowerShell) باز کن و بزن:</p>
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">ترمینال</span></div><pre><code>php -v</code></pre></div></div>
+        <p>باید نسخه‌ی PHP چاپ شود. اگر عدد کمتر از ۸.۳ بود، به بخش بعدی (Laragon) برو.</p>
+
+        <h3>اولین فایل PHP</h3>
+        <p>پوشه‌ی <code>C:\xampp\htdocs</code> محل فایل‌های وب است. یک فایل به نام <code>test.php</code> در آن بساز:</p>
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>C:\xampp\htdocs\test.php</span><span class="demo-tag">PHP</span></div><pre><code>&lt;?php
+echo 'سلام Rayvo! PHP کار می‌کند ';
+echo '&lt;br&gt;نسخه‌ی PHP: ' . PHP_VERSION;</code></pre></div></div>
+        <p>آدرس <code>http://127.0.0.1/test.php</code> را باز کن. اگر پیام را دیدی، سرور و PHP درست کار می‌کنند. پس از تست، فایل را پاک کن.</p>
+    </section>
+
+    <!-- ================= Laragon ================= -->
+    <section class="lesson" id="laragon">
+        <div class="lesson-head"><span class="lesson-num">۵</span><h2>نصب و راه‌اندازی Laragon</h2></div>
+        <p>اگر XAMPP نصب نکردی یا PHP آن قدیمی بود، از این بخش استفاده کن.</p>
+        <ol>
+            <li>اگر XAMPP روی سیستم هست، اول آن را متوقف و حذف کن.</li>
+            <li>از <code>laragon.org</code> نسخه‌ی <strong>Full</strong> را دانلود و نصب کن (ترجیحاً مسیر <code>C:\laragon</code>).</li>
+            <li>Laragon را باز کن و دکمه‌ی <code>Start All</code> را بزن؛ Apache (یا Nginx) و MySQL روشن می‌شوند.</li>
+            <li>روی دکمه‌ی <code>Terminal</code> بزن. ترمینال Laragon <code>php</code>، <code>composer</code> و <code>git</code> را بدون تنظیم PATH می‌شناسد.</li>
+        </ol>
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">ترمینال داخل Laragon</span></div><pre><code>php -v
+composer -V
+mysql --version</code></pre></div></div>
+        <p>پوشه‌ی پروژه‌ها در Laragon <code>C:\laragon\www</code> است. یک پروژه‌ی لاراول می‌تواند آنجا ساخته شود؛ اما در این دوره ترجیح می‌دهیم پروژه‌ها را خودمان در پوشه‌ی ساده‌ای مثل <code>D:\projects</code> نگه داریم و با <code>php artisan serve</code> اجرا کنیم تا در هر دو حالت (XAMPP/Laragon) یکسان کار کنیم.</p>
+
+        <div class="note info"><div class="note-title"> phpMyAdmin در Laragon</div>
+            <p>Laragon به‌صورت پیش‌فرض ابزار دیتابیس خودش (HeidiSQL) را دارد. اگر phpMyAdmin را ترجیح می‌دهی، از منوی Laragon (راست‌کلیک روی آیکن) بخش ابزارها / نصب سریع را نگاه کن و phpMyAdmin را اضافه کن. محل دقیق منو در نسخه‌های مختلف کمی فرق می‌کند.</p>
+        </div>
+    </section>
+
+    <!-- ================= phpMyAdmin ================= -->
+    <section class="lesson" id="pma">
+        <div class="lesson-head"><span class="lesson-num">۶</span><h2>phpMyAdmin و ساخت دیتابیس</h2></div>
+        <p>phpMyAdmin یک صفحه‌ی وب است که دیتابیس MySQL را با ماوس مدیریت می‌کند. با XAMPP روشن (Apache و MySQL سبز) این آدرس را باز کن:</p>
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>آدرس</span><span class="demo-tag">مرورگر</span></div><pre><code>http://127.0.0.1/phpmyadmin/</code></pre></div></div>
+        <p>بدون رمز وارد می‌شوی؛ کاربر پیش‌فرض <code>root</code> و رمز آن خالی است. این تنظیم فقط برای کامپیوتر شخصی مناسب است.</p>
+        <h3>ساخت یک دیتابیس</h3>
+        <ol>
+            <li>روی <code>New</code> (جدید) در ستون چپ بزن.</li>
+            <li>نام دیتابیس: <code>laravel_course</code></li>
+            <li>مقابل آن کادر Collation را روی <code>utf8mb4_unicode_ci</code> بگذار (برای پشتیبانی کامل از فارسی و ایموجی).</li>
+            <li><code>Create</code> را بزن.</li>
+        </ol>
+        <h3>اتصال لاراول به این دیتابیس</h3>
+        <p>در درس بعد پروژه‌ی لاراول را می‌سازیم. اگر بخواهی به‌جای SQLite از MySQL استفاده کنی، در فایل <code>.env</code> پروژه این مقدارها را می‌گذاری:</p>
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">فایل .env</span></div><pre><code>DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=laravel_course
+DB_USERNAME=root
+DB_PASSWORD=</code></pre></div></div>
+        <p>بعد با <code>php artisan migrate</code> جدول‌ها ساخته می‌شوند و همان لحظه در phpMyAdmin (با رفرش) دیده می‌شوند.</p>
+        <div class="note warn"><div class="note-title"> هشدار امنیتی</div>
+            <p>هرگز روی سرور واقعی کاربر <code>root</code> بدون رمز نگذار و phpMyAdmin را بدون محافظت در دسترس همه قرار نده.</p>
+        </div>
+    </section>
+
+    <!-- ================= ابزارها ================= -->
+    <section class="lesson" id="tools">
+        <div class="lesson-head"><span class="lesson-num">۷</span><h2>Composer، Git و Node</h2></div>
+        <h3>Composer</h3>
+        <p>مدیر بسته‌های PHP است. لاراول و همه‌ی کتابخانه‌هایش با آن نصب می‌شوند. (در Laragon همراه است.) در XAMPP باید جداگانه از <code>getcomposer.org</code> نصب‌کننده‌ی ویندوز را دانلود کنی؛ در حین نصب، مسیر <code>php.exe</code> را به آن نشان بده. بعد در ترمینال جدید:</p>
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">ترمینال</span></div><pre><code>composer -V</code></pre></div></div>
+        <h3>Git</h3>
+        <p>تاریخچه‌ی تغییرات کد را ذخیره می‌کند و برای کار تیمی و گیت‌هاب لازم است. از <code>git-scm.com</code> نصب کن (تنظیمات پیش‌فرض خوب‌اند) و یک بار نام و ایمیل خودت را معرفی کن:</p>
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">ترمینال</span></div><pre><code>git --version
+git config --global user.name "نام تو"
+git config --global user.email "you@example.com"</code></pre></div></div>
+        <p>سه دستور اصلی که در پروژه‌ها زیاد استفاده می‌کنیم:</p>
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">ترمینال</span></div><pre><code>git init            # شروع نگهداری تاریخچه در پوشه
+git add .           # همه‌ی تغییرات را آماده‌ی ثبت کن
+git commit -m "پیام"  # یک نقطه‌ی بازگشت بساز</code></pre></div></div>
+        <h3>Node.js (اختیاری فعلاً)</h3>
+        <p>برای ساخت CSS و جاوااسکریپت پروژه‌های لاراول (Vite) لازم می‌شود. نسخه‌ی LTS را از <code>nodejs.org</code> نصب کن و با <code>node -v</code> تست کن. فروشگاه این دوره بدون Node هم اجرا می‌شود.</p>
+        <div class="note tip"><div class="note-title"> مسیر پروژه‌ها</div>
+            <p>پروژه‌ها را در مسیری <strong>بدون فاصله و بدون حروف فارسی</strong> نگه دار؛ مثلاً <code>D:\projects\shop</code>. مسیرهایی مثل «دسکتاپ\پروژه من» گاهی باعث خطاهای عجیب ابزارها می‌شوند.</p>
+        </div>
+    </section>
+
+    <!-- ================= عیب‌یابی ================= -->
+    <section class="lesson" id="trouble">
+        <div class="lesson-head"><span class="lesson-num">۸</span><h2>عیب‌یابی خطاهای رایج</h2></div>
+        <table class="tbl">
+            <thead><tr><th>مشکل</th><th>علت و راه‌حل</th></tr></thead>
+            <tbody>
+                <tr><td>Apache روشن نمی‌شود (پورت ۸۰ اشغال)</td><td>برنامه‌ی دیگری (مثل Skype یا سرویس IIS) پورت را گرفته. آن را ببند، یا در XAMPP از <code>Config → httpd.conf</code> پورت را به ۸۰۸۰ تغییر بده و آدرس را <code>http://127.0.0.1:8080/</code> بزن.</td></tr>
+                <tr><td>MySQL روشن نمی‌شود</td><td>معمولاً MySQL دیگری روی سیستم در حال اجراست (از <code>Services</code> ویندوز بررسی کن) یا پورت ۳۳۰۶ اشغال است.</td></tr>
+                <tr><td><code>'php' is not recognized</code></td><td>مسیر PHP به PATH اضافه نشده، یا ترمینال را بعد از تغییر PATH دوباره باز نکرده‌ای.</td></tr>
+                <tr><td><code>'composer' is not recognized</code></td><td>Composer نصب نشده یا ترمینال قدیمی است. یک ترمینال جدید باز کن.</td></tr>
+                <tr><td>phpMyAdmin باز نمی‌شود</td><td>Apache باید روشن باشد. آدرس را با <code>/</code> آخر بزن: <code>http://127.0.0.1/phpmyadmin/</code></td></tr>
+                <tr><td>phpMyAdmin خطای Access denied می‌دهد</td><td>رمز root را تغییر داده‌ای؛ همان رمز را وارد کن یا در <code>config.inc.php</code> اصلاح کن.</td></tr>
+                <tr><td>نسخه‌ی PHP پایین‌تر از ۸.۳ است</td><td>به Laragon مهاجرت کن (بخش ۵).</td></tr>
+                <tr><td>آنتی‌ویروس مانع نصب می‌شود</td><td>موقتاً پوشه‌ی <code>C:\xampp</code> یا <code>C:\laragon</code> را در استثناهای آنتی‌ویروس بگذار.</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- ================= چک‌لیست ================= -->
+    <section class="lesson" id="final">
+        <div class="lesson-head"><span class="lesson-num">۹</span><h2>چک‌لیست نهایی و تمرین</h2></div>
+        <p>همه‌ی این موارد باید روی سیستم تو درست باشد تا بتوانی به درس بعد بروی:</p>
+        <ul class="check">
+            <li>VS Code نصب است و حداقل افزونه‌ی PHP Intelephense را دارد.</li>
+            <li><code>php -v</code> نسخه‌ی ۸.۳ یا بالاتر را نشان می‌دهد.</li>
+            <li><code>composer -V</code> کار می‌کند.</li>
+            <li><code>git --version</code> کار می‌کند.</li>
+            <li>Apache و MySQL (در XAMPP یا Laragon) روشن می‌شوند.</li>
+            <li>صفحه‌ی <code>http://127.0.0.1/phpmyadmin/</code> باز می‌شود.</li>
+            <li>دیتابیس <code>laravel_course</code> ساخته شده است.</li>
+        </ul>
+
+        <div class="exercise"><div class="ex-title"> تمرین</div>
+            <ol>
+                <li>فایل <code>test.php</code> را طوری تغییر بده که نام خودت و تاریخ امروز (<code>date('Y-m-d')</code>) را نشان دهد.</li>
+                <li>در phpMyAdmin یک جدول ساده به نام <code>notes</code> با دو ستون <code>id</code> و <code>title</code> بساز و یک ردیف در آن وارد کن.</li>
+                <li>یک پوشه‌ی <code>D:\projects\hello</code> بساز، داخلش <code>git init</code> بزن و یک commit با پیام «اولین commit» ثبت کن.</li>
+                <li>اگر یکی از مراحل خطا داد، پیام خطا را در بخش «عیب‌یابی» جست‌وجو کن؛ اگر نبود، متن خطا را در گوگل بگذار و به نتایج Stack Overflow نگاه کن. این مهارت یک برنامه‌نویس واقعی است.</li>
+            </ol>
+        </div>
+    </section>
+
+    <div class="golden"><h3> چیزی که از این درس بماند</h3>
+        <ol>
+            <li>سایت = مرورگر + سرور (PHP) + دیتابیس؛ localhost یعنی همین کامپیوتر.</li>
+            <li>فقط یک سرور محلی نصب کن: XAMPP یا Laragon؛ اگر PHP قدیمی بود Laragon.</li>
+            <li>phpMyAdmin در <code>http://127.0.0.1/phpmyadmin/</code> دیتابیس را به‌صورت تصویری نشان می‌دهد.</li>
+            <li>مسیر پروژه‌ها بدون فاصله و حروف فارسی باشد.</li>
+            <li>خطا دیدن عادی است؛ پیام خطا را بخوان، جست‌وجو کن، و دوباره امتحان کن.</li>
+        </ol>
+    </div>
+
+    <nav class="lesson-nav" aria-label="ناوبری بین بخش‌ها">
+        <a href="00-فهرست.html">فهرست درس‌ها</a>
+        <a href="00-فهرست.html">→ قبلی</a>
+        <a href="01-مقدمه-و-نصب.html">بعدی ←</a>
+    </nav>
+
+</div>
+<script src="../assets/js/rayvo.js"></script>
+</body>
+</html>

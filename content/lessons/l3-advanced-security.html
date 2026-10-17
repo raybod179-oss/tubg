@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سطح ۳ · درس 9 | امنیت پیشرفته</title><meta name="description" content="علاوه بر درس امنیت پایه، این‌ها را قبل از انتشار بررسی کن.">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">سطح ۳ · درس 9</span><h1>امنیت پیشرفته</h1><p>علاوه بر درس امنیت پایه، این‌ها را قبل از انتشار بررسی کن.</p></header>
+<section class="step"><h2>۱. محدودیت نرخ</h2><p></p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">rate limit</span></div><pre><code>RateLimiter::for('login', fn (Request $r) =&gt; Limit::perMinute(5)-&gt;by($r-&gt;ip()));
+Route::post('/login', ...)-&gt;middleware('throttle:login');</code></pre></div></div></section><section class="step"><h2>۲. چک‌لیست</h2><p><code>{!! !!}</code> را فقط برای محتوای کاملاً پاک‌سازی‌شده؛ همیشه <code>$fillable</code> یا <code>$guarded</code>؛ آپلود فایل با اعتبارسنجی <code>mimes</code> و حجم؛ فایل‌های آپلودی را اجرا نکن؛ HTTPS اجباری؛ کلیدها فقط در .env.</p></section><section class="step"><h2>۳. بررسی وابستگی‌ها</h2><p></p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">audit</span></div><pre><code>composer audit</code></pre></div></div></section><section class="step"><h2>۴. پشتیبان و لاگ</h2><p>پشتیبان منظم از دیتابیس، لاگ‌گیری خطاها و دسترسی حداقلیِ کاربر دیتابیس.</p></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>اعتماد به اعتبارسنجی سمت مرورگر.</li><li>نمایش خطای کامل (stack trace) به کاربر.</li></ol></div>
+<nav class="lesson-nav"><a href="l3-cicd.html">→ بخش قبل: CI/CD و GitHub Actions</a><a href="l3-package.html">بعدی: ساخت پکیج لاراول ←</a></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

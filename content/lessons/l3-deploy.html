@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سطح ۳ · درس 7 | دیپلوی روی هاست و VPS</title><meta name="description" content="سایت لاراولی باید ریشه‌ی وب‌سرورش پوشه‌ی <code>public</code> باشد، نه ریشه‌ی پروژه.">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">سطح ۳ · درس 7</span><h1>دیپلوی روی هاست و VPS</h1><p>سایت لاراولی باید ریشه‌ی وب‌سرورش پوشه‌ی <code>public</code> باشد، نه ریشه‌ی پروژه.</p></header>
+<section class="step"><h2>۱. آماده‌سازی .env</h2><p></p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">env</span></div><pre><code>APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://yoursite.ir
+# اطلاعات دیتابیس واقعی</code></pre></div></div></section><section class="step"><h2>۲. فرمان‌های دیپلوی</h2><p></p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">deploy</span></div><pre><code>composer install --no-dev --optimize-autoloader
+php artisan migrate --force
+php artisan storage:link
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache</code></pre></div></div></section><section class="step"><h2>۳. هاست اشتراکی</h2><p>اگر فقط به <code>public_html</code> دسترسی داری: محتوای <code>public</code> را آنجا بگذار و مسیر <code>index.php</code> را به پوشه‌ی پروژه (بیرون public_html) اصلاح کن. بقیه‌ی پروژه نباید از وب در دسترس باشد. پوشه‌های storage و bootstrap/cache باید قابل نوشتن باشند.</p></section><section class="step"><h2>۴. VPS</h2><p>Nginx + PHP-FPM + MySQL، گواهی HTTPS با Certbot، Supervisor برای <code>queue:work</code> و یک Cron برای <code>schedule:run</code>. روی سرور ابتدا فقط پورت‌های لازم را باز کن.</p></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>بازگذاشتن <code>APP_DEBUG=true</code> روی سایت زنده.</li><li>قراردادن ریشه‌ی وب روی ریشه‌ی پروژه و لو رفتن .env.</li></ol></div>
+<nav class="lesson-nav"><a href="l3-docker.html">→ بخش قبل: Docker و محیط توسعه</a><a href="l3-cicd.html">بعدی: CI/CD و GitHub Actions ←</a></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

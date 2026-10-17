@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سطح ۳ · درس 10 | ساخت پکیج لاراول</title><meta name="description" content="کدی که در چند پروژه تکرار می‌شود را به پکیج تبدیل کن؛ همان‌طور که Spatie و دیگران می‌کنند.">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">سطح ۳ · درس 10</span><h1>ساخت پکیج لاراول</h1><p>کدی که در چند پروژه تکرار می‌شود را به پکیج تبدیل کن؛ همان‌طور که Spatie و دیگران می‌کنند.</p></header>
+<section class="step"><h2>۱. ساختار</h2><p></p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">ساختار</span></div><pre><code>my-package/
+├── composer.json
+└── src/
+    ├── MyPackageServiceProvider.php
+    └── Greeter.php</code></pre></div></div></section><section class="step"><h2>۲. composer.json</h2><p></p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">composer.json</span></div><pre><code>{
+  "name": "rayvo/my-package",
+  "autoload": { "psr-4": { "Rayvo\\MyPackage\\": "src/" } },
+  "extra": { "laravel": { "providers": ["Rayvo\\MyPackage\\MyPackageServiceProvider"] } }
+}</code></pre></div></div></section><section class="step"><h2>۳. ServiceProvider</h2><p></p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Provider</span></div><pre><code>class MyPackageServiceProvider extends ServiceProvider
+{
+    public function register(): void
+    {
+        $this-&gt;app-&gt;singleton(Greeter::class);
+    }
+}</code></pre></div></div></section><section class="step"><h2>۴. استفاده‌ی محلی</h2><p>در composer.json پروژه‌ی اصلی:</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">local</span></div><pre><code>"repositories": [{ "type": "path", "url": "../my-package" }]
+
+composer require rayvo/my-package:@dev</code></pre></div></div></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>فراموش‌کردن <code>extra.laravel.providers</code> و ثبت‌نشدن خودکار Provider.</li><li>اشتباه در namespace و مسیر psr-4؛ بعد از تغییر <code>composer dump-autoload</code> بزن.</li></ol></div>
+<nav class="lesson-nav"><a href="l3-advanced-security.html">→ بخش قبل: امنیت پیشرفته</a><span></span></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

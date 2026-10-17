@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سطح ۰ · درس ۵ | مبانی SQL و MySQL با phpMyAdmin</title><meta name="description" content="دیتابیس جای نگهداری داده‌های سایت است. با phpMyAdmin یک دیتابیس می‌سازی و پنج دستور اصلی SQL را اجرا می‌کنی.">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">سطح ۰ · درس ۵</span><h1>مبانی SQL و MySQL با phpMyAdmin</h1><p>دیتابیس جای نگهداری داده‌های سایت است. با phpMyAdmin یک دیتابیس می‌سازی و پنج دستور اصلی SQL را اجرا می‌کنی.</p></header>
+<section class="step"><h2>۱. ورود به phpMyAdmin</h2><p>XAMPP: Apache و MySQL را Start کن و برو به <code>http://127.0.0.1/phpmyadmin/</code>. اگر Laragon داری: Start All، بعد Database ← Open یا همان آدرس. کاربر پیش‌فرض <code>root</code> و گذرواژه خالی است (فقط روی سیستم شخصی).</p></section><section class="step"><h2>۲. ساخت دیتابیس و جدول</h2><p>از تب SQL این را اجرا کن:</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">ساخت جدول</span></div><pre><code>CREATE DATABASE shop_lab CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE shop_lab;
+
+CREATE TABLE products (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  price INT NOT NULL,
+  stock INT NOT NULL DEFAULT 0
+);</code></pre></div></div></section><section class="step"><h2>۳. چهار عمل CRUD</h2><p>ساخت، خواندن، ویرایش، حذف:</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">CRUD</span></div><pre><code>INSERT INTO products (name, price, stock) VALUES ('هدفون', 450000, 10);
+SELECT * FROM products WHERE price &gt; 100000 ORDER BY price DESC;
+UPDATE products SET stock = 9 WHERE id = 1;
+DELETE FROM products WHERE id = 1;</code></pre></div></div></section><section class="step"><h2>۴. تمرین</h2><p>جدول <code>categories</code> بساز و ۳ ردیف وارد کن. بعد فقط ردیفی را که اسمش با «ل» شروع می‌شود با <code>LIKE 'ل%'</code> بخوان.</p></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>نوشتن <code>UPDATE</code> یا <code>DELETE</code> بدون <code>WHERE</code> (کل جدول تغییر می‌کند).</li><li>فراموش‌کردن <code>utf8mb4</code> و خراب‌شدن حروف فارسی.</li><li>روشن‌نبودن MySQL در XAMPP.</li></ol></div>
+<nav class="lesson-nav"><a href="php-3-oop.html">→ بخش قبل: مبانی PHP ۳</a><a href="l0-composer-git.html">بعدی: Composer و Git ←</a></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

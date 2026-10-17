@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پروژه‌ی اول | فروشگاه لاراول</title>
+    <meta name="description" content="پروژه‌ی پایانی دوره لاراول: ساختن فروشگاه کوچک قدم‌به‌قدم — Auth، CRUD محصول، دسته‌بندی، آپلود تصویر، سبد خرید و سفارش">
+
+    <link rel="icon" href="../assets/img/favicon.png">
+    <link rel="stylesheet" href="../assets/css/rayvo.css">
+    <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script>
+
+    <style>
+        .tk99-term { background:#0f172a; color:#e2e8f0; direction:ltr; text-align:left; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:12.5px; line-height:1.9; padding:14px 16px; border-radius:10px; overflow-x:auto; white-space:pre; }
+        .tk99-term .p { color:#38bdf8; }
+        .tk99-term .c { color:#94a3b8; }
+        .tk99-term .o { color:#4ade80; }
+        .tk99-term .x { color:#f87171; }
+        .tk99-more { margin-top:14px; font-size:12.5px; color:#64748b; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:8px 12px; }
+        .tk99-more a { color:#4f46e5; text-decoration:none; font-weight:600; }
+        .tk99-more a:hover { text-decoration:underline; }
+        .tk99-file { display:inline-block; background:#eef2ff; color:#4338ca; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:12.5px; direction:ltr; padding:2px 9px; border-radius:6px; border:1px solid #c7d2fe; }
+        .tk99-check { margin-top:14px; background:#f0fdf4; border:1px solid #bbf7d0; border-right:4px solid #10b981; border-radius:10px; padding:12px 16px; font-size:13.5px; }
+        .tk99-check .lbl { color:#15803d; font-weight:700; margin-bottom:4px; }
+        .tk99-check code { background:#ecfdf5; border-color:#bbf7d0; }
+        .tk99-map { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; }
+        .tk99-card { background:#fff; border:1px solid var(--border); border-radius:12px; padding:16px 18px; }
+        .tk99-card h4 { margin:0 0 8px; color:#4338ca; font-size:14px; }
+        .tk99-card p { margin:0; color:#475569; font-size:13px; line-height:1.9; }
+        .tk99-done { list-style:none; padding-right:0; }
+        .tk99-done li { position:relative; padding-right:26px; margin-bottom:8px; }
+        .tk99-done li::before { content:""; position:absolute; right:0; top:0; color:#10b981; font-weight:800; }
+    
+        .dl-hero{background:var(--subtle);border:1px solid var(--border);color:var(--text);border-radius:var(--radius);padding:24px 26px;margin:18px 0;display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+        .dl-hero h2{color:var(--heading);margin:0 0 6px;font-size:1.2rem}
+        .dl-hero p{margin:0;color:var(--muted);font-size:14px}
+        .dl-btn{display:inline-flex;align-items:center;gap:10px;background:var(--heading);color:var(--bg);font-weight:600;padding:11px 22px;border-radius:var(--radius-sm);text-decoration:none;white-space:nowrap}
+        .dl-btn:hover{opacity:.88;text-decoration:none}
+        .dl-meta{font-size:12.5px;color:var(--muted);margin-top:6px}
+        .src-dir{margin:22px 0 8px;font-size:14px;color:var(--accent)}
+        .ltr-inline{direction:ltr;unicode-bidi:embed;font-family:Consolas,monospace}
+        details.src{background:transparent;border:1px solid var(--border);border-radius:10px;margin:6px 0;overflow:hidden}
+        details.src summary{cursor:pointer;padding:9px 14px;display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:13px}
+        details.src summary:hover{background:var(--subtle)}
+        details.src summary code{direction:ltr;unicode-bidi:embed}
+        details.src summary small{color:var(--muted)}
+        details.src .demo{margin:0}
+        details.src pre{max-height:520px;overflow:auto;direction:ltr;text-align:left}
+        .demo-code pre{direction:ltr;text-align:left}
+        .tbl{width:100%;border-collapse:collapse;font-size:13.5px;background:transparent}
+        .tbl th,.tbl td{border:1px solid var(--border);padding:8px 12px;text-align:right;vertical-align:top}
+        .tbl th{background:var(--subtle)}
+        .tbl code{direction:ltr;unicode-bidi:embed}
+        .tree{background:#0b1220;color:#e2e8f0;direction:ltr;text-align:left;font-family:'JetBrains Mono','Fira Code',Consolas,monospace;font-size:13px;line-height:1.8;padding:16px 18px;border-radius:10px;white-space:pre;overflow-x:auto}
+        .os-tabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+    
+        .part-title{margin:56px 0 4px;padding:0 0 12px;border-bottom:1px solid var(--border)}
+        .part-title b{display:block;font-size:1.3rem;color:var(--heading)}
+        .part-title span{color:var(--muted);font-size:14px}
+    </style>
+</head>
+<body>
+<div class="course-page"><header class="course-header">
+        <span class="badge">پروژه‌ی اول</span>
+        <h1>پروژه‌ی اول: فروشگاه لاراول</h1>
+        <p>اولین سایت واقعی دوره. اول قدم‌به‌قدم می‌سازیمش، بعد نسخه‌ی کامل و آماده‌اش را دانلود می‌کنی و با کار خودت مقایسه می‌کنی. این فروشگاه در سطح پیشرفته به یک مارکت‌پلیس چندفروشنده ارتقا پیدا می‌کند.</p>
+    </header>
+
+    
+
+
+    <div class="part-title" id="part1"><b>بخش اول: ساخت قدم‌به‌قدم</b><span>پروژه را خودت از صفر بساز؛ هر گام یک «تست گام» دارد.</span></div>
+
+    <!-- ================= نقشه ================= -->
+    
+
+    <!-- ================= گام ۱ ================= -->
+    
+
+    <!-- ================= گام ۲ ================= -->
+    
+
+    <!-- ================= گام ۳ ================= -->
+    
+
+    <!-- ================= گام ۴ ================= -->
+    
+
+    <!-- ================= گام ۵ ================= -->
+    
+
+    <!-- ================= گام ۶ ================= -->
+    
+
+    <!-- ================= گام ۷ ================= -->
+    
+
+    <!-- ================= گام ۸ ================= -->
+    
+
+    <!-- ================= گام ۹ ================= -->
+    
+
+    <!-- ================= گام ۱۰ ================= -->
+    
+
+    <!-- ================= خلاصه ================= -->
+    
+
+    <div class="part-title" id="part2"><b>بخش دوم: سورس کامل و آماده</b><span>اگر گام‌ها را خودت ساختی، با این نسخه مقایسه کن؛ اگر عجله داری، مستقیم دانلودش کن و اجرا کن.</span></div>
+
+<!-- ================= دانلود ================= -->
+    <section class="lesson" id="download">
+        <div class="lesson-head"><span class="lesson-num">۱۳</span><h2>دانلود با یک کلیک</h2></div>
+
+        <div class="dl-hero"><div class="grow" style="flex:1;min-width:240px"><h2> فروشگاه لاراول — سورس کامل</h2>
+                <p>مدل‌ها، مایگریشن‌ها، کنترلرها، ویوها، پنل مدیریت، داده‌ی آزمایشی و تست‌ها؛ همه در یک فایل zip.</p>
+                <div class="dl-meta">67 فایل سورس · حدود 2,601 خط · حجم زیپ ≈ 204 کیلوبایت · سازگار با Laravel 12 و 13</div>
+            </div>
+            <a class="dl-btn" href="../downloads/laravel-shop-source.zip" download>دانلود laravel-shop-source.zip</a>
+        </div>
+
+        <div class="note info"><div class="note-title"> این zip چیست؟</div>
+            <ul>
+                <li>یک «لایه‌ی روی لاراول» است، نه یک پروژه‌ی کامل با <code>vendor</code>. پوشه‌ی <code>vendor</code> را خودِ Composer نصب می‌کند؛ پس حجم کم می‌ماند.</li>
+                <li>فایل‌ها طوری چیده شده‌اند که وقتی داخل پروژه‌ی تازه استخراج شوند، هرکدام دقیقاً سرِ جای خودشان بنشینند.</li>
+                <li>برای دیدنِ کد بدون دانلود، به <a href="#browser">مرورگر سورس</a> پایین همین صفحه برو.</li>
+            </ul>
+        </div>
+
+        <div class="note warn"><div class="note-title"> چهار فایل بازنویسی می‌شوند</div>
+            <p>روی پروژه‌ی تازه این چهار فایل جایگزین می‌شوند: <code>routes/web.php</code>، <code>app/Models/User.php</code>، <code>app/Providers/AppServiceProvider.php</code> و <code>database/seeders/DatabaseSeeder.php</code>. اگر روی پروژه‌ی خودت (و نه پروژه‌ی تازه) استخراج می‌کنی، اول از آن‌ها نسخه‌ی پشتیبان بگیر.</p>
+        </div>
+    <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>بعد از دانلود: همه‌ی دستورها</span><span class="demo-tag">ترمینال</span></div><pre><code>composer create-project laravel/laravel laravel-shop
+cd laravel-shop
+unzip -o ~/Downloads/laravel-shop-source.zip -d .   # ویندوز: tar -xf "$env:USERPROFILE\Downloads\laravel-shop-source.zip" -C .
+php artisan migrate --seed
+php artisan storage:link
+php artisan serve</code></pre></div></div>
+<p>ورود مدیر: <code>admin@shop.test</code> / <code>password</code> (آدرس <code>/admin</code>). این پروژه برای دوره‌ی «Laravel از 0 تا 1000» توسط Rayvo (رایبد اکبرلو) ساخته شده است.</p></section>
+
+    <!-- ================= نصب ================= -->
+    
+
+    <!-- ================= حساب‌ها ================= -->
+    
+
+    <!-- ================= ساختار ================= -->
+    
+
+    <!-- ================= نقشه ================= -->
+    
+
+    <!-- ================= قلب ================= -->
+    
+
+    <!-- ================= تست ================= -->
+    
+
+    <!-- ================= عیب‌یابی ================= -->
+    
+
+    <!-- ================= تمرین ================= -->
+    
+
+    <!-- ================= مرورگر سورس ================= -->
+    
+
+    
+    <!-- ================= نکات طلایی ================= -->
+    <div class="golden"><h3> چیزی که از این پروژه تویِ ذهنت بماند</h3>
+        <ol>
+            <li>یک سایتِ واقعی ترکیبی است از: روت + کنترلر + مدل + بلید — و «ترتیبِ میان‌افزارها» حرفِ آخر را می‌زند.</li>
+            <li>«داده در دیتابیس، فایل در storage» — فقط مسیرِ فایل را ذخیره کن.</li>
+            <li>همیشه به ورودیِ کاربر بدباش: <code>validated()</code>، <code>{{ }}</code> و <code>@csrf</code>.</li>
+            <li>هر صفحه‌ای که middleware نداشته باشد «درِ بدونِ قفل» است؛ از <code>resource</code> فقط همان متدهایی را بساز که لازم داری.</li>
+            <li>برایِ توسعه، وضعیتِ قابلِ بازتولید (migrate:fresh --seed) مهم‌تر از داده‌ای است که دستی ست کرده‌ای.</li>
+            <li>پروژه‌ی بعدی‌ات را با همین ساختارِ ساده شروع کن؛ بعد پیچیدگی اضافه کن، نه قبلش.</li>
+        </ol>
+    </div>
+
+    <!-- ================= مطالعه‌ی بیشتر ================= -->
+    <div class="tk99-more"> مطالعه‌ی بیشتر (انگلیسی) برایِ ادامه‌ی راه:
+        <a href="https://laravel.com/docs/13.x/starter-kits" target="_blank" rel="noopener">Starter Kits</a> —
+        <a href="https://laravel.com/docs/13.x/session" target="_blank" rel="noopener">Session</a> —
+        <a href="https://laravel.com/docs/13.x/sanctum" target="_blank" rel="noopener">Sanctum (API)</a> —
+        <a href="https://laravel.com/docs/13.x/queues" target="_blank" rel="noopener">Queues</a> —
+        <a href="https://laravel.com/docs/13.x/testing" target="_blank" rel="noopener">Testing</a>.
+    </div>
+
+    <!-- ================= ناوبری ================= -->
+    <nav class="lesson-nav" aria-label="ناوبری بین بخش‌ها">
+        <a href="00-فهرست.html">فهرست درس‌ها</a>
+        <a href="15-امنیت.html">→ بخش قبل: امنیت پایه‌ی وب</a>
+        <a href="00-فهرست.html">فهرست ←</a>
+    </nav>
+
+</div>
+<script src="../assets/js/rayvo.js"></script>
+</body>
+</html>

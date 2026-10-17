@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سطح ۳ · درس 2 | Service و Repository و کد تمیز</title><meta name="description" content="کنترلر باید نازک باشد: درخواست را بگیرد، کار را به کلاس مناسب بدهد و پاسخ بدهد.">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">سطح ۳ · درس 2</span><h1>Service و Repository و کد تمیز</h1><p>کنترلر باید نازک باشد: درخواست را بگیرد، کار را به کلاس مناسب بدهد و پاسخ بدهد.</p></header>
+<section class="step"><h2>۱. Service</h2><p>منطق کسب‌وکار را از کنترلر بیرون ببر. لاراول خودش وابستگی را تزریق می‌کند.</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Service</span></div><pre><code>class OrderService
+{
+    public function place(User $user, array $data): Order
+    {
+        return DB::transaction(function () use ($user, $data) {
+            // ساخت سفارش و کم‌کردن موجودی
+        });
+    }
+}
+
+public function store(CheckoutRequest $r, OrderService $orders)
+{
+    $order = $orders-&gt;place($r-&gt;user(), $r-&gt;validated());
+    return redirect()-&gt;route('orders.show', $order);
+}</code></pre></div></div></section><section class="step"><h2>۲. Repository چه موقع؟</h2><p>برای پروژه‌های متوسط Eloquent خودش کافی است. Repository فقط وقتی لازم است که بخواهی منبع داده را عوض کنی یا تست را ساده کنی؛ بی‌دلیل لایه اضافه نکن.</p></section><section class="step"><h2>۳. اصول کوتاه</h2><p>نام‌های گویا، تابع‌های کوتاه با یک مسئولیت، اجتناب از تکرار، و فرمت خودکار با Pint:</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">Pint</span></div><pre><code>./vendor/bin/pint</code></pre></div></div></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>انتقال همه‌چیز به Repository از روز اول و پیچیده‌شدن بی‌دلیل.</li><li>Service بزرگ با ده‌ها متد؛ آن را به کلاس‌های کوچک‌تر بشکن.</li></ol></div>
+<nav class="lesson-nav"><a href="l3-policies-permissions.html">→ بخش قبل: نقش‌ها و دسترسی‌ها (Policy و Permission)</a><a href="l3-query-optimization.html">بعدی: بهینه‌سازی کوئری و رفع N+1 ←</a></nav></div><script src="../assets/js/rayvo.js"></script></body></html>

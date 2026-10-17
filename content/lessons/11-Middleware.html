@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بخش ۱۱ | Middleware</title>
+    <meta name="description" content="آموزش Middleware در لاراول ۱۳: مفهوم و ترتیبِ اجرا، ساخت با make:middleware، ثبت سراسری در bootstrap/app.php، گروه‌های web و api و مثال CheckRole با abort(403)">
+
+    <link rel="icon" href="../assets/img/favicon.png">
+    <link rel="stylesheet" href="../assets/css/rayvo.css">
+    <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script>
+
+    <style>
+        .tk11-file { display:inline-block; background:#eef2ff; color:#4338ca; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:12.5px; direction:ltr; padding:2px 9px; border-radius:6px; border:1px solid #c7d2fe; }
+        .tk11-term { background:#0f172a; color:#e2e8f0; direction:ltr; text-align:left; font-family:'JetBrains Mono','Fira Code',Consolas,monospace; font-size:12.5px; line-height:1.9; padding:14px 16px; border-radius:10px; overflow-x:auto; white-space:pre; }
+        .tk11-term .p { color:#38bdf8; }
+        .tk11-term .c { color:#94a3b8; }
+        .tk11-term .o { color:#4ade80; }
+        .tk11-term .x { color:#f87171; }
+        .tk11-out { background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px 18px; font-size:14px; line-height:1.9; color:#1f2937; }
+        .tk11-muted { color:#94a3b8; font-size:12.5px; }
+        .tk11-more { margin-top:14px; font-size:12.5px; color:#64748b; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:8px 12px; }
+        .tk11-more a { color:#4f46e5; text-decoration:none; font-weight:600; }
+        .tk11-more a:hover { text-decoration:underline; }
+        .tk11-pipe { display:flex; gap:14px; flex-wrap:wrap; justify-content:center; background:#fff; border:1px solid var(--border); border-radius:10px; padding:18px 16px; }
+        .tk11-stage { flex:1; min-width:150px; text-align:center; }
+        .tk11-stage .lbl { display:inline-block; font-size:12px; font-weight:800; color:#475569; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:999px; padding:4px 12px; margin-bottom:8px; }
+        .tk11-stage small { display:block; color:#64748b; font-size:12px; line-height:1.8; }
+        .tk11-stage.s-ctrl { order:1; }
+        .tk11-stage.s-mid { order:2; }
+        .tk11-stage.s-note { order:3; }
+    </style>
+</head>
+<body>
+<div class="course-page"><!-- ================= سربرگ ================= -->
+    <header class="course-header">
+        <span class="badge">بخش ۱۱</span>
+        <h1>Middleware</h1>
+        <p>می‌خواهیم بعضی روت‌ها فقط برای بعضی کاربران باز باشد. Middleware یعنی «درِ ورودیِ مطمئن» برای روت‌ها — دقیقاً همان‌چیزی که در درس‌های قبل بدون معرفی، هر روز برای‌مان کار می‌کرد.</p>
+    </header>
+
+    <!-- ================= فهرست ================= -->
+    <nav class="toc" aria-label="فهرست مطالب">
+        <h2>توی این بخش چه چیزهایی یاد می‌گیریم؟</h2>
+        <ol>
+            <li><a href="#why">Middleware چیست؟</a></li>
+            <li><a href="#flow">ترتیبِ اجرا</a></li>
+            <li><a href="#make">ساخت با make:middleware</a></li>
+            <li><a href="#handle">نوشتنِ بدنه‌ی middleware</a></li>
+            <li><a href="#global">ثبتِ سراسری (Global)</a></li>
+            <li><a href="#route">ثبت رویِ روت</a></li>
+            <li><a href="#alias-groups">alias و گروه‌های web/api</a></li>
+            <li><a href="#params">middleware با پارامتر</a></li>
+            <li><a href="#project-step">گام پروژه: CheckRole</a></li>
+            <li><a href="#exercises">تمرین‌ها</a></li>
+        </ol>
+    </nav>
+
+    <!-- ================= درس ۱ ================= -->
+    <section class="lesson" id="why">
+        <div class="lesson-head"><span class="lesson-num">۱</span>
+            <h2>Middleware چیست؟</h2>
+        </div>
+
+        <p>Middleware یعنی «یک لایه» که هر درخواستِ HTTP باید از آن رد شود تا به کنترلر برسد. مثل درِ ساختمانی که
+            «کارت می‌خواهیم»، «بلیت می‌خواهیم» یا «به این فرد اجازه نمی‌دهیم» را چک می‌کند:
+        </p>
+
+        <div class="tk11-pipe"><div class="tk11-stage s-ctrl"><span class="lbl">دریافتِ درخواست</span>
+                <small>مرورگر می‌خواهد <code>/admin</code> را ببیند</small>
+            </div>
+            <div class="tk11-stage s-mid"><span class="lbl">Middleware (دَروازه)</span>
+                <small>چکِ ورود، چکِ نقش، چکِ CSRF، …</small>
+            </div>
+            <div class="tk11-stage s-note"><span class="lbl">کنترلر + پاسخ</span>
+                <small>فقط بعدِ عبورِ همه‌ی دروازه‌ها</small>
+            </div>
+        </div>
+
+        <p>اگر دروازه عبور کرد، درخواست «همان‌طور» به لایه‌ی بعدی یا کنترلر می‌رسد؛ اگر نه، middleware چیزی برمی‌گرداند
+            — معمولاً <code>redirect</code> یا پاسخِ خطا مثل <code>abort(403)</code>. این یعنی middleware می‌تواند
+            «جلوتر» از کنترلر، درخواست را قطع کند.
+        </p>
+        <p>جالب است که درِ خروج هم middleware دارد: می‌توانی قبل از تحویلِ پاسخ به مرورگر، چیزی به آن اضافه کنی —
+            مثلاً یک هدر. پس middleware هم «قبل» و هم «بعد» از کنترلر می‌تواند کار کند.
+        </p>
+
+        <div class="note info"><div class="note-title"> از کجا آشناست؟</div>
+            <p>از درسِ ۴ که <code>PreventRequestForgery</code> (همان توکنِ @csrf درسِ ۱۰) در همه‌ی روت‌های POST بود،
+                دقیقاً همان middleware است. یعنی تو از قبل با «کاربرد»ش آشنا بوده‌ای؛ الان ساختارش را یاد می‌گیری.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۲ ================= -->
+    <section class="lesson" id="flow">
+        <div class="lesson-head"><span class="lesson-num">۲</span>
+            <h2>ترتیبِ اجرا</h2>
+        </div>
+
+        <p>middleware مثل پیاز است: درخواست لایه‌ها را «از بیرون به داخل» می‌پیماید تا به هسته (کنترلر) برسد و پاسخ
+            «از داخل به بیرون» برمی‌گردد. بنابراین ترتیبِ ثبتِ middleware مهم است:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">schematic — لایه‌ها</span></div>
+                <pre><code>Request ──► [A] ──► [B] ──► [C] ──► Controller ──► Response ◄── [C] ◄── [B] ◄── [A] ◄── Response
+            ورود         ورود</code></pre>
+            </div>
+        </div>
+
+        <p>کدِ بعد از <code>$next($request)</code>، «بعد از کنترلر» اجرا می‌شود. برای خیلی از کارها مهم است که کدام را می‌خواهی:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">PHP — قبل و بعد از کنترلر</span></div>
+                <pre><code>public function handle(Request $request, Closure $next): Response
+{
+    // اینجا قبل از کنترلر اجرا می‌شود  (مثلاً چکِ دسترسی)
+
+    $response = $next($request);
+
+    // اینجا بعد از کنترلر اجرا می‌شود   (مثلاً افزودن هدر به پاسخ)
+
+    return $response;
+}</code></pre>
+            </div>
+        </div>
+
+        <div class="note tip"><div class="note-title"> دو راهِ «قطع کردن»</div>
+            <p>داخلِ middleware می‌توانی یا <code>redirect()->to(...)</code> برگردانی، یا <code>abort(403)</code>
+                بدهی (یا <code>abort(404)</code> برای «اظهارِ عدمِ وجود»). هر دو یعنی «عبور نکن». اگر هیچ‌یک نبود،
+                با <code>$next($request)</code> درخواست را راه بده.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۳ ================= -->
+    <section class="lesson" id="make">
+        <div class="lesson-head"><span class="lesson-num">۳</span>
+            <h2>ساخت با make:middleware</h2>
+        </div>
+
+        <p>ساختِ middleware مثل بیشترِ چیزها در Laravel — با artisan:</p>
+
+        <div class="tk11-term">$ php artisan make:middleware EnsureTokenIsValid
+
+<span class="o">INFO</span>  Middleware [<span class="p">app/Http/Middleware/EnsureTokenIsValid.php</span>] created successfully.</div>
+
+        <ul>
+            <li>نامِ کلاس را به‌صورتِ CamelCase بگو (مثل مدل‌ها).</li>
+            <li>فایل در <span class="tk11-file">app/Http/Middleware</span> می‌شود — پیش‌فرضِ laravel برای middlewareهای خودت.</li>
+            <li>متدِ اصلی همان <code>handle</code> است که این‌بار درش را خودمان پر می‌کنیم.</li>
+        </ul>
+    </section>
+
+    <!-- ================= درس ۴ ================= -->
+    <section class="lesson" id="handle">
+        <div class="lesson-head"><span class="lesson-num">۴</span>
+            <h2>نوشتنِ بدنه‌ی middleware</h2>
+        </div>
+
+        <p>متدِ <code>handle</code> سه چیز می‌گیرد: <code>$request</code> (درخواستِ فعلی)، یک Closure به اسمِ
+            <code>$next</code> («بده به بعدی»)، و ممکن است پارامترهایِ اضافه. الگویِ پایه:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">app/Http/Middleware/EnsureTokenIsValid.php</span></div>
+                <pre><code>&lt;?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class EnsureTokenIsValid
+{
+    /**
+     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     */
+    public function handle(Request $request, Closure $next): Response
+    {
+        if ($request-&gt;input('token') !== 'my-secret-token') {
+            return redirect('/home');
+        }
+
+        return $next($request);
+    }
+}</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li>مثالی کاملاً ساختگی از داکِ رسمی: فقط کسی می‌شود بگذرد که مقدارِ <code>token</code> را در ورودی داشته باشد — وگرنه به <code>/home</code> کشانده می‌شود.</li>
+            <li><code>$request-&gt;input('token')</code> برایِ GET و POST هر دو کار می‌کند.</li>
+            <li><code>$next($request)</code> یعنی «درخواست را به لایه‌ی بعدی / کنترلر بده و جوابش را بردار».</li>
+            <li>نوعِ بازگشت <code>Response</code>؛ پس returnِ آخر پاسخِ واقعیِ برنامه است.</li>
+        </ul>
+
+        <div class="note info"><div class="note-title"> چه چیزهایی می‌شود این‌جا داشت؟</div>
+            <p>چون middlewareها از container ساخته می‌شوند، در constructor می‌توان هر سرویسی را به آن تزریق کرد (مثل Logger).
+                خیلی از لایه‌هایِ قدرتمند (rate-limit، تاییدِ ایمیل، CSRF و …) دقیقاً با همین مکانیزمِ ساده ساخته شده‌اند.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۵ ================= -->
+    <section class="lesson" id="global">
+        <div class="lesson-head"><span class="lesson-num">۵</span>
+            <h2>ثبتِ سراسری (Global)</h2>
+        </div>
+
+        <p>ساختِ middleware کافی نیست؛ باید «ثبت»ش کنی تا واردِ سیستم شود. دو جور ثبت داریم.
+            اولی <strong>سراسری</strong> — یعنی برایِ <em>همه‌ی</em> روت‌ها اجرا می‌شود. در
+            <span class="tk11-file">bootstrap/app.php</span>:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">bootstrap/app.php — داخلِ withMiddleware</span></div>
+                <pre><code>use App\Http\Middleware\EnsureTokenIsValid;
+use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Foundation\Application;
+
+// ...
+
+-&gt;withMiddleware(function (Middleware $middleware): void {
+    $middleware-&gt;append(EnsureTokenIsValid::class);   // اضافه کن به آخرِ فهرستِ سراسری
+})</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li><code>-&gt;append(...)</code> یعنی به انتهایِ فهرستِ سراسری؛ <code>-&gt;prepend(...)</code> یعنی به سرِ آن.</li>
+            <li>فایل <code>bootstrap/app.php</code> همان جایی است که سرنوشتِ پروژه را با <code>->withRouting(...)</code> و
+                <code>->withMiddleware(...)</code> و <code>->withExceptions(...)</code> می‌نویسی.</li>
+            <li>چند middleware؟ آرایه بده: <code>$middleware-&gt;append([First::class, Second::class])</code>.</li>
+        </ul>
+
+        <div class="note warn"><div class="note-title"> سراسری یعنی همه‌جا</div>
+            <p>چیزهایی مثلِ TrimStrings و StartSession در فهرستِ سراسری می‌نشینند. برایِ «نقشِ کاربرِ خاص رویِ
+                روتِ خاص»، middleware سراسری مناسب نیست — ثبت رویِ روت را ببین.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۶ ================= -->
+    <section class="lesson" id="route">
+        <div class="lesson-head"><span class="lesson-num">۶</span>
+            <h2>ثبت رویِ روت</h2>
+        </div>
+
+        <p>دومین روش: middleware را مستقماً به یک روت (یا گروهِ روت) وصل کن:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">routes/web.php</span></div>
+                <pre><code>use App\Http\Middleware\EnsureTokenIsValid;
+
+Route::get('/profile', function () {
+    // ...
+})-&gt;middleware(EnsureTokenIsValid::class);
+
+// چندتایی:
+Route::get('/admin', function () {
+    // ...
+})-&gt;middleware([First::class, Second::class]);
+
+// رویِ گروهِ روت:
+Route::middleware([EnsureTokenIsValid::class])-&gt;group(function () {
+    Route::get('/a', function () { /* ... */ });
+    Route::get('/b', function () { /* ... */ });
+});</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li>با <code>-&gt;middleware(ClassName::class)</code> همان کلاس را وصل کن.</li>
+            <li>با <code>Route::middleware([...])-&gt;group(...)</code> یک‌جا رویِ چند روت بگذار — در این بخشِ پروژه استفاده می‌شود.</li>
+            <li>اگر یک روتِ داخلِ گروه باید معاف باشد: <code>Route::get('/b', ...)-&gt;middleware([...])-&gt;withoutMiddleware(EnsureTokenIsValid::class)</code>.</li>
+        </ul>
+
+        <div class="note tip"><div class="note-title"> alias چیست و کجاست؟</div>
+            <p>به‌جای نوشتنِ نامِ کاملِ کلاس در هر روت، می‌توانی یک اسمِ کوتاه (alias) برایش تعریف کنی — مثلاً <code>'admin'</code>.
+                نتیجه‌اش می‌شود: <code>-&gt;middleware('admin')</code>. درسِ بعد سراغِ همین می‌رود.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۷ ================= -->
+    <section class="lesson" id="alias-groups">
+        <div class="lesson-head"><span class="lesson-num">۷</span>
+            <h2>alias و گروه‌های web/api</h2>
+        </div>
+
+        <p><strong>۱) alias.</strong> یک نامِ کوتاه برایِ کلاسِ middleware، در <code>bootstrap/app.php</code>:</p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">bootstrap/app.php</span></div>
+                <pre><code>-&gt;withMiddleware(function (Middleware $middleware): void {
+    $middleware-&gt;alias([
+        'check-role' =&gt; CheckRole::class,
+        'is-admin'   =&gt; EnsureUserIsAdmin::class,
+    ]);
+})</code></pre>
+            </div>
+        </div>
+
+        <p>حالا درِ روت کوتاه و خوانا: <code>-&gt;middleware('check-role:admin')</code>. چند aliasِ آماده‌ی Laravel که حتماً می‌بینی: <code>auth</code> (رمزِ ورود لازم است)، <code>guest</code> (برعکس — مهمان‌ها فقط)، <code>verified</code>، <code>throttle</code>، <code>can</code>، <code>password.confirm</code>.</p>
+
+        <p><strong>۲) گروه‌های <code>web</code> و <code>api</code>.</strong> Laravel دو گروهِ آماده دارد که پرونده به‌صورتِ خودکار رویِ فایلِهایِ روتِشان می‌شود:</p>
+
+        <table>
+            <thead>
+                <tr><th>گروه</th><th>روت‌ها</th><th>مهم‌ترین‌ها درونِ آن</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>web</code></td><td><span class="tk11-file">routes/web.php</span></td><td>StartSession، ShareErrorsFromSession، PreventRequestForgery (همان @csrf!)، SubstituteBindings</td></tr>
+                <tr><td><code>api</code></td><td><span class="tk11-file">routes/api.php</span></td><td>SubstituteBindings (بدونِ session؛ بدونِ CSRF)</td></tr>
+            </tbody>
+        </table>
+
+        <ul>
+            <li>پس کلاسِ ما در <code>routes/web.php</code> بدونِ هیچ‌کاری session، <code>$errors</code> و CSRF را دارد؛ درِ api ندارد.</li>
+            <li>اگر می‌خواهی middleware خودت را به گروهِ web اضافه کنی: <code>$middleware-&gt;web(append: [CheckRole::class])</code>.</li>
+            <li>برای افزودن به پشته‌ی سراسری: <code>$middleware-&gt;append(...)</code>؛ برای حذف از گروهِ <code>web</code>: <code>$middleware-&gt;removeFromGroup('web', CheckRole::class)</code>.</li>
+        </ul>
+
+        <div class="note info"><div class="note-title"> پس چرا فرمِ درسِ ۱۰ بدونِ کارِ اضافه جواب داد؟</div>
+            <p>چون روت‌های استور در گروهِ web بودند و درِ گروهِ web شاملِ PreventRequestForgery («همانِ @csrf»)
+                و ShareErrorsFromSession («همانِ $errors») است. همه‌چیز گره خورده است!
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۸ ================= -->
+    <section class="lesson" id="params">
+        <div class="lesson-head"><span class="lesson-num">۸</span>
+            <h2>middleware با پارامتر</h2>
+        </div>
+
+        <p>گاهی middleware باید مقدار بگیرد — مثل «نقشِ مربوطه». پارامتر بعد ازِ <code>$next</code> می‌آید، و درِ
+            روت با <code>نام:مقدار</code> داده می‌شود:
+        </p>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">EnsureUserHasRole.php</span></div>
+                <pre><code>public function handle(Request $request, Closure $next, string $role): Response
+{
+    if (! $request-&gt;user() || $request-&gt;user()-&gt;role !== $role) {
+        abort(403, 'شما به این صفحه دسترسی ندارید');
+    }
+
+    return $next($request);
+}</code></pre>
+            </div>
+        </div>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">routes/web.php</span></div>
+                <pre><code>// با alias:
+Route::get('/admin', [DashboardController::class, 'index'])
+    -&gt;middleware('check-role:admin');
+
+// مستقیم با کلاس:
+Route::put('/post/{id}', function (string $id) { /* ... */ })
+    -&gt;middleware(EnsureUserHasRole::class.':editor');
+
+// چند پارامتر با کاما:
+Route::put('/post/{id}', ...)-&gt;middleware(EnsureUserHasRole::class.':editor,publisher');</code></pre>
+            </div>
+        </div>
+
+        <ul>
+            <li>دقت کن: با کلاس، رشته را با <code>.</code> و دونقطه می‌سازی؛ با alias فقط <code>'check-role:admin'</code>.</li>
+            <li><code>$request-&gt;user()</code> درِ کاربرِ لاگین‌کرده را می‌دهد — بعدِ درسِ ۱۲ که احرازِ هویت را می‌نصب کنیم، دیگر خالی نیست.</li>
+        </ul>
+
+        <div class="note warn"><div class="note-title"> پارامتر و «مقدارِ» روت را اشتباه نگیر</div>
+            <p><code>check-role:admin</code> پارامترِ middleware است، نه پارامترِ URL. پارامترِ URL همان
+                <code>{id}</code> است (که در روتِ پوت بالا می‌بینی). این‌ها را با هم جای‌به‌جایی نکن.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۹ ================= -->
+    <section class="lesson" id="project-step">
+        <div class="lesson-head"><span class="lesson-num">۹</span>
+            <h2>گام پروژه: CheckRole</h2>
+        </div>
+
+        <div class="proj-step"><div class="proj-title"> تکمیلی: صفحه‌ی مدیر فروشگاه را «قفل» می‌کنیم</div>
+            <p>پنلِ مدیریت را روی <code>/admin</code> می‌گذاریم و با یک middleware فقط به کاربرانی می‌دهیم که
+                نقش‌شان <code>admin</code> است — بقیه خطای ۴۰۳ می‌گیرند.
+            </p>
+        </div>
+
+        <ol>
+            <li>ساختِ middleware و alias:</li>
+        </ol>
+
+        <div class="tk11-term">$ php artisan make:middleware CheckRole</div>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">بعد: app/Http/Middleware/CheckRole.php</span></div>
+                <pre><code>&lt;?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class CheckRole
+{
+    public function handle(Request $request, Closure $next, string $role): Response
+    {
+        if (! $request-&gt;user() || $request-&gt;user()-&gt;role !== $role) {
+            abort(403);
+        }
+
+        return $next($request);
+    }
+}</code></pre>
+            </div>
+        </div>
+
+        <ol start="2">
+            <li>ثبتِ alias در <code>bootstrap/app.php</code>:</li>
+        </ol>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">bootstrap/app.php</span></div>
+                <pre><code>-&gt;withMiddleware(function (Middleware $middleware): void {
+    $middleware-&gt;alias([
+        'check-role' =&gt; CheckRole::class,
+    ]);
+})</code></pre>
+            </div>
+        </div>
+
+        <ol start="3">
+            <li>گروهِ روتِ /admin با همان دروازه:</li>
+        </ol>
+
+        <div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">routes/web.php</span></div>
+                <pre><code>Route::middleware('check-role:admin')-&gt;group(function () {
+    Route::get('/admin', [DashboardController::class, 'index'])-&gt;name('admin.dashboard');
+    // ... و هر روتِ مدیریتیِ دیگر
+});</code></pre>
+            </div>
+        </div>
+
+        <div class="note info"><div class="note-title"> بعدی</div>
+            <p>فعلاً <code>$request-&gt;user()</code> همیشه خالی است و همه خطای ۴۰۳ می‌گیرند، چون هنوز «ورودِ کاربر»
+                نداریم. در درسِ ۱۲ با <code>auth</code> کاربر را وارد می‌کنیم و بعد از آن، این پنل واقعاً
+                قفل می‌شود. تا آن موقع همین middleware را نگه دار.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= درس ۱۰ ================= -->
+    <section class="lesson" id="exercises">
+        <div class="lesson-head"><span class="lesson-num">۱۰</span>
+            <h2>تمرین‌ها؛ حالا نوبت توست!</h2>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۱: دروازه‌ی محلی</div>
+            <ol>
+                <li>با <code>php artisan make:middleware EnsureLocalRequest</code> یک middleware بساز که فقط وقتی
+                    <code>$request-&gt;ip() === '127.0.0.1'</code> یا <code>'::1'</code> باشد ادامه دهد، وگرنه <code>abort(403)</code>.</li>
+                <li>به روتِ <code>/admin</code> وصلش کن (حتی قبلِ اتصالِ CheckRole).</li>
+                <li>با <code>php artisan route:list</code> ببین ستونِ Middleware چه می‌گوید.</li>
+            </ol>
+        </div>
+
+        <div class="exercise"><div class="ex-title"> تمرین ۲: لاگِ درخواست</div>
+            <ol>
+                <li>middleware بساز که <code>Request::url()</code> و <code>Request::method()</code> را با
+                    <code>Log::info(...)</code> در <span class="tk11-file">storage/logs/laravel.log</span> بنویسد — «قبلِ» کنترلر.</li>
+                <li>این‌بار هم‌پیمانِ «بعدِ» $next بنویس که بنویسد «پاسخِ آماده است»؛ اجراش کن و ترتیبِ دو خطِ لاگ را در فایل ببین.</li>
+            </ol>
+        </div>
+
+        <div class="note info"><div class="note-title"> چالش</div>
+            <p>تمرینِ ۲ را «terminable» کن: متدِ <code>terminate(Request, Response)</code> اضافه کن که بعد ازِ
+                ارسالِ پاسخ به مرورگر، لاگی دیگر بنویسد (زمانِ صرف‌شده). ببین فرقش با بعدِ $next در چیست — hint:
+                $next هنوز ارسالِ پاسخ را ندارد؛ terminate بعدِ ارسال است.
+            </p>
+        </div>
+    </section>
+
+    <!-- ================= نکات طلایی ================= -->
+    <div class="golden"><h3> چیزی که از این بخش توی ذهنت بماند</h3>
+        <ol>
+            <li>Middleware = لایه‌ای «قبل و بعد» از کنترلر؛ <code>handle(Request, Closure $next)</code> و <code>$next($request)</code>.</li>
+            <li>با <code>php artisan make:middleware Name</code> می‌سازی؛ داخلِ <span class="tk11-file">app/Http/Middleware</span> می‌نشیند.</li>
+            <li>دو نوعِ ثبت: سراسری (<code>$middleware-&gt;append/prepend</code>) و رویِ روت (<code>-&gt;middleware(...)</code>).</li>
+            <li>aliasها نامِ کوتاهِ middlewareها هستند (<code>'auth'</code>، <code>'check-role'</code>، …) و به‌جایِ کلاس درِ روت می‌آمدند.</li>
+            <li>گروهِ <code>web</code> خودِ CSRF و $errors را دارد؛ گروهِ <code>api</code> نه.</li>
+            <li>پارامتر: <code>middleware('نام:مقدار')</code> — فقط «رشته‌یِ کلاس» را با <code>.</code> می‌چسبانی.</li>
+        </ol>
+    </div>
+
+    <!-- ================= مطالعه‌ی بیشتر ================= -->
+    <div class="tk11-more"> مطالعه‌ی بیشتر (انگلیسی):
+        <a href="https://laravel.com/docs/13.x/middleware#introduction" target="_blank" rel="noopener">آشنایی با Middleware</a> —
+        <a href="https://laravel.com/docs/13.x/middleware#defining-middleware" target="_blank" rel="noopener">ساخت و بدنه</a>،
+        <a href="https://laravel.com/docs/13.x/middleware#global-middleware" target="_blank" rel="noopener">ثبتِ سراسری</a>،
+        <a href="https://laravel.com/docs/13.x/middleware#assigning-middleware-to-routes" target="_blank" rel="noopener">ثبت رویِ روت</a>،
+        <a href="https://laravel.com/docs/13.x/middleware#laravels-default-middleware-groups" target="_blank" rel="noopener">گروه‌های web و api</a>،
+        <a href="https://laravel.com/docs/13.x/middleware#middleware-aliases" target="_blank" rel="noopener">aliasها</a> و
+        <a href="https://laravel.com/docs/13.x/middleware#middleware-parameters" target="_blank" rel="noopener">پارامترِ middleware</a>.
+    </div>
+
+    <!-- ================= ناوبری ================= -->
+    <nav class="lesson-nav" aria-label="ناوبری بین بخش‌ها">
+        <a href="00-فهرست.html">فهرست درس‌ها</a>
+        <a href="10-فرم-ها-Validation.html">→ بخش قبل: فرم‌ها و Validation</a>
+        <a href="12-Auth.html">بعدی: Auth و احرازِ هویت ←</a>
+    </nav>
+
+</div>
+<script src="../assets/js/rayvo.js"></script>
+</body>
+</html>

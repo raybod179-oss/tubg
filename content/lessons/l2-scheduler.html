@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سطح ۲ · درس 8 | Scheduler و کارهای زمان‌بندی‌شده</title><meta name="description" content="به‌جای ده‌ها Cron جدا، یک Cron می‌گذاری و زمان‌بندی‌ها را در کد می‌نویسی.">
+<link rel="icon" href="../assets/img/favicon.png"><link rel="stylesheet" href="../assets/css/rayvo.css">
+<script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("rayvo:theme")||"light")}catch(e){}</script></head>
+<body><div class="course-page"><header class="course-header"><span class="badge">سطح ۲ · درس 8</span><h1>Scheduler و کارهای زمان‌بندی‌شده</h1><p>به‌جای ده‌ها Cron جدا، یک Cron می‌گذاری و زمان‌بندی‌ها را در کد می‌نویسی.</p></header>
+<section class="step"><h2>۱. تعریف</h2><p>در لاراول ۱۲ و ۱۳ فایل <code>routes/console.php</code> محل تعریف است.</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">console.php</span></div><pre><code>// routes/console.php
+use Illuminate\Support\Facades\Schedule;
+
+Schedule::command('queue:prune-failed --hours=48')-&gt;daily();
+Schedule::call(fn () =&gt; \App\Models\Order::where('status','pending')
+    -&gt;where('created_at','&lt;',now()-&gt;subDay())-&gt;update(['status'=&gt;'cancelled']))
+    -&gt;dailyAt('02:00');</code></pre></div></div></section><section class="step"><h2>۲. اجرا</h2><p>محلی با <code>schedule:work</code>. روی هاست فقط همین یک خط Cron کافی است:</p><div class="demo demo-full"><div class="demo-code"><div class="demo-label"><span>کد</span><span class="demo-tag">cron</span></div><pre><code>php artisan schedule:work      # توسعه
+php artisan schedule:list
+
+# Cron روی سرور (هر دقیقه)
+* * * * * cd /path/to/project &amp;&amp; php artisan schedule:run &gt;&gt; /dev/null 2&gt;&amp;1</code></pre></div></div></section><section class="step"><h2>۳. تمرین</h2><p>فرمان خودت را با <code>php artisan make:command</code> بساز که سفارش‌های پرداخت‌نشده‌ی قدیمی را لغو کند و آن را زمان‌بندی کن.</p></section>
+<div class="step"><h2>اشتباه‌های رایج</h2><ol><li>نگذاشتن Cron روی هاست و اجرا‌نشدن زمان‌بندی‌ها.</li><li>فراموش‌کردن اختلاف timezone؛ مقدار <code>APP_TIMEZONE</code> را بررسی کن.</li></ol></div>
+<nav class="lesson-nav"><a href="l2-mail-sms.html">→ بخش قبل: ایمیل و پیامک</a><a href="l2-persian-rtl.html">بعدی: فارسی‌سازی: RTL و تاریخ شمسی ←</a></nav></div><script src="../assets/js/rayvo.js"></script></body></html>
